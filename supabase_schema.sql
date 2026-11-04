@@ -1,6 +1,7 @@
 -- ==============================================================================
--- Mobile Store - Supabase Database Schema & Initial Data
--- متجر الموبايلات والأجهزة الذكية والإلكترونيات
+-- Mobile Store - Supabase Complete Schema & Initial Data
+-- متجر فون زون (PhoneZone) للأجهزة الذكية والإلكترونيات
+-- قم بنسخ هذا الكود بالكامل ولصقه في SQL Editor داخل Supabase ثم اضغط Run
 -- ==============================================================================
 
 -- 1. جدول الفئات الرئيسية والفرعية (Categories Table)
@@ -39,8 +40,8 @@ CREATE TABLE IF NOT EXISTS products (
   subcategory TEXT DEFAULT '',
   brand_id TEXT REFERENCES brands(id) ON DELETE SET NULL,
   brand TEXT DEFAULT '',
-  price NUMERIC NOT NULL,
-  old_price NUMERIC,
+  price NUMERIC NOT NULL CHECK (price > 0),
+  old_price NUMERIC CHECK (old_price IS NULL OR old_price >= price),
   rating NUMERIC DEFAULT 4.9,
   reviews INTEGER DEFAULT 85,
   tag TEXT DEFAULT 'new',
@@ -122,7 +123,7 @@ CREATE TABLE IF NOT EXISTS admins (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- إضافة حساب المشرف الافتراضي (admin / admin مشفر بـ Bcrypt)
+-- إضافة حساب المشرف الافتراضي (admin / admin)
 INSERT INTO admins (username, password_hash)
 VALUES ('admin', '$2b$10$rzmW8Z9S9SZzkc6vpTKcJeLdoghftshEu.TvIa7yaWxR8nOslVHzK')
 ON CONFLICT (username) DO UPDATE 
@@ -145,7 +146,8 @@ INSERT INTO colors (id, name, hex_code) VALUES
 ('yellow', 'أصفر', '#EAB308'),
 ('transparent', 'شفاف', '#F3F4F6'),
 ('multicolor', 'ألوان متعددة', '#4F46E5')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE
+SET name = EXCLUDED.name, hex_code = EXCLUDED.hex_code;
 
 -- 11. إدخال الفئات الرئيسية والفرعية
 INSERT INTO categories (id, name, parent_id, sort_order) VALUES
@@ -156,39 +158,27 @@ INSERT INTO categories (id, name, parent_id, sort_order) VALUES
 ('chargers-cables', 'الشواحن والكابلات', NULL, 5),
 ('smart-watches', 'الساعات الذكية', NULL, 6),
 ('accessories', 'إكسسوارات أخرى', NULL, 7)
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE
+SET name = EXCLUDED.name, sort_order = EXCLUDED.sort_order;
 
--- الفئات الفرعية
-INSERT INTO categories (id, name, parent_id, sort_order) VALUES
-('phones-apple', 'آيفون', 'phones', 1),
-('phones-samsung', 'سامسونج', 'phones', 2),
-('phones-xiaomi', 'شاومي', 'phones', 3),
-('phones-oppo', 'أوبو', 'phones', 4),
-('phones-realme', 'ريلمي', 'phones', 5),
-('tablets-ipad', 'آيباد', 'tablets', 1),
-('tablets-samsung', 'سامسونج تاب', 'tablets', 2),
-('headphones-wireless', 'سماعات بلوتوث', 'headphones', 1),
-('headphones-airpods', 'سماعات إيربودز', 'headphones', 2),
-('chargers-fast', 'شواحن سريعة', 'chargers-cables', 1),
-('chargers-powerbank', 'باور بانك', 'chargers-cables', 2),
-('cases-magsafe', 'جرابات مغناطيسية', 'cases-protection', 1)
-ON CONFLICT (id) DO NOTHING;
-
--- 12. الماركات الرئيسية
+-- 12. الماركات الرئيسية (مع الصيغة الموحدة: العربية والإنجليزية بين قوسين)
 INSERT INTO brands (id, name, category_id) VALUES
-('apple', 'Apple', 'phones'),
-('samsung', 'Samsung', 'phones'),
-('xiaomi', 'Xiaomi', 'phones'),
-('oppo', 'Oppo', 'phones'),
-('realme', 'Realme', 'phones'),
-('vivo', 'Vivo', 'phones'),
-('honor', 'Honor', 'phones'),
-('infinix', 'Infinix', 'phones'),
-('huawei', 'Huawei', 'phones'),
-('anker', 'Anker', 'chargers-cables'),
-('sony', 'Sony', 'headphones'),
-('joyroom', 'Joyroom', 'accessories')
-ON CONFLICT (id) DO NOTHING;
+('samsung', 'سامسونج (Samsung)', 'phones'),
+('apple', 'آبل (Apple)', 'phones'),
+('xiaomi', 'شاومي (Xiaomi)', 'phones'),
+('oppo', 'أوبو (OPPO)', 'phones'),
+('realme', 'ريلمي (Realme)', 'phones'),
+('vivo', 'فيفو (Vivo)', 'phones'),
+('honor', 'هونر (Honor)', 'phones'),
+('infinix', 'إنفينيكس (Infinix)', 'phones'),
+('tecno', 'تكنو (Tecno)', 'phones'),
+('huawei', 'هواوي (Huawei)', 'phones'),
+('anker', 'أنكر (Anker)', 'chargers-cables'),
+('sony', 'سوني (Sony)', 'headphones'),
+('joyroom', 'جويروم (Joyroom)', 'accessories'),
+('baseus', 'بيسوس (Baseus)', 'chargers-cables')
+ON CONFLICT (id) DO UPDATE
+SET name = EXCLUDED.name, category_id = EXCLUDED.category_id;
 
 -- 13. إدخال المنتجات الأولية المميزة (Initial Products Seed)
 INSERT INTO products (
@@ -197,92 +187,104 @@ INSERT INTO products (
   overview, description, condition, specifications, colors, in_stock, is_featured
 ) VALUES
 (
-  'iphone-16-pro-max',
-  'آيفون 16 برو ماكس (iPhone 16 Pro Max 256GB)',
-  'تيتانيوم صحراوي فاخر · معالج A18 Pro الجبار وزر الكاميرا الجديد',
-  'الموبايلات', 'phones', 'آيفون', 'apple', 'Apple',
-  78500, 84000, 4.98, 312, 'best', 'الأكثر طلباً 🔥',
-  'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-9inch-deserttitanium?wid=1000&hei=1000&fmt=jpeg&qlt=90', '["https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-9inch-deserttitanium?wid=1000&hei=1000&fmt=jpeg&qlt=90"]'::jsonb,
-  'معالج A18 Pro · شاشة 6.9 بوصة OLED 120Hz · كاميرا احترافية 48MP',
-  'الهاتف الأقوى من أبل لعام 2026. إطار تيتانيوم من الدرجة الخامسة فائق المتانة والخفة، شاشة 6.9 بوصة Super Retina XDR ProMotion بتردد 120Hz، كاميرا رئيسية 48MP مع تقريب بصري 5x وزر التحكم بالكاميرا الاحترافي. ضمان الوكيل المعتمد 12 شهر.',
-  'جديد',
-  '{"ram": "8GB", "storage": "256GB", "network": "5G", "condition": "جديد", "warranty": "ضمان الوكيل 12 شهراً استبدال", "battery_health": "100%", "box_available": true, "charger_available": false}'::jsonb,
-  '[{"color_id": "gold", "color_name": "تيتانيوم صحراوي", "hex_code": "#D4AF37", "quantity": 8}, {"color_id": "black", "color_name": "تيتانيوم أسود", "hex_code": "#1F2421", "quantity": 5}]'::jsonb,
-  1, true
-),
-(
   'samsung-s24-ultra',
   'سامسونج جالاكسي S24 ألترا (Galaxy S24 Ultra 512GB)',
   'ذكاء اصطناعي Galaxy AI · شاشة مسطحة مقاومة للانعكاس وقلم S-Pen مدمج',
-  'الموبايلات', 'phones', 'سامسونج', 'samsung', 'Samsung',
+  'الموبايلات', 'phones', '', 'samsung', 'سامسونج (Samsung)',
   61900, 67500, 4.95, 245, 'best', 'الأعلى تقييماً',
   'https://upload.wikimedia.org/wikipedia/commons/e/ed/Samsung_S24_Ultra_Phone.png', '["https://upload.wikimedia.org/wikipedia/commons/e/ed/Samsung_S24_Ultra_Phone.png"]'::jsonb,
   'Snapdragon 8 Gen 3 · شاشة 6.8 بوصة QHD+ 120Hz · كاميرا 200MP · قلم S-Pen مدمج',
   'عملاق الأندرويد بلا منازع. معالج Snapdragon 8 Gen 3 المخصص لجالاكسي، كاميرا أسطورية 200MP مع تقريب بصري مذهل، إطار تيتانيوم صلب وزجاج Gorilla Armor المقاوم للانعكاسات والخدوش. يدعم ميزات Galaxy AI للترجمة الفورية وتعديل الصور الذكي.',
   'جديد',
-  '{"ram": "12GB", "storage": "512GB", "network": "5G", "condition": "جديد", "warranty": "ضمان محلي سنتين معتمد", "battery_health": "100%", "box_available": true, "charger_available": false}'::jsonb,
-  '[{"color_id": "gray", "color_name": "تيتانيوم رمادي", "hex_code": "#4B5563", "quantity": 6}, {"color_id": "black", "color_name": "تيتانيوم أسود", "hex_code": "#111827", "quantity": 7}]'::jsonb,
+  '{"ram": "12GB", "storage": "512GB", "network": "5G", "condition": "جديد", "warranty": "سنتين", "battery_health": "100%", "box_available": true, "charger_available": false}'::jsonb,
+  '[{"color_id": "gray", "color_name": "رمادي", "hex_code": "#6B7280", "quantity": 6}, {"color_id": "black", "color_name": "أسود", "hex_code": "#111827", "quantity": 7}]'::jsonb,
+  1, true
+),
+(
+  'iphone-16-pro-max',
+  'آيفون 16 برو ماكس (iPhone 16 Pro Max 256GB)',
+  'تيتانيوم صحراوي فاخر · معالج A18 Pro الجبار وزر الكاميرا الجديد',
+  'الموبايلات', 'phones', '', 'apple', 'آبل (Apple)',
+  78500, 84000, 4.98, 312, 'best', 'الأكثر طلباً 🔥',
+  'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-9inch-deserttitanium?wid=1000&hei=1000&fmt=jpeg&qlt=90', '["https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-9inch-deserttitanium?wid=1000&hei=1000&fmt=jpeg&qlt=90"]'::jsonb,
+  'معالج A18 Pro · شاشة 6.9 بوصة OLED 120Hz · كاميرا احترافية 48MP',
+  'الهاتف الأقوى من أبل لعام 2026. إطار تيتانيوم من الدرجة الخامسة فائق المتانة والخفة، شاشة 6.9 بوصة Super Retina XDR ProMotion بتردد 120Hz، كاميرا رئيسية 48MP مع تقريب بصري 5x وزر التحكم بالكاميرا الاحترافي. ضمان الوكيل المعتمد 12 شهر.',
+  'جديد',
+  '{"ram": "8GB", "storage": "256GB", "network": "5G", "condition": "جديد", "warranty": "سنة", "battery_health": "100%", "box_available": true, "charger_available": false}'::jsonb,
+  '[{"color_id": "gold", "color_name": "ذهبي", "hex_code": "#F59E0B", "quantity": 8}, {"color_id": "black", "color_name": "أسود", "hex_code": "#111827", "quantity": 5}]'::jsonb,
   1, true
 ),
 (
   'iphone-15-pro-like-new',
   'آيفون 15 برو كسر زيرو (iPhone 15 Pro 128GB)',
   'كسر زيرو كالجديد تماماً · بطارية 99% مع العلبة وكابل الشحن الأصلي',
-  'الموبايلات', 'phones', 'آيفون', 'apple', 'Apple',
+  'الموبايلات', 'phones', '', 'apple', 'آبل (Apple)',
   46500, 52000, 4.92, 178, 'sale', 'كسر زيرو 💎',
   'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-15-pro-finish-select-202309-6-1inch-bluetitanium?wid=1000&hei=1000&fmt=jpeg&qlt=90', '["https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-15-pro-finish-select-202309-6-1inch-bluetitanium?wid=1000&hei=1000&fmt=jpeg&qlt=90"]'::jsonb,
   'معالج A17 Pro · شاشة 6.1 بوصة 120Hz ProMotion · صحة البطارية 99%',
-  'جهاز كسر زيرو استخدام أسابيع قليلة فقط، بحالة المصنع خالي من أي خدوش أو علامات استخدام. صحة البطارية 99%، الشاشة أصلية 100% مع فحص كامل لكافة أجزاء الهاتف والمستشعرات والفيس آي دي. متاح فحص ومعاينة دقيقة قبل الدفع.',
+  'جهاز كسر زيرو استخدام أسابيع قليلة فقط، بحالة المصنع خالي من أي خدوش أو علامات استخدام. صحة البطارية 99%، الشاشة أصلية 100% مع فحص كامل لكافة أجزاء الهاتف والمستشعرات والفيس آي دي.',
   'كسر زيرو',
-  '{"ram": "8GB", "storage": "128GB", "network": "5G", "condition": "كسر زيرو", "warranty": "ضمان المتجر 6 أشهر", "battery_health": "99%", "screen_condition": "أصلية 100% بحالة المصنع", "frame_condition": "تيتانيوم أزرق كالجديد", "repair_history": "لم يُفتح نهائياً", "box_available": true, "charger_available": true}'::jsonb,
-  '[{"color_id": "blue", "color_name": "تيتانيوم أزرق", "hex_code": "#1E3A8A", "quantity": 2}, {"color_id": "gray", "color_name": "تيتانيوم طبيعي", "hex_code": "#6B7280", "quantity": 3}]'::jsonb,
+  '{"ram": "8GB", "storage": "128GB", "network": "5G", "condition": "كسر زيرو", "warranty": "6 شهور", "battery_health": "99%", "screen_condition": "أصلية 100% بحالة المصنع", "frame_condition": "تيتانيوم أزرق كالجديد", "repair_history": "لم يُفتح نهائياً", "box_available": true, "charger_available": true}'::jsonb,
+  '[{"color_id": "blue", "color_name": "أزرق", "hex_code": "#2563EB", "quantity": 2}, {"color_id": "gray", "color_name": "رمادي", "hex_code": "#6B7280", "quantity": 3}]'::jsonb,
   1, true
 ),
 (
   'airpods-pro-2-type-c',
   'سماعات أبل إيربودز برو 2 (AirPods Pro 2 USB-C)',
   'عزل ضوضاء نشط مضاعف 2x ANC · صوت مكاني مخصص ومنفذ شحن Type-C',
-  'السماعات', 'headphones', 'سماعات إيربودز', 'apple', 'Apple',
+  'السماعات', 'headphones', '', 'apple', 'آبل (Apple)',
   11900, 13500, 4.97, 520, 'best', 'الأكثر مبيعاً 🎧',
   'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/MTJV3?wid=1000&hei=1000&fmt=jpeg&qlt=90', '["https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/MTJV3?wid=1000&hei=1000&fmt=jpeg&qlt=90"]'::jsonb,
   'شريحة Apple H2 · إلغاء الضوضاء المتطور · 30 ساعة استماع مع علبة USB-C',
   'التجربة الصوتية الأروع من أبل مع شريحة H2 المتطورة. عزل ضوضاء نشط فائق القوة، نمط شفافية الصوت المتكيف، صوت مكاني يغمرك في الموسيقى والأفلام، ومقاومة الماء والعرق IP54.',
   'جديد',
-  '{"connection_type": "بلوتوث 5.3", "battery_life": "حتى 30 ساعة مع العلبة", "headphone_type": "إيربودز داخل الأذن", "condition": "جديد", "warranty": "ضمان أبل الدولي 12 شهر"}'::jsonb,
-  '[{"color_id": "white", "color_name": "أبيض لامع أصلي", "hex_code": "#FFFFFF", "quantity": 15}]'::jsonb,
+  '{"connection_type": "بلوتوث 5.3", "battery_life": "حتى 30 ساعة مع العلبة", "headphone_type": "إيربودز داخل الأذن", "condition": "جديد", "warranty": "سنة"}'::jsonb,
+  '[{"color_id": "white", "color_name": "أبيض", "hex_code": "#FFFFFF", "quantity": 15}]'::jsonb,
   1, true
 ),
 (
   'apple-watch-ultra-2',
   'ساعة أبل واتش ألترا 2 تيتانيوم (Apple Watch Ultra 2 49mm)',
   'تيتانيوم فضائي مقاوم للخدش والصدمات · شاشة بسطوع 3000 شمعة وGPS مزدوج',
-  'الساعات الذكية', 'smart-watches', 'ساعات أبل', 'apple', 'Apple',
+  'الساعات الذكية', 'smart-watches', '', 'apple', 'آبل (Apple)',
   43500, 48000, 4.96, 185, 'best', 'تيتانيوم 49mm',
   'https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/refurb-49-ultra-natural-titanium-ocean-navy?wid=1000&hei=1000&fmt=jpeg&qlt=90', '["https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/refurb-49-ultra-natural-titanium-ocean-navy?wid=1000&hei=1000&fmt=jpeg&qlt=90"]'::jsonb,
   'تيتانيوم فضائي 49 ملم · شاشة Retina بسطوع 3000 nits · مقاومة ماء 100M',
-  'الساعة الأكثر صلابة وقدرة من أبل. صممت لتحمل أقسى التحديات والرياضات الخطرة والغوص حتى عمق 40 متراً، مع معالج S9 فائق السرعة وإيماءة الضغط المزدوج Double Tap وبطارية تدوم حتى 72 ساعة في نمط توفير الطاقة.',
+  'الساعة الأكثر صلابة وقدرة من أبل. صممت لتحمل أقسى التحديات والرياضات الخطرة والغوص حتى عمق 40 متراً، مع معالج S9 فائق السرعة وإيماءة الضغط المزدوج Double Tap.',
   'جديد',
-  '{"connection_type": "بلوتوث 5.3 + eSIM", "compatibility": "iPhone", "battery_life": "36-72 ساعة", "condition": "جديد", "warranty": "ضمان أبل 12 شهر"}'::jsonb,
-  '[{"color_id": "silver", "color_name": "تيتانيوم طبيعي مع سوار أوشن", "hex_code": "#9CA3AF", "quantity": 6}, {"color_id": "orange", "color_name": "تيتانيوم مع سوار برتقالي", "hex_code": "#F97316", "quantity": 4}]'::jsonb,
+  '{"connection_type": "بلوتوث 5.3 + eSIM", "compatibility": "iPhone", "battery_life": "36-72 ساعة", "condition": "جديد", "warranty": "سنة"}'::jsonb,
+  '[{"color_id": "silver", "color_name": "فضي", "hex_code": "#E5E7EB", "quantity": 6}, {"color_id": "orange", "color_name": "برتقالي", "hex_code": "#F97316", "quantity": 4}]'::jsonb,
   1, true
 ),
 (
   'anker-prime-65w',
   'شاحن أنكر برايم فائق السرعة 65W GaN (Anker Prime 65W)',
   'تقنية GaN III فائقة الصغر · 3 منافذ شحن سريع للهواتف واللابتوبات والتابلت',
-  'الشواحن والكابلات', 'chargers-cables', 'شواحن سريعة', 'anker', 'Anker',
+  'الشواحن والكابلات', 'chargers-cables', '', 'anker', 'أنكر (Anker)',
   2450, 2900, 4.93, 320, 'best', 'شاحن GaN 65W',
   'https://cdn.shopify.com/s/files/1/0493/9834/9974/products/A2663111-Anker_715_Charger_Nano_II_65W.png', '["https://cdn.shopify.com/s/files/1/0493/9834/9974/products/A2663111-Anker_715_Charger_Nano_II_65W.png"]'::jsonb,
   'قدرة 65W · 2 منفذ USB-C + 1 منفذ USB-A · متوافق مع iPhone, Samsung, Mac, iPad',
-  'شاحن واحد يكفيك لجميع أجهزتك. يعتمد على أحدث تقنيات نيتريد الجاليوم GaN لتوفير طاقة 65W بحجم أصغر بنسبة 50% من الشواحن التقليدية، مع نظام حماية حرارية متطور ActiveShield 2.0 يحمي بطاريات أجهزتك من الحرارة الزائدة.',
+  'شاحن واحد يكفيك لجميع أجهزتك. يعتمد على أحدث تقنيات نيتريد الجاليوم GaN لتوفير طاقة 65W بحجم أصغر بنسبة 50% من الشواحن التقليدية، مع نظام حماية حرارية متطور ActiveShield 2.0.',
   'جديد',
-  '{"charging_power": "65W Max", "connector_type": "2x Type-C + 1x USB-A", "condition": "جديد", "warranty": "ضمان استبدال معتمد 18 شهر"}'::jsonb,
-  '[{"color_id": "black", "color_name": "أسود تيتانيوم", "hex_code": "#18181B", "quantity": 20}]'::jsonb,
+  '{"charging_power": "65W Max", "connector_type": "2x Type-C + 1x USB-A", "condition": "جديد", "warranty": "ضمان آخر"}'::jsonb,
+  '[{"color_id": "black", "color_name": "أسود", "hex_code": "#111827", "quantity": 20}]'::jsonb,
   1, false
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE
+SET
+  name = EXCLUDED.name,
+  sub = EXCLUDED.sub,
+  cat = EXCLUDED.cat,
+  category_id = EXCLUDED.category_id,
+  brand = EXCLUDED.brand,
+  brand_id = EXCLUDED.brand_id,
+  price = EXCLUDED.price,
+  old_price = EXCLUDED.old_price,
+  condition = EXCLUDED.condition,
+  specifications = EXCLUDED.specifications,
+  colors = EXCLUDED.colors;
 
--- 14. تفعيل Row Level Security (RLS)
+-- 14. تفعيل Row Level Security (RLS) وسياسات الوصول
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE brands ENABLE ROW LEVEL SECURITY;
 ALTER TABLE colors ENABLE ROW LEVEL SECURITY;
@@ -293,7 +295,23 @@ ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
 
--- سياسات القراءة العامة للجميع
+-- حذف السياسات القديمة إن وجدت لمنع تكرار الأسماء
+DROP POLICY IF EXISTS "Public read categories" ON categories;
+DROP POLICY IF EXISTS "Public read brands" ON brands;
+DROP POLICY IF EXISTS "Public read colors" ON colors;
+DROP POLICY IF EXISTS "Public read products" ON products;
+DROP POLICY IF EXISTS "Public read product_colors" ON product_colors;
+DROP POLICY IF EXISTS "Public read product_variants" ON product_variants;
+DROP POLICY IF EXISTS "Public insert orders" ON orders;
+DROP POLICY IF EXISTS "Public insert order_items" ON order_items;
+DROP POLICY IF EXISTS "Service role full access products" ON products;
+DROP POLICY IF EXISTS "Service role full access categories" ON categories;
+DROP POLICY IF EXISTS "Service role full access brands" ON brands;
+DROP POLICY IF EXISTS "Service role full access colors" ON colors;
+DROP POLICY IF EXISTS "Service role full access orders" ON orders;
+DROP POLICY IF EXISTS "Service role full access order_items" ON order_items;
+
+-- سياسات القراءة العامة للمتجر
 CREATE POLICY "Public read categories" ON categories FOR SELECT USING (true);
 CREATE POLICY "Public read brands" ON brands FOR SELECT USING (true);
 CREATE POLICY "Public read colors" ON colors FOR SELECT USING (true);
@@ -304,3 +322,14 @@ CREATE POLICY "Public read product_variants" ON product_variants FOR SELECT USIN
 -- سياسة إنشاء الطلبات للعملاء
 CREATE POLICY "Public insert orders" ON orders FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public insert order_items" ON order_items FOR INSERT WITH CHECK (true);
+
+-- سياسات الوصول الكامل لـ service_role (لوحة الأدمن والسيرفر)
+CREATE POLICY "Service role full access products" ON products FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Service role full access categories" ON categories FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Service role full access brands" ON brands FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Service role full access colors" ON colors FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Service role full access orders" ON orders FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Service role full access order_items" ON order_items FOR ALL USING (true) WITH CHECK (true);
+
+-- 15. تحديث كاش PostgREST Schema فوراً
+NOTIFY pgrst, 'reload schema';
