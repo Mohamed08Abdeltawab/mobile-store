@@ -17,22 +17,49 @@ const CATEGORIES = [
   "إكسسوارات أخرى"
 ];
 
-const BRANDS = [
-  "Apple",
-  "Samsung",
-  "Xiaomi",
-  "Oppo",
-  "Realme",
-  "Vivo",
-  "Honor",
-  "Infinix",
-  "Tecno",
-  "Huawei",
-  "Anker",
-  "Joyroom",
-  "Baseus",
-  "أخرى"
+export const BRAND_OPTIONS = [
+  { id: "samsung", name_ar: "سامسونج", name_en: "Samsung", display: "سامسونج (Samsung)" },
+  { id: "apple", name_ar: "آبل", name_en: "Apple", display: "آبل (Apple)" },
+  { id: "xiaomi", name_ar: "شاومي", name_en: "Xiaomi", display: "شاومي (Xiaomi)" },
+  { id: "oppo", name_ar: "أوبو", name_en: "OPPO", display: "أوبو (OPPO)" },
+  { id: "realme", name_ar: "ريلمي", name_en: "Realme", display: "ريلمي (Realme)" },
+  { id: "vivo", name_ar: "فيفو", name_en: "Vivo", display: "فيفو (Vivo)" },
+  { id: "honor", name_ar: "هونر", name_en: "Honor", display: "هونر (Honor)" },
+  { id: "infinix", name_ar: "إنفينيكس", name_en: "Infinix", display: "إنفينيكس (Infinix)" },
+  { id: "tecno", name_ar: "تكنو", name_en: "Tecno", display: "تكنو (Tecno)" },
+  { id: "huawei", name_ar: "هواوي", name_en: "Huawei", display: "هواوي (Huawei)" },
+  { id: "anker", name_ar: "أنكر", name_en: "Anker", display: "أنكر (Anker)" },
+  { id: "joyroom", name_ar: "جويروم", name_en: "Joyroom", display: "جويروم (Joyroom)" },
+  { id: "baseus", name_ar: "بيسوس", name_en: "Baseus", display: "بيسوس (Baseus)" },
+  { id: "sony", name_ar: "سوني", name_en: "Sony", display: "سوني (Sony)" },
+  { id: "other", name_ar: "ماركة أخرى", name_en: "Other", display: "أخرى (Other)" }
 ];
+
+export function getBrandDisplay(brand: string | undefined): string {
+  if (!brand) return "سامسونج (Samsung)";
+  const trimmed = brand.trim();
+  if (trimmed.includes("(") && trimmed.includes(")")) return trimmed;
+  const match = BRAND_OPTIONS.find(b =>
+    b.id.toLowerCase() === trimmed.toLowerCase() ||
+    b.name_en.toLowerCase() === trimmed.toLowerCase() ||
+    b.name_ar === trimmed ||
+    b.name_ar.replace(/[أإآ]/g, "ا") === trimmed.replace(/[أإآ]/g, "ا")
+  );
+  return match ? match.display : trimmed;
+}
+
+export const WARRANTY_OPTIONS = [
+  "14 يوم",
+  "شهر",
+  "شهرين",
+  "3 شهور",
+  "6 شهور",
+  "سنة",
+  "سنتين",
+  "ضمان آخر"
+] as const;
+
+export const CONDITION_OPTIONS: ProductCondition[] = ["جديد", "كسر زيرو", "مستعمل"];
 
 const STORAGE_OPTIONS = ["32GB", "64GB", "128GB", "256GB", "512GB", "1TB"];
 const RAM_OPTIONS = ["2GB", "3GB", "4GB", "6GB", "8GB", "12GB", "16GB", "24GB"];
@@ -40,14 +67,14 @@ const RAM_OPTIONS = ["2GB", "3GB", "4GB", "6GB", "8GB", "12GB", "16GB", "24GB"];
 export default function AdminDashboardPage() {
   const router = useRouter();
   const { setIsAdmin } = useCart();
-  const [activeTab, setActiveTab] = useState<"products" | "orders" | "categories" | "brands">("products");
-  
+  const [activeTab, setActiveTab] = useState<"products" | "orders">("products");
+
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [categoriesList, setCategoriesList] = useState<any[]>([]);
   const [brandsList, setBrandsList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [notification, setNotification] = useState("");
@@ -55,12 +82,14 @@ export default function AdminDashboardPage() {
   const [uploadError, setUploadError] = useState("");
   const [manualImageUrl, setManualImageUrl] = useState("");
 
-  // Product Form State
+  const [isSaving, setIsSaving] = useState(false);
+  const [priceError, setPriceError] = useState("");
+
+  // Product Form State (Default Values for Mobile Products as per Requirement 6)
   const initialFormState = {
     name: "",
     category: "الموبايلات",
-    subcategory: "آيفون",
-    brand: "Apple",
+    brand: "سامسونج (Samsung)",
     price: "",
     original_price: "",
     quantity: 10,
@@ -68,11 +97,13 @@ export default function AdminDashboardPage() {
     description: "",
     is_featured: false,
     is_published: true,
-    images: ["https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-9inch-deserttitanium?wid=1000&hei=1000&fmt=jpeg&qlt=90"],
-    // Specifications
+    images: [] as string[],
+    // Specs defaults: 128GB Storage, 8GB RAM, 4G LTE Network
     ram: "8GB",
-    storage: "256GB",
-    network: "5G",
+    storage: "128GB",
+    network: "4G LTE",
+    warranty_duration: "سنة",
+    custom_warranty: "",
     battery_health: "100%",
     screen_condition: "أصلية 100% بدون أي خدوش",
     frame_condition: "ممتاز كأنه جديد",
@@ -80,25 +111,16 @@ export default function AdminDashboardPage() {
     repaired: false,
     box_available: true,
     charger_available: true,
-    warranty: "ضمان محلي معتمد لمدة سنة",
     charging_power: "65W",
     connector_type: "Type-C",
-    connection_type: "Bluetooth 5.3",
+    connection_type: "بلوتوث 5.3",
     compatibility: "iOS / Android",
-    // Selected colors with independent stock
     colors: [
-      { id: "black", name_ar: "أسود", hex: "#000000", quantity: 5 },
-      { id: "gold", name_ar: "ذهبي", hex: "#D4AF37", quantity: 5 }
+      { id: "black", name_ar: "أسود", hex: "#111827", quantity: 5 }
     ]
   };
 
   const [form, setForm] = useState(initialFormState);
-
-  // New Category / Brand forms
-  const [newCatName, setNewCatName] = useState("");
-  const [newCatNameAr, setNewCatNameAr] = useState("");
-  const [newBrandName, setNewBrandName] = useState("");
-  const [newBrandNameAr, setNewBrandNameAr] = useState("");
 
   function notify(msg: string) {
     setNotification(msg);
@@ -157,7 +179,7 @@ export default function AdminDashboardPage() {
     const remainingSlots = 10 - currentCount;
 
     if (remainingSlots <= 0) {
-      alert("وصلت للحد الأقصى المسموح به (10 صور للمنتج الواحد)");
+      alert("لقد وصلت للحد الأقصى المسموح به (10 صور للمنتج الواحد)");
       e.target.value = "";
       return;
     }
@@ -187,12 +209,12 @@ export default function AdminDashboardPage() {
             images: combined
           };
         });
-        notify(`تم رفع وتخزين ${data.urls.length} صور في ملفات المتجر بنجاح`);
+        notify(`تم رفع وتخزين ${data.urls.length} صور بنجاح ✓`);
       } else {
-        setUploadError(data.error || "فشل رفع الصور");
+        setUploadError(data.error || "فشل رفع الصور، يرجى المحاولة مرة أخرى");
       }
-    } catch (err) {
-      setUploadError("حدث خطأ أثناء رفع الصور");
+    } catch (err: any) {
+      setUploadError("حدث خطأ أثناء الاتصال بالخادم لرفع الصور");
     } finally {
       setUploadingImage(false);
       e.target.value = "";
@@ -203,7 +225,7 @@ export default function AdminDashboardPage() {
     const url = manualImageUrl.trim();
     if (!url) return;
     if (form.images.length >= 10) {
-      alert("وصلت للحد الأقصى (10 صور)");
+      alert("لقد وصلت للحد الأقصى المسموح به (10 صور)");
       return;
     }
     setForm(prev => ({
@@ -211,7 +233,7 @@ export default function AdminDashboardPage() {
       images: [...prev.images, url].slice(0, 10)
     }));
     setManualImageUrl("");
-    notify("تمت إضافة رابط الصورة بنجاح");
+    notify("تمت إضافة رابط الصورة بنجاح ✓");
   }
 
   function handleSetAsCover(idx: number) {
@@ -243,7 +265,7 @@ export default function AdminDashboardPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: targetUrl })
       });
-      notify("تم حذف ملف الصورة");
+      notify("تم حذف ملف الصورة بنجاح");
     } catch (err) {
       console.error(err);
     }
@@ -278,19 +300,21 @@ export default function AdminDashboardPage() {
   }
 
   async function handleDeleteProduct(id: string | number, name: string) {
-    if (!confirm(`هل أنت متأكد من حذف المنتج "${name}" نهائياً من قاعدة البيانات؟`)) return;
+    if (!confirm(`هل أنت متأكد من حذف المنتج "${name}" نهائياً من قاعدة البيانات؟ لا يمكن التراجع عن هذا الإجراء.`)) {
+      return;
+    }
 
     try {
       const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
-        notify(`تم حذف "${name}" بنجاح`);
+        notify(`تم حذف المنتج "${name}" بنجاح ✓`);
         loadData();
       } else {
-        alert(data.error);
+        alert(data.error || "فشل حذف المنتج من قاعدة البيانات");
       }
-    } catch (err) {
-      alert("حدث خطأ أثناء الحذف");
+    } catch (err: any) {
+      alert("حدث خطأ أثناء محاولة حذف المنتج: " + (err.message || "خطأ غير معروف"));
     }
   }
 
@@ -299,7 +323,7 @@ export default function AdminDashboardPage() {
 
     const initialImages = Array.isArray(p.images) && p.images.length > 0
       ? p.images
-      : ["/img/mobile-concept-01.png"];
+      : (p.image ? [p.image] : []);
 
     const specs = p.specifications || {};
 
@@ -307,45 +331,69 @@ export default function AdminDashboardPage() {
       ? p.colors.map(c => ({
           id: c.color_id || c.id || "black",
           name_ar: c.name_ar || c.color_name || c.name || "أسود",
-          hex: c.hex || c.hex_code || "#000000",
-          quantity: c.quantity || 5
+          hex: c.hex || c.hex_code || "#111827",
+          quantity: c.quantity !== undefined ? c.quantity : 5
         }))
       : [
-          { id: "black", name_ar: "أسود", hex: "#000000", quantity: Number(p.quantity || 5) }
+          { id: "black", name_ar: "أسود", hex: "#111827", quantity: Number(p.quantity ?? 5) }
         ];
+
+    // Normalize condition
+    let normalizedCondition: ProductCondition = "جديد";
+    const rawCond = (p.condition || "").trim().toLowerCase();
+    if (rawCond.includes("كسر") || rawCond.includes("like")) {
+      normalizedCondition = "كسر زيرو";
+    } else if (rawCond.includes("مستعمل") || rawCond.includes("used") || rawCond.includes("pre-owned")) {
+      normalizedCondition = "مستعمل";
+    }
+
+    // Determine warranty duration & custom warranty
+    const savedWarranty = (specs.warranty || "").trim();
+    const standardWarranties = ["14 يوم", "شهر", "شهرين", "3 شهور", "6 شهور", "سنة", "سنتين"];
+    let warrantyDuration = "سنة";
+    let customWarranty = "";
+
+    if (standardWarranties.includes(savedWarranty)) {
+      warrantyDuration = savedWarranty;
+      customWarranty = "";
+    } else if (savedWarranty) {
+      warrantyDuration = "ضمان آخر";
+      customWarranty = savedWarranty;
+    }
 
     setForm({
       name: p.name,
       category: p.category || p.cat || "الموبايلات",
-      subcategory: p.subcategory || "",
-      brand: p.brand || "Apple",
+      brand: getBrandDisplay(p.brand || "Samsung"),
       price: String(p.price),
       original_price: p.original_price ? String(p.original_price) : (p.old_price ? String(p.old_price) : ""),
-      quantity: Number(p.quantity || 5),
-      condition: p.condition || "جديد",
-      description: p.description || "",
+      quantity: Number(p.quantity ?? 10),
+      condition: normalizedCondition,
+      description: p.description || p.overview || "",
       is_featured: !!p.is_featured,
       is_published: p.is_published !== undefined ? !!p.is_published : true,
       images: initialImages,
-      // Specs
-      ram: String(specs.ram || "8GB"),
-      storage: String(specs.storage || "256GB"),
-      network: String(specs.network || "5G"),
-      battery_health: String(specs.battery_health || "100%"),
-      screen_condition: String(specs.screen_condition || "أصلية 100% بدون أي خدوش"),
-      frame_condition: String(specs.frame_condition || "ممتاز كأنه جديد"),
-      back_condition: String(specs.back_condition || "سليم بدون أي علامات"),
+      // Specs - use SAVED values, NOT default values!
+      ram: specs.ram ? String(specs.ram) : "8GB",
+      storage: specs.storage ? String(specs.storage) : "128GB",
+      network: specs.network ? String(specs.network) : "4G LTE",
+      warranty_duration: warrantyDuration,
+      custom_warranty: customWarranty,
+      battery_health: specs.battery_health ? String(specs.battery_health) : "100%",
+      screen_condition: specs.screen_condition ? String(specs.screen_condition) : "أصلية 100% بدون أي خدوش",
+      frame_condition: specs.frame_condition ? String(specs.frame_condition) : "ممتاز كأنه جديد",
+      back_condition: specs.back_condition ? String(specs.back_condition) : "سليم بدون أي علامات",
       repaired: Boolean(specs.repaired),
       box_available: specs.box_available === false ? false : true,
       charger_available: specs.charger_available === false ? false : true,
-      warranty: String(specs.warranty || "ضمان محلي معتمد لمدة سنة"),
-      charging_power: String(specs.charging_power || "65W"),
-      connector_type: String(specs.connector_type || "Type-C"),
-      connection_type: String(specs.connection_type || "Bluetooth 5.3"),
-      compatibility: String(specs.compatibility || "iOS / Android"),
+      charging_power: specs.charging_power ? String(specs.charging_power) : "65W",
+      connector_type: specs.connector_type ? String(specs.connector_type) : "Type-C",
+      connection_type: specs.connection_type ? String(specs.connection_type) : "بلوتوث 5.3",
+      compatibility: specs.compatibility ? String(specs.compatibility) : "iOS / Android",
       colors: colorItems
     });
 
+    setPriceError("");
     setManualImageUrl("");
     setUploadError("");
     setShowProductModal(true);
@@ -354,25 +402,67 @@ export default function AdminDashboardPage() {
   function resetForm() {
     setEditingProduct(null);
     setForm(initialFormState);
+    setPriceError("");
     setManualImageUrl("");
     setUploadError("");
   }
 
   async function handleSaveProduct(e: React.FormEvent) {
     e.preventDefault();
+    setPriceError("");
+
+    if (!form.name.trim()) {
+      alert("يرجى إدخال اسم المنتج بالكامل");
+      return;
+    }
+
+    if (!form.category) {
+      alert("يرجى اختيار القسم الرئيسي للمنتج");
+      return;
+    }
+
+    if (!form.brand) {
+      alert("يرجى اختيار البراند / الماركة");
+      return;
+    }
+
+    // Strict price validation
+    const numPrice = parseFloat(form.price);
+    if (isNaN(numPrice) || numPrice <= 0) {
+      setPriceError("السعر يجب أن يكون أكبر من صفر.");
+      return;
+    }
+
+    let numOriginal: number | null = null;
+    if (form.original_price && form.original_price.trim() !== "") {
+      numOriginal = parseFloat(form.original_price);
+      if (isNaN(numOriginal) || numOriginal < 0) {
+        setPriceError("السعر قبل الخصم لا يمكن أن يكون رقمًا سالبًا.");
+        return;
+      }
+      if (numOriginal <= numPrice) {
+        setPriceError("السعر قبل الخصم يجب أن يكون أكبر من سعر البيع الحالي.");
+        return;
+      }
+    }
+
+    if (form.warranty_duration === "ضمان آخر" && !form.custom_warranty.trim()) {
+      alert("يرجى كتابة مدة الضمان المطلوبة أو اختيار مدة جاهزة من القائمة");
+      return;
+    }
 
     if (form.images.length === 0) {
-      alert("يرجى إضافة صورة واحدة على الأقل للمنتج");
+      alert("يرجى إضافة صورة واحدة على الأقل للمنتج (رفع من الجهاز أو إدخال رابط)");
       return;
     }
 
-    if (!form.name || !form.price || !form.category || !form.brand) {
-      alert("يرجى ملء كافة الحقول الأساسية المطلوبة");
-      return;
-    }
+    // Determine final warranty string
+    const finalWarranty = form.warranty_duration === "ضمان آخر"
+      ? form.custom_warranty.trim()
+      : form.warranty_duration;
 
     const specifications: any = {
-      warranty: form.warranty,
+      warranty: finalWarranty,
       box_available: form.box_available,
       charger_available: form.charger_available
     };
@@ -396,18 +486,19 @@ export default function AdminDashboardPage() {
       specifications.compatibility = form.compatibility;
     }
 
-    // Total quantity calculated from colors, or default
+    // Total quantity calculated from colors or direct quantity
     const totalQty = form.colors.length > 0
       ? form.colors.reduce((sum, c) => sum + (c.quantity || 0), 0)
-      : Number(form.quantity);
+      : Number(form.quantity || 10);
 
     const payload = {
-      name: form.name,
+      name: form.name.trim(),
+      cat: form.category,
       category: form.category,
-      subcategory: form.subcategory,
       brand: form.brand,
-      price: parseFloat(form.price),
-      original_price: form.original_price ? parseFloat(form.original_price) : null,
+      price: numPrice,
+      old_price: numOriginal,
+      original_price: numOriginal,
       quantity: totalQty,
       condition: form.condition,
       description: form.description,
@@ -418,6 +509,7 @@ export default function AdminDashboardPage() {
       specifications
     };
 
+    setIsSaving(true);
     try {
       const url = editingProduct ? `/api/products/${editingProduct.id}` : "/api/products";
       const method = editingProduct ? "PUT" : "POST";
@@ -430,15 +522,17 @@ export default function AdminDashboardPage() {
 
       const data = await res.json();
       if (data.success) {
-        notify(editingProduct ? "تم تحديث بيانات المنتج بنجاح" : "تمت إضافة المنتج الجديد للكتالوج بنجاح");
+        notify(editingProduct ? "تم تحديث بيانات المنتج بنجاح ✓" : "تمت إضافة المنتج الجديد للكتالوج بنجاح ✓");
         setShowProductModal(false);
         resetForm();
         loadData();
       } else {
-        alert(data.error || "حدث خطأ أثناء حفظ المنتج");
+        alert(data.error || "حدث خطأ أثناء حفظ المنتج في قاعدة البيانات");
       }
-    } catch (err) {
-      alert("فشل الاتصال بالخادم لحفظ المنتج");
+    } catch (err: any) {
+      alert("فشل الاتصال بالخادم لحفظ المنتج: " + (err.message || "خطأ غير معروف"));
+    } finally {
+      setIsSaving(false);
     }
   }
 
@@ -458,48 +552,6 @@ export default function AdminDashboardPage() {
       }
     } catch (err) {
       alert("فشل تحديث حالة الطلب");
-    }
-  }
-
-  async function handleCreateCategory(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newCatName || !newCatNameAr) return;
-    try {
-      const res = await fetch("/api/categories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newCatName, name_ar: newCatNameAr, icon: "Smartphone" })
-      });
-      const data = await res.json();
-      if (data.success) {
-        notify("تمت إضافة القسم الجديد بنجاح");
-        setNewCatName("");
-        setNewCatNameAr("");
-        loadData();
-      }
-    } catch (err) {
-      alert("فشل إضافة القسم");
-    }
-  }
-
-  async function handleCreateBrand(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newBrandName || !newBrandNameAr) return;
-    try {
-      const res = await fetch("/api/brands", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newBrandName, name_ar: newBrandNameAr })
-      });
-      const data = await res.json();
-      if (data.success) {
-        notify("تمت إضافة العلامة التجارية بنجاح");
-        setNewBrandName("");
-        setNewBrandNameAr("");
-        loadData();
-      }
-    } catch (err) {
-      alert("فشل إضافة البراند");
     }
   }
 
@@ -592,7 +644,7 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Tab Navigation */}
+        {/* Tab Navigation: Products & Orders Only (Tabs for categories and brands removed as requested) */}
         <div className="flex gap-2 sm:gap-3 mb-6 border-b border-white/10 pb-3 sm:pb-4 overflow-x-auto scrollbar-none">
           <button
             onClick={() => setActiveTab("products")}
@@ -614,28 +666,6 @@ export default function AdminDashboardPage() {
             }`}
           >
             📋 الطلبات والواتساب ({orders.length})
-          </button>
-
-          <button
-            onClick={() => setActiveTab("categories")}
-            className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-extrabold text-xs sm:text-sm cursor-pointer border-0 whitespace-nowrap transition-all ${
-              activeTab === "categories"
-                ? "bg-lime-400 text-black shadow-lg shadow-lime-400/20"
-                : "bg-white/10 text-white hover:bg-white/15"
-            }`}
-          >
-            🏷️ الأقسام والتصنيفات ({categoriesList.length})
-          </button>
-
-          <button
-            onClick={() => setActiveTab("brands")}
-            className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-extrabold text-xs sm:text-sm cursor-pointer border-0 whitespace-nowrap transition-all ${
-              activeTab === "brands"
-                ? "bg-lime-400 text-black shadow-lg shadow-lime-400/20"
-                : "bg-white/10 text-white hover:bg-white/15"
-            }`}
-          >
-            🏢 الماركات والبراندات ({brandsList.length})
           </button>
         </div>
 
@@ -676,7 +706,7 @@ export default function AdminDashboardPage() {
                     resetForm();
                     setShowProductModal(true);
                   }}
-                  className="px-6 py-2.5 rounded-xl bg-lime-400 text-black font-extrabold text-sm"
+                  className="px-6 py-2.5 rounded-xl bg-lime-400 text-black font-extrabold text-sm cursor-pointer"
                 >
                   إضافة أول منتج
                 </button>
@@ -698,7 +728,7 @@ export default function AdminDashboardPage() {
                     </thead>
                     <tbody className="divide-y divide-white/5">
                       {products.map(p => {
-                        const coverImg = Array.isArray(p.images) && p.images[0] ? p.images[0] : "/img/mobile-concept-01.png";
+                        const coverImg = Array.isArray(p.images) && p.images[0] ? p.images[0] : (p.image || "/img/mobile-concept-01.png");
                         return (
                           <tr key={p.id} className="hover:bg-white/[0.02] transition-colors">
                             {/* Product Info */}
@@ -718,16 +748,16 @@ export default function AdminDashboardPage() {
                                   <h4 className="font-bold text-white text-sm line-clamp-1">{p.name}</h4>
                                   <div className="text-[11px] text-neutral-400 mt-0.5 flex items-center gap-2">
                                     {p.specifications?.storage && <span>{p.specifications.storage}</span>}
-                                    {p.specifications?.ram && <span>· {p.specifications.ram} RAM</span>}
+                                    {p.specifications?.ram && <span>· {p.specifications.ram} رام</span>}
                                   </div>
                                 </div>
                               </div>
                             </td>
 
-                            {/* Category & Brand */}
+                            {/* Category & Brand (Brand displayed with Arabic and English in parentheses) */}
                             <td className="p-4">
                               <div className="text-xs text-white font-semibold">{p.category || p.cat}</div>
-                              <div className="text-[11px] text-neutral-400">{p.brand}</div>
+                              <div className="text-[11px] text-neutral-400 font-medium">{getBrandDisplay(p.brand)}</div>
                             </td>
 
                             {/* Condition Badge */}
@@ -747,7 +777,7 @@ export default function AdminDashboardPage() {
 
                             {/* Price */}
                             <td className="p-4 font-bold text-white">
-                              <div>{p.price.toLocaleString("ar-EG")} ج.م</div>
+                              <div>{Number(p.price).toLocaleString("ar-EG")} ج.م</div>
                               {(p.original_price || p.old_price) && (Number(p.original_price || p.old_price) > p.price) && (
                                 <div className="text-[11px] text-neutral-500 line-through">
                                   {Number(p.original_price || p.old_price).toLocaleString("ar-EG")} ج.م
@@ -774,9 +804,9 @@ export default function AdminDashboardPage() {
                             <td className="p-4">
                               <div className="flex items-center gap-1.5 flex-wrap max-w-[150px]">
                                 {Array.isArray(p.colors) && p.colors.length > 0 ? (
-                                  p.colors.map(c => (
+                                  p.colors.map((c, cIdx) => (
                                     <span
-                                      key={c.id || c.color_id}
+                                      key={c.id || c.color_id || cIdx}
                                       title={`${c.name_ar || c.color_name || c.name || ""} (${c.quantity || 0} قطعة)`}
                                       className="w-4 h-4 rounded-full border border-white/20 inline-block"
                                       style={{ backgroundColor: c.hex || c.hex_code || "#000" }}
@@ -892,7 +922,6 @@ export default function AdminDashboardPage() {
 
                         {/* Order Actions */}
                         <div className="flex items-center gap-3">
-                          {/* WhatsApp Chat Button */}
                           <a
                             href={waUrl}
                             target="_blank"
@@ -902,7 +931,6 @@ export default function AdminDashboardPage() {
                             <span>محادثة واتساب 💬</span>
                           </a>
 
-                          {/* Status Selector */}
                           <select
                             value={order.status}
                             onChange={(e) => handleUpdateOrderStatus(order.order_reference, e.target.value)}
@@ -972,116 +1000,6 @@ export default function AdminDashboardPage() {
             )}
           </div>
         )}
-
-        {/* ========================================================= */}
-        {/* TAB 3: CATEGORIES MANAGEMENT */}
-        {/* ========================================================= */}
-        {activeTab === "categories" && (
-          <div className="space-y-6">
-            <div className="bg-[#141c18] border border-white/10 rounded-2xl p-6">
-              <h3 className="text-lg font-black text-white mb-2">إضافة قسم جديد</h3>
-              <form onSubmit={handleCreateCategory} className="flex flex-col sm:flex-row gap-3">
-                <input
-                  type="text"
-                  placeholder="الاسم بالعربي (مثال: الشواحن اللاسلكية)"
-                  value={newCatNameAr}
-                  onChange={(e) => setNewCatNameAr(e.target.value)}
-                  className="bg-black/50 border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-lime-400 flex-1"
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Slug بالإنجليزية (مثال: wireless-chargers)"
-                  value={newCatName}
-                  onChange={(e) => setNewCatName(e.target.value)}
-                  className="bg-black/50 border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-lime-400 flex-1"
-                  required
-                />
-                <button
-                  type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-lime-400 text-black font-extrabold text-sm cursor-pointer hover:bg-lime-300 transition-colors"
-                >
-                  إضافة القسم
-                </button>
-              </form>
-            </div>
-
-            {/* Existing Categories List */}
-            <div className="bg-[#141c18] border border-white/10 rounded-2xl p-6">
-              <h3 className="text-lg font-black text-white mb-4">الأقسام الحالية بالمتجر</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {categoriesList.map(cat => (
-                  <div
-                    key={cat.id}
-                    className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between"
-                  >
-                    <div>
-                      <div className="font-bold text-white text-sm">{cat.name_ar}</div>
-                      <div className="text-xs text-neutral-400">{cat.name}</div>
-                    </div>
-                    <span className="text-xs px-2.5 py-1 rounded-full bg-lime-400/10 text-lime-400 font-bold">
-                      نشط
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================= */}
-        {/* TAB 4: BRANDS MANAGEMENT */}
-        {/* ========================================================= */}
-        {activeTab === "brands" && (
-          <div className="space-y-6">
-            <div className="bg-[#141c18] border border-white/10 rounded-2xl p-6">
-              <h3 className="text-lg font-black text-white mb-2">إضافة براند أو علامة تجارية</h3>
-              <form onSubmit={handleCreateBrand} className="flex flex-col sm:flex-row gap-3">
-                <input
-                  type="text"
-                  placeholder="اسم البراند بالعربي (مثال: أنكر)"
-                  value={newBrandNameAr}
-                  onChange={(e) => setNewBrandNameAr(e.target.value)}
-                  className="bg-black/50 border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-lime-400 flex-1"
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="الاسم بالإنجليزي (مثال: Anker)"
-                  value={newBrandName}
-                  onChange={(e) => setNewBrandName(e.target.value)}
-                  className="bg-black/50 border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-lime-400 flex-1"
-                  required
-                />
-                <button
-                  type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-lime-400 text-black font-extrabold text-sm cursor-pointer hover:bg-lime-300 transition-colors"
-                >
-                  إضافة الماركة
-                </button>
-              </form>
-            </div>
-
-            {/* Existing Brands List */}
-            <div className="bg-[#141c18] border border-white/10 rounded-2xl p-6">
-              <h3 className="text-lg font-black text-white mb-4">العلامات التجارية المعتمدة</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {brandsList.map(b => (
-                  <div
-                    key={b.id}
-                    className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between"
-                  >
-                    <div>
-                      <div className="font-bold text-white text-sm">{b.name}</div>
-                      <div className="text-xs text-neutral-400">{b.name_ar}</div>
-                    </div>
-                    <span className="text-[11px] text-lime-400 font-bold">معتمد ✓</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
       </main>
 
       {/* ========================================================= */}
@@ -1097,10 +1015,11 @@ export default function AdminDashboardPage() {
                   {editingProduct ? `تعديل المنتج: ${editingProduct.name}` : "إضافة منتج جديد للكتالوج"}
                 </h3>
                 <span className="text-xs text-neutral-400 block mt-0.5">
-                  أدخل مواصفات الجهاز بدقة، حدد الألوان والمخزون، وارفع حتى 10 صور عالية الدقة.
+                  أدخل بيانات ومواصفات الجهاز بدقة، حدد الألوان والمخزون، وارفع حتى 10 صور عالية الجودة.
                 </span>
               </div>
               <button
+                type="button"
                 onClick={() => setShowProductModal(false)}
                 className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white grid place-items-center cursor-pointer transition-colors"
               >
@@ -1110,117 +1029,140 @@ export default function AdminDashboardPage() {
 
             {/* Modal Form */}
             <form onSubmit={handleSaveProduct} className="space-y-6">
-              {/* Basic Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-neutral-300 mb-1.5">
-                    اسم المنتج بالكامل *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="مثال: iPhone 16 Pro Max 256GB Desert Titanium"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    className="w-full bg-black/50 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-lime-400"
-                  />
+              {/* القسم الأول: البيانات الأساسية */}
+              <div className="space-y-4">
+                <div className="text-xs font-bold text-lime-400 flex items-center gap-2">
+                  <span>📋</span>
+                  <span>البيانات الأساسية:</span>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-neutral-300 mb-1.5">
-                    القسم الرئيسي *
-                  </label>
-                  <select
-                    value={form.category}
-                    onChange={(e) => setForm({ ...form, category: e.target.value })}
-                    className="w-full bg-black/50 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-lime-400"
-                  >
-                    {CATEGORIES.map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Row 1, Col 1: اسم المنتج بالكامل */}
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-300 mb-1.5">
+                      اسم المنتج بالكامل *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="مثال: سامسونج جالاكسي S24 ألترا (Galaxy S24 Ultra 512GB)"
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      className="w-full bg-black/50 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-lime-400"
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-neutral-300 mb-1.5">
-                    البراند / الماركة *
-                  </label>
-                  <select
-                    value={form.brand}
-                    onChange={(e) => setForm({ ...form, brand: e.target.value })}
-                    className="w-full bg-black/50 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-lime-400"
-                  >
-                    {BRANDS.map(b => (
-                      <option key={b} value={b}>{b}</option>
-                    ))}
-                  </select>
-                </div>
+                  {/* Row 1, Col 2: القسم الرئيسي */}
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-300 mb-1.5">
+                      القسم الرئيسي *
+                    </label>
+                    <select
+                      value={form.category}
+                      onChange={(e) => setForm({ ...form, category: e.target.value })}
+                      className="w-full bg-black/50 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-lime-400 cursor-pointer font-medium"
+                    >
+                      {CATEGORIES.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-neutral-300 mb-1.5">
-                    القسم الفرعي
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="مثال: آيفون، سماعات بلوتوث، شواحن سريعة"
-                    value={form.subcategory}
-                    onChange={(e) => setForm({ ...form, subcategory: e.target.value })}
-                    className="w-full bg-black/50 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-lime-400"
-                  />
-                </div>
-              </div>
+                  {/* Row 2, Col 1: البراند / الماركة (معروضة بالعربية والإنجليزية بين قوسين) */}
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-300 mb-1.5">
+                      البراند / الماركة *
+                    </label>
+                    <select
+                      value={form.brand}
+                      onChange={(e) => setForm({ ...form, brand: e.target.value })}
+                      className="w-full bg-black/50 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-lime-400 cursor-pointer font-medium"
+                    >
+                      {BRAND_OPTIONS.map(b => (
+                        <option key={b.id} value={b.display}>
+                          {b.display}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              {/* Pricing & Condition */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-black/30 p-4 rounded-xl border border-white/5">
-                <div>
-                  <label className="block text-xs font-bold text-neutral-300 mb-1.5">
-                    سعر البيع (ج.م) *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    placeholder="مثال: 58500"
-                    value={form.price}
-                    onChange={(e) => setForm({ ...form, price: e.target.value })}
-                    className="w-full bg-black/50 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-lime-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-neutral-300 mb-1.5">
-                    السعر قبل الخصم (اختياري)
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="مثال: 62000"
-                    value={form.original_price}
-                    onChange={(e) => setForm({ ...form, original_price: e.target.value })}
-                    className="w-full bg-black/50 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-lime-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-neutral-300 mb-1.5">
-                    حالة الجهاز *
-                  </label>
-                  <select
-                    value={form.condition}
-                    onChange={(e) => setForm({ ...form, condition: e.target.value as ProductCondition })}
-                    className="w-full bg-black/50 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-lime-400 font-bold"
-                  >
-                    <option value="جديد">جديد (New Sealed)</option>
-                    <option value="كسر زيرو">كسر زيرو (Like New)</option>
-                    <option value="مستعمل">مستعمل (Pre-Owned)</option>
-                  </select>
+                  {/* Row 2, Col 2: حالة الجهاز (بجوار الماركة مباشرة بالخيارات العربية الثلاثة) */}
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-300 mb-1.5">
+                      حالة الجهاز *
+                    </label>
+                    <select
+                      value={form.condition}
+                      onChange={(e) => setForm({ ...form, condition: e.target.value as ProductCondition })}
+                      className="w-full bg-black/50 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-lime-400 font-bold cursor-pointer"
+                    >
+                      {CONDITION_OPTIONS.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              {/* Dynamic Condition Report (When Like-New or Used) */}
+              {/* القسم الثاني: قسم السعر والخصومات */}
+              <div className="space-y-2">
+                <div className="text-xs font-bold text-lime-400 flex items-center gap-2">
+                  <span>💰</span>
+                  <span>التسعير والعروض:</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-black/30 p-4 rounded-xl border border-white/5">
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-300 mb-1.5">
+                      سعر البيع (ج.م) *
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      step="any"
+                      placeholder="مثال: 58500"
+                      value={form.price}
+                      onChange={(e) => {
+                        setForm({ ...form, price: e.target.value });
+                        if (priceError) setPriceError("");
+                      }}
+                      className="w-full bg-black/50 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-lime-400 font-bold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-300 mb-1.5">
+                      السعر قبل الخصم (اختياري)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      placeholder="مثال: 62000"
+                      value={form.original_price}
+                      onChange={(e) => {
+                        setForm({ ...form, original_price: e.target.value });
+                        if (priceError) setPriceError("");
+                      }}
+                      className="w-full bg-black/50 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-lime-400"
+                    />
+                  </div>
+                </div>
+
+                {priceError && (
+                  <div className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg p-2.5 font-bold">
+                    ⚠️ {priceError}
+                  </div>
+                )}
+              </div>
+
+              {/* تقرير الفحص والضمان للأجهزة (كسر زيرو ومستعمل) */}
               {(form.condition === "كسر زيرو" || form.condition === "مستعمل") && (
                 <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-4">
                   <div className="flex items-center gap-2 text-amber-400 font-black text-sm">
                     <span>⚠️</span>
-                    <span>تقرير الفحص والضمان للأجهزة (كسر زيرو ومستعمل):</span>
+                    <span>تقرير الفحص والضمان للأجهزة ({form.condition}):</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
@@ -1277,7 +1219,7 @@ export default function AdminDashboardPage() {
                         onChange={(e) => setForm({ ...form, repaired: e.target.checked })}
                         className="rounded accent-lime-400"
                       />
-                      <span>الجهاز تم صيانته أو فتح مسبقاً</span>
+                      <span>الجهاز تم صيانته أو فتحه مسبقاً</span>
                     </label>
 
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -1287,7 +1229,7 @@ export default function AdminDashboardPage() {
                         onChange={(e) => setForm({ ...form, box_available: e.target.checked })}
                         className="rounded accent-lime-400"
                       />
-                      <span>الكرتونة الأصلية متوفرة</span>
+                      <span>العلبة الأصلية متوفرة</span>
                     </label>
 
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -1303,67 +1245,193 @@ export default function AdminDashboardPage() {
                 </div>
               )}
 
-              {/* Hardware Specifications */}
-              {(form.category === "الموبايلات" || form.category === "التابلت") && (
+              {/* مواصفات الهاردوير والشبكة ونظام الضمان (للموبايلات والتابلت) */}
+              {(form.category === "الموبايلات" || form.category === "التابلت") ? (
                 <div className="bg-black/30 p-4 rounded-xl border border-white/5 space-y-3">
-                  <div className="text-xs font-bold text-neutral-300">مواصفات الهاردوير والشبكة:</div>
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                  <div className="text-xs font-bold text-neutral-300">مواصفات الهاردوير والشبكة والضمان:</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                    {/* السعة التخزينية (افتراضي 128GB للموبايل الجديد) */}
                     <div>
                       <label className="block text-[11px] text-neutral-400 mb-1">السعة التخزينية</label>
                       <select
                         value={form.storage}
                         onChange={(e) => setForm({ ...form, storage: e.target.value })}
-                        className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-xs text-white"
+                        className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-xs text-white font-medium"
                       >
                         {STORAGE_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
                     </div>
 
+                    {/* الذاكرة العشوائية RAM (افتراضي 8GB للموبايل الجديد) */}
                     <div>
                       <label className="block text-[11px] text-neutral-400 mb-1">الذاكرة العشوائية RAM</label>
                       <select
                         value={form.ram}
                         onChange={(e) => setForm({ ...form, ram: e.target.value })}
-                        className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-xs text-white"
+                        className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-xs text-white font-medium"
                       >
                         {RAM_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
                       </select>
                     </div>
 
+                    {/* الشبكة والاتصال (افتراضي 4G LTE للموبايل الجديد) */}
                     <div>
                       <label className="block text-[11px] text-neutral-400 mb-1">الشبكة والاتصال</label>
                       <select
                         value={form.network}
                         onChange={(e) => setForm({ ...form, network: e.target.value })}
-                        className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-xs text-white"
+                        className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-xs text-white font-medium"
                       >
-                        <option value="5G">5G فائقة السرعة</option>
-                        <option value="4G">4G LTE</option>
-                        <option value="Wi-Fi Only">واي فاي فقط (Wi-Fi)</option>
+                        <option value="4G LTE">4G LTE</option>
+                        <option value="5G">5G</option>
+                        <option value="واي فاي فقط (Wi-Fi)">واي فاي فقط (Wi-Fi)</option>
                       </select>
                     </div>
 
+                    {/* مدة الضمان (Select واضح بالخيارات الثمانية المطلوبة) */}
                     <div>
-                      <label className="block text-[11px] text-neutral-400 mb-1">مدة ونوع الضمان</label>
-                      <input
-                        type="text"
-                        value={form.warranty}
-                        onChange={(e) => setForm({ ...form, warranty: e.target.value })}
-                        placeholder="ضمان محلي سنة"
-                        className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-xs text-white"
-                      />
+                      <label className="block text-[11px] text-neutral-400 mb-1">مدة الضمان</label>
+                      <select
+                        value={form.warranty_duration}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setForm({
+                            ...form,
+                            warranty_duration: val,
+                            custom_warranty: val === "ضمان آخر" ? form.custom_warranty : ""
+                          });
+                        }}
+                        className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-xs text-white font-bold"
+                      >
+                        {WARRANTY_OPTIONS.map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
+
+                  {/* الحقل الإضافي الذي يظهر فقط عند اختيار "ضمان آخر" */}
+                  {form.warranty_duration === "ضمان آخر" && (
+                    <div className="pt-2 animate-fadeIn">
+                      <label className="block text-xs font-bold text-lime-400 mb-1.5">
+                        اكتب مدة الضمان *
+                      </label>
+                      <input
+                        type="text"
+                        required={form.warranty_duration === "ضمان آخر"}
+                        placeholder="مثال: 45 يوم، 4 شهور، 18 شهر"
+                        value={form.custom_warranty}
+                        onChange={(e) => setForm({ ...form, custom_warranty: e.target.value })}
+                        className="w-full bg-black/50 border border-lime-400/50 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-lime-400"
+                      />
+                      <span className="text-[10px] text-neutral-400 block mt-1">
+                        سيتم حفظ هذه المدة كنص عربي مخصص يظهر للمشتري في صفحة المنتج وسلة الشراء.
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* مواصفات الأقسام الأخرى ونظام الضمان */
+                <div className="bg-black/30 p-4 rounded-xl border border-white/5 space-y-3">
+                  <div className="text-xs font-bold text-neutral-300">مواصفات القسم والضمان:</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {form.category === "الشواحن والكابلات" && (
+                      <>
+                        <div>
+                          <label className="block text-[11px] text-neutral-400 mb-1">قدرة الشحن</label>
+                          <input
+                            type="text"
+                            placeholder="مثال: 65W GaN"
+                            value={form.charging_power}
+                            onChange={(e) => setForm({ ...form, charging_power: e.target.value })}
+                            className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-xs text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-neutral-400 mb-1">نوع المنفذ</label>
+                          <input
+                            type="text"
+                            placeholder="مثال: Type-C إلى Type-C"
+                            value={form.connector_type}
+                            onChange={(e) => setForm({ ...form, connector_type: e.target.value })}
+                            className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-xs text-white"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {(form.category === "السماعات" || form.category === "الساعات الذكية") && (
+                      <>
+                        <div>
+                          <label className="block text-[11px] text-neutral-400 mb-1">طريقة الاتصال</label>
+                          <input
+                            type="text"
+                            placeholder="مثال: بلوتوث 5.3"
+                            value={form.connection_type}
+                            onChange={(e) => setForm({ ...form, connection_type: e.target.value })}
+                            className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-xs text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-neutral-400 mb-1">التوافق</label>
+                          <input
+                            type="text"
+                            placeholder="مثال: iOS / Android"
+                            value={form.compatibility}
+                            onChange={(e) => setForm({ ...form, compatibility: e.target.value })}
+                            className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-xs text-white"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {/* مدة الضمان للأقسام الأخرى */}
+                    <div>
+                      <label className="block text-[11px] text-neutral-400 mb-1">مدة الضمان</label>
+                      <select
+                        value={form.warranty_duration}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setForm({
+                            ...form,
+                            warranty_duration: val,
+                            custom_warranty: val === "ضمان آخر" ? form.custom_warranty : ""
+                          });
+                        }}
+                        className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-xs text-white font-bold"
+                      >
+                        {WARRANTY_OPTIONS.map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {form.warranty_duration === "ضمان آخر" && (
+                    <div className="pt-2 animate-fadeIn">
+                      <label className="block text-xs font-bold text-lime-400 mb-1.5">
+                        اكتب مدة الضمان *
+                      </label>
+                      <input
+                        type="text"
+                        required={form.warranty_duration === "ضمان آخر"}
+                        placeholder="مثال: 45 يوم، 4 شهور، 18 شهر"
+                        value={form.custom_warranty}
+                        onChange={(e) => setForm({ ...form, custom_warranty: e.target.value })}
+                        className="w-full bg-black/50 border border-lime-400/50 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-lime-400"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Color System with Independent Stock */}
+              {/* نظام الألوان والمخزون المستقل */}
               <div className="bg-black/30 p-4 rounded-xl border border-white/5 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-neutral-300">
                     الألوان المتاحة والكميات المستقلة لكل لون:
                   </span>
-                  <span className="text-[11px] text-lime-400">
+                  <span className="text-[11px] text-lime-400 font-bold">
                     محدد ({form.colors.length}) لون
                   </span>
                 </div>
@@ -1424,7 +1492,7 @@ export default function AdminDashboardPage() {
                 )}
               </div>
 
-              {/* Product Images (Up to 10 images) */}
+              {/* صور المنتج (حتى 10 صور) */}
               <div className="bg-black/30 p-4 rounded-xl border border-white/5 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-neutral-300">
@@ -1447,10 +1515,10 @@ export default function AdminDashboardPage() {
                       className="hidden"
                     />
                     <span className="text-xs text-lime-400 font-bold block">
-                      {uploadingImage ? "جاري رفع الصور..." : "📁 اضغط لاختيار صور من جهازك (متعدد)"}
+                      {uploadingImage ? "جاري رفع الصور وتخزينها..." : "📁 اضغط لاختيار صور من جهازك (متعدد)"}
                     </span>
                     <span className="text-[10px] text-neutral-500 block mt-0.5">
-                      JPG, PNG, WEBP, SVG حتى 5MB
+                      JPG, PNG, WEBP حتى 5MB للملف الواحد
                     </span>
                   </label>
 
@@ -1475,50 +1543,52 @@ export default function AdminDashboardPage() {
                 {uploadError && <div className="text-xs text-rose-400">{uploadError}</div>}
 
                 {/* Thumbnails */}
-                <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 pt-2">
-                  {form.images.map((img, idx) => (
-                    <div
-                      key={idx}
-                      className={`relative aspect-square rounded-lg border overflow-hidden group bg-black/40 flex items-center justify-center p-1 ${
-                        idx === 0 ? "border-lime-400" : "border-white/10"
-                      }`}
-                    >
-                      <img
-                        src={img}
-                        alt="Product preview"
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
-                        }}
-                      />
-                      {idx === 0 && (
-                        <span className="absolute top-1 right-1 bg-lime-400 text-black text-[9px] font-black px-1 rounded">
-                          غلاف
-                        </span>
-                      )}
-                      <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
-                        {idx !== 0 && (
+                {form.images.length > 0 && (
+                  <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 pt-2">
+                    {form.images.map((img, idx) => (
+                      <div
+                        key={idx}
+                        className={`relative aspect-square rounded-lg border overflow-hidden group bg-black/40 flex items-center justify-center p-1 ${
+                          idx === 0 ? "border-lime-400" : "border-white/10"
+                        }`}
+                      >
+                        <img
+                          src={img}
+                          alt="Product preview"
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
+                          }}
+                        />
+                        {idx === 0 && (
+                          <span className="absolute top-1 right-1 bg-lime-400 text-black text-[9px] font-black px-1 rounded shadow">
+                            غلاف
+                          </span>
+                        )}
+                        <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
+                          {idx !== 0 && (
+                            <button
+                              type="button"
+                              onClick={() => handleSetAsCover(idx)}
+                              title="تعيين كغلاف رئيسي"
+                              className="text-[10px] bg-lime-400 text-black px-1.5 py-0.5 rounded font-bold cursor-pointer"
+                            >
+                              غلاف
+                            </button>
+                          )}
                           <button
                             type="button"
-                            onClick={() => handleSetAsCover(idx)}
-                            title="تعيين كغلاف رئيسي"
-                            className="text-[10px] bg-lime-400 text-black px-1.5 py-0.5 rounded font-bold cursor-pointer"
+                            onClick={() => handleRemoveImage(idx)}
+                            title="حذف الصورة"
+                            className="text-[10px] bg-rose-500 text-white px-1.5 py-0.5 rounded font-bold cursor-pointer"
                           >
-                            غلاف
+                            ✕
                           </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveImage(idx)}
-                          title="حذف الصورة"
-                          className="text-[10px] bg-rose-500 text-white px-1.5 py-0.5 rounded font-bold cursor-pointer"
-                        >
-                          ✕
-                        </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Description */}
@@ -1544,7 +1614,7 @@ export default function AdminDashboardPage() {
                     onChange={(e) => setForm({ ...form, is_featured: e.target.checked })}
                     className="rounded accent-lime-400"
                   />
-                  <span>تمييز المنتج في الصفحة الرئيسية (Featured)</span>
+                  <span>تمييز المنتج في الصفحة الرئيسية (مميز)</span>
                 </label>
 
                 <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-neutral-300">
@@ -1554,24 +1624,35 @@ export default function AdminDashboardPage() {
                     onChange={(e) => setForm({ ...form, is_published: e.target.checked })}
                     className="rounded accent-lime-400"
                   />
-                  <span>نشر المنتج في المتجر فوراً (Published)</span>
+                  <span>عرض ونشر المنتج في المتجر فوراً (نشط)</span>
                 </label>
               </div>
 
-              {/* Submit Buttons */}
+              {/* Submit Buttons with Double-Submit Prevention */}
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
                 <button
                   type="button"
+                  disabled={isSaving}
                   onClick={() => setShowProductModal(false)}
-                  className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs sm:text-sm font-bold cursor-pointer transition-colors"
+                  className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs sm:text-sm font-bold cursor-pointer transition-colors disabled:opacity-50"
                 >
                   إلغاء
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-black text-xs sm:text-sm font-black cursor-pointer transition-colors shadow-lg shadow-lime-400/20"
+                  disabled={isSaving}
+                  className="px-6 py-2.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-black text-xs sm:text-sm font-black cursor-pointer transition-colors shadow-lg shadow-lime-400/20 disabled:opacity-50 flex items-center gap-2"
                 >
-                  {editingProduct ? "حفظ التعديلات" : "إضافة المنتج الآن"}
+                  {isSaving && (
+                    <span className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin inline-block" />
+                  )}
+                  <span>
+                    {isSaving
+                      ? "جاري الحفظ..."
+                      : editingProduct
+                      ? "حفظ التعديلات"
+                      : "إضافة المنتج الآن"}
+                  </span>
                 </button>
               </div>
             </form>

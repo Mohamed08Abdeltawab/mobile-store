@@ -679,7 +679,77 @@ function seedInitialProducts(db: any) {
   }
 }
 
-// Helpers
+// Helpers & Normalizers
+export const BRAND_MAPPING: { id: string; ar: string; en: string }[] = [
+  { id: "samsung", ar: "سامسونج", en: "Samsung" },
+  { id: "apple", ar: "آبل", en: "Apple" },
+  { id: "xiaomi", ar: "شاومي", en: "Xiaomi" },
+  { id: "oppo", ar: "أوبو", en: "OPPO" },
+  { id: "realme", ar: "ريلمي", en: "Realme" },
+  { id: "vivo", ar: "فيفو", en: "Vivo" },
+  { id: "honor", ar: "هونر", en: "Honor" },
+  { id: "infinix", ar: "إنفينيكس", en: "Infinix" },
+  { id: "tecno", ar: "تكنو", en: "Tecno" },
+  { id: "huawei", ar: "هواوي", en: "Huawei" },
+  { id: "anker", ar: "أنكر", en: "Anker" },
+  { id: "joyroom", ar: "جويروم", en: "Joyroom" },
+  { id: "baseus", ar: "بيسوس", en: "Baseus" },
+  { id: "sony", ar: "سوني", en: "Sony" },
+  { id: "other", ar: "أخرى", en: "Other" }
+];
+
+export function formatBrandWithEnglish(brandName: string): string {
+  if (!brandName) return "";
+  const trimmed = brandName.trim();
+  if (trimmed.includes("(") && trimmed.includes(")")) return trimmed;
+  const lower = trimmed.toLowerCase();
+  for (const b of BRAND_MAPPING) {
+    if (
+      b.id === lower ||
+      b.en.toLowerCase() === lower ||
+      b.ar === trimmed ||
+      b.ar.replace(/[أإآ]/g, "ا") === trimmed.replace(/[أإآ]/g, "ا")
+    ) {
+      return `${b.ar} (${b.en})`;
+    }
+  }
+  return trimmed;
+}
+
+export function resolveBrandId(brandName: string): string | null {
+  if (!brandName) return null;
+  const lower = brandName.toLowerCase();
+  for (const b of BRAND_MAPPING) {
+    if (lower.includes(b.id) || lower.includes(b.en.toLowerCase()) || brandName.includes(b.ar)) {
+      return b.id;
+    }
+  }
+  return null;
+}
+
+export const CATEGORY_ID_MAP: Record<string, string> = {
+  "الموبايلات": "phones",
+  "التابلت": "tablets",
+  "السماعات": "headphones",
+  "الجرابات ووسائل الحماية": "cases-protection",
+  "الشواحن والكابلات": "chargers-cables",
+  "الساعات الذكية": "smart-watches",
+  "إكسسوارات أخرى": "accessories"
+};
+
+export function resolveCategoryId(categoryName: string): string | null {
+  if (!categoryName) return "phones";
+  return CATEGORY_ID_MAP[categoryName] || null;
+}
+
+export function normalizeCondition(condition: any): "جديد" | "كسر زيرو" | "مستعمل" {
+  if (!condition) return "جديد";
+  const str = String(condition).trim().toLowerCase();
+  if (str.includes("كسر") || str.includes("like")) return "كسر زيرو";
+  if (str.includes("مستعمل") || str.includes("used") || str.includes("pre-owned")) return "مستعمل";
+  return "جديد";
+}
+
 function formatProduct(r: any): Product | null {
   if (!r) return null;
   let images: string[] = [];
@@ -713,15 +783,30 @@ function formatProduct(r: any): Product | null {
     try { specifications = JSON.parse(r.specifications); } catch (e) { specifications = {}; }
   }
 
+  const brandFormatted = formatBrandWithEnglish(r.brand || "");
+  const conditionNormalized = normalizeCondition(r.condition);
+
+  const priceNum = Number(r.price);
+  const oldPriceNum = r.old_price ? Number(r.old_price) : (r.original_price ? Number(r.original_price) : null);
+
+  const totalColorQty = colors.reduce((sum, c) => sum + (Number(c.quantity) || 0), 0);
+  const qty = totalColorQty > 0 ? totalColorQty : (r.quantity !== undefined ? Number(r.quantity) : 10);
+
   return {
     ...r,
-    price: Number(r.price),
-    old_price: r.old_price ? Number(r.old_price) : null,
+    cat: r.cat || r.category || "الموبايلات",
+    category: r.cat || r.category || "الموبايلات",
+    brand: brandFormatted,
+    condition: conditionNormalized,
+    price: priceNum,
+    old_price: oldPriceNum,
+    original_price: oldPriceNum,
+    quantity: qty,
     rating: r.rating ? Number(r.rating) : 4.9,
     reviews: r.reviews ? Number(r.reviews) : 0,
     in_stock: r.in_stock === 1 || r.in_stock === true,
     is_featured: r.is_featured === 1 || r.is_featured === true,
-    image: images[0] || r.image || "/img/iphone-16-pro-max.png",
+    image: images[0] || r.image || "/img/mobile-concept-01.png",
     images: images.slice(0, 10),
     colors,
     variants,
@@ -752,17 +837,26 @@ function formatOrder(r: any): Order | null {
 
 export async function getAllProducts(): Promise<Product[]> {
   if (isSupabaseConfigured()) {
-    const supabase = getSupabaseAdmin()!;
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .order("created_at", { ascending: false });
+    try {
+      const supabase = getSupabaseAdmin()!;
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("[Supabase Error - getAllProducts]:", error);
-      throw error;
+      if (!error && data) {
+        return (data || []).map(formatProduct) as Product[];
+      }
+      if (error && error.code !== "PGRST205" && !error.message?.includes("schema cache")) {
+        console.error("[Supabase Error - getAllProducts]:", error);
+        throw error;
+      }
+    } catch (err: any) {
+      if (err.code !== "PGRST205" && !err.message?.includes("schema cache")) {
+        console.error("Supabase getAllProducts error:", err);
+        throw err;
+      }
     }
-    return (data || []).map(formatProduct) as Product[];
   }
 
   // SQLite Fallback
@@ -773,18 +867,27 @@ export async function getAllProducts(): Promise<Product[]> {
 
 export async function getProductById(id: string): Promise<Product | null> {
   if (isSupabaseConfigured()) {
-    const supabase = getSupabaseAdmin()!;
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle();
+    try {
+      const supabase = getSupabaseAdmin()!;
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
 
-    if (error) {
-      console.error("[Supabase Error - getProductById]:", error);
-      throw error;
+      if (!error && data) {
+        return formatProduct(data);
+      }
+      if (error && error.code !== "PGRST205" && !error.message?.includes("schema cache")) {
+        console.error("[Supabase Error - getProductById]:", error);
+        throw error;
+      }
+    } catch (err: any) {
+      if (err.code !== "PGRST205" && !err.message?.includes("schema cache")) {
+        console.error("Supabase getProductById error:", err);
+        throw err;
+      }
     }
-    return formatProduct(data);
   }
 
   // SQLite Fallback
@@ -796,24 +899,52 @@ export async function getProductById(id: string): Promise<Product | null> {
 export async function createProduct(prod: any): Promise<Product | null> {
   const id = prod.id || "mob-" + Date.now();
 
+  const name = (prod.name || "").trim();
+  if (!name) {
+    throw new Error("اسم المنتج بالكامل مطلوب");
+  }
+
+  const price = Number(prod.price);
+  if (isNaN(price) || price <= 0) {
+    throw new Error("السعر يجب أن يكون أكبر من صفر.");
+  }
+
+  const rawOldPrice = prod.old_price !== undefined ? prod.old_price : prod.original_price;
+  let oldPrice: number | null = null;
+  if (rawOldPrice !== undefined && rawOldPrice !== null && rawOldPrice !== "") {
+    oldPrice = Number(rawOldPrice);
+    if (isNaN(oldPrice) || oldPrice < 0) {
+      throw new Error("السعر قبل الخصم لا يمكن أن يكون رقمًا سالبًا.");
+    }
+    if (oldPrice <= price) {
+      throw new Error("السعر قبل الخصم يجب أن يكون أكبر من سعر البيع الحالي.");
+    }
+  }
+
+  const catName = prod.cat || prod.category || "الموبايلات";
+  const catId = resolveCategoryId(catName);
+  const brandName = formatBrandWithEnglish(prod.brand || "سامسونج (Samsung)");
+  const brandId = resolveBrandId(prod.brand || prod.brand_id || "");
+  const condition = normalizeCondition(prod.condition);
+
   let imagesList = Array.isArray(prod.images)
     ? prod.images.filter(Boolean).slice(0, 10)
     : (prod.image ? [prod.image] : []);
 
   if (imagesList.length === 0 && prod.image) imagesList = [prod.image];
-  if (imagesList.length === 0) imagesList = ["/img/iphone-16-pro-max.png"];
+  if (imagesList.length === 0) imagesList = ["/img/mobile-concept-01.png"];
 
   const mainImage = imagesList[0];
   const desc = prod.description || prod.overview || "";
 
-  let colorsList = [];
+  let colorsList: any[] = [];
   if (Array.isArray(prod.colors)) {
     colorsList = prod.colors;
   } else if (typeof prod.colors === "string") {
     try { colorsList = JSON.parse(prod.colors); } catch (e) { colorsList = []; }
   }
 
-  let variantsList = [];
+  let variantsList: any[] = [];
   if (Array.isArray(prod.variants)) {
     variantsList = prod.variants;
   } else if (typeof prod.variants === "string") {
@@ -825,88 +956,118 @@ export async function createProduct(prod: any): Promise<Product | null> {
     try { specsObj = JSON.parse(specsObj); } catch (e) { specsObj = {}; }
   }
 
+  const newProduct = {
+    id,
+    name,
+    sub: prod.sub || prod.overview || "",
+    cat: catName,
+    category_id: catId,
+    subcategory: prod.subcategory || "",
+    brand_id: brandId,
+    brand: brandName,
+    price,
+    old_price: oldPrice,
+    rating: prod.rating ? Number(prod.rating) : 5.0,
+    reviews: prod.reviews ? Number(prod.reviews) : 0,
+    tag: prod.tag || "new",
+    badge_text: prod.badge_text || condition,
+    image: mainImage,
+    images: imagesList,
+    description: desc,
+    overview: prod.overview || desc,
+    condition,
+    specifications: specsObj,
+    colors: colorsList,
+    variants: variantsList,
+    in_stock: prod.in_stock !== undefined ? (prod.in_stock ? 1 : 0) : 1,
+    is_featured: prod.is_featured ? 1 : 0
+  };
+
+  const saveToSqlite = () => {
+    const db = getSqliteDb();
+    const stmt = db.prepare(`
+      INSERT OR REPLACE INTO products (
+        id, name, sub, cat, category_id, subcategory, brand_id, brand,
+        price, old_price, rating, reviews, tag, badge_text, image, images,
+        overview, description, condition, specifications, colors, variants,
+        in_stock, is_featured
+      ) VALUES (
+        ?, ?, ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?,
+        ?, ?
+      )
+    `);
+
+    stmt.run(
+      id, name, newProduct.sub, catName, catId || "",
+      newProduct.subcategory, brandId || "", brandName,
+      price, oldPrice,
+      newProduct.rating, newProduct.reviews, newProduct.tag,
+      newProduct.badge_text,
+      mainImage, JSON.stringify(imagesList),
+      newProduct.overview, desc, condition,
+      JSON.stringify(specsObj), JSON.stringify(colorsList), JSON.stringify(variantsList),
+      newProduct.in_stock, newProduct.is_featured
+    );
+
+    const colorStmt = db.prepare(`
+      INSERT OR REPLACE INTO product_colors (product_id, color_id, color_name, hex_code, quantity)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+    for (const c of colorsList) {
+      if (c.color_id || c.id) {
+        colorStmt.run(id, c.color_id || c.id, c.color_name || c.name_ar || c.name || "", c.hex_code || c.hex || "#111827", c.quantity || 0);
+      }
+    }
+  };
+
   if (isSupabaseConfigured()) {
-    const supabase = getSupabaseAdmin()!;
-    const newProduct = {
-      id,
-      name: prod.name,
-      sub: prod.sub || "",
-      cat: prod.cat || "الموبايلات",
-      category_id: prod.category_id || "phones",
-      subcategory: prod.subcategory || "",
-      brand_id: prod.brand_id || "",
-      brand: prod.brand || "",
-      price: Number(prod.price),
-      old_price: prod.old_price ? Number(prod.old_price) : null,
-      rating: prod.rating ? Number(prod.rating) : 5.0,
-      reviews: prod.reviews ? Number(prod.reviews) : 0,
-      tag: prod.tag || "new",
-      badge_text: prod.badge_text || (prod.condition || "جديد"),
-      image: mainImage,
-      images: imagesList,
-      description: desc,
-      overview: prod.overview || desc,
-      condition: prod.condition || "جديد",
-      specifications: specsObj,
-      colors: colorsList,
-      variants: variantsList,
-      in_stock: prod.in_stock !== undefined ? (prod.in_stock ? 1 : 0) : 1,
-      is_featured: prod.is_featured ? 1 : 0
-    };
+    try {
+      const supabase = getSupabaseAdmin()!;
+      const { data, error } = await supabase
+        .from("products")
+        .insert([newProduct])
+        .select()
+        .single();
 
-    const { data, error } = await supabase
-      .from("products")
-      .insert([newProduct])
-      .select()
-      .single();
+      if (error) {
+        if (error.code === "PGRST205" || error.message?.includes("schema cache")) {
+          console.warn("[Supabase] Table 'products' not found in schema cache. Saving to local SQLite.");
+          saveToSqlite();
+          return getProductById(id);
+        }
+        console.error("[Supabase Error - createProduct]:", error);
+        throw error;
+      }
 
-    if (error) {
-      console.error("[Supabase Error - createProduct]:", error);
-      throw error;
-    }
-    return formatProduct(data);
-  }
+      if (colorsList.length > 0) {
+        try {
+          const rows = colorsList.map((c: any) => ({
+            product_id: id,
+            color_id: c.color_id || c.id || "black",
+            color_name: c.color_name || c.name_ar || c.name || "أسود",
+            hex_code: c.hex_code || c.hex || "#111827",
+            quantity: Number(c.quantity || 0)
+          }));
+          await supabase.from("product_colors").insert(rows);
+        } catch (cErr) {
+          console.warn("[Supabase] Could not sync product_colors:", cErr);
+        }
+      }
 
-  // SQLite Fallback
-  const db = getSqliteDb();
-  const stmt = db.prepare(`
-    INSERT INTO products (
-      id, name, sub, cat, category_id, subcategory, brand_id, brand,
-      price, old_price, rating, reviews, tag, badge_text, image, images,
-      overview, description, condition, specifications, colors, variants,
-      in_stock, is_featured
-    ) VALUES (
-      ?, ?, ?, ?, ?, ?, ?, ?,
-      ?, ?, ?, ?, ?, ?, ?, ?,
-      ?, ?, ?, ?, ?, ?,
-      ?, ?
-    )
-  `);
-
-  stmt.run(
-    id, prod.name, prod.sub || "", prod.cat || "الموبايلات", prod.category_id || "phones",
-    prod.subcategory || "", prod.brand_id || "", prod.brand || "",
-    Number(prod.price), prod.old_price ? Number(prod.old_price) : null,
-    prod.rating || 5.0, prod.reviews || 0, prod.tag || "new",
-    prod.badge_text || (prod.condition || "جديد"),
-    mainImage, JSON.stringify(imagesList),
-    prod.overview || desc, desc, prod.condition || "جديد",
-    JSON.stringify(specsObj), JSON.stringify(colorsList), JSON.stringify(variantsList),
-    prod.in_stock !== undefined ? (prod.in_stock ? 1 : 0) : 1,
-    prod.is_featured ? 1 : 0
-  );
-
-  // Sync color inventory
-  const colorStmt = db.prepare(`
-    INSERT OR REPLACE INTO product_colors (product_id, color_id, color_name, hex_code, quantity)
-    VALUES (?, ?, ?, ?, ?)
-  `);
-  for (const c of colorsList) {
-    if (c.color_id) {
-      colorStmt.run(id, c.color_id, c.color_name || c.name || "", c.hex_code || "#111827", c.quantity || 0);
+      try { saveToSqlite(); } catch (e) {}
+      return formatProduct(data);
+    } catch (err: any) {
+      if (err.code === "PGRST205" || err.message?.includes("schema cache")) {
+        saveToSqlite();
+        return getProductById(id);
+      }
+      throw err;
     }
   }
 
+  saveToSqlite();
   return getProductById(id);
 }
 
@@ -914,12 +1075,47 @@ export async function updateProduct(id: string, prod: any): Promise<Product | nu
   const existing = await getProductById(id);
   if (!existing) return null;
 
+  const name = prod.name !== undefined ? String(prod.name).trim() : existing.name;
+  if (!name) {
+    throw new Error("اسم المنتج بالكامل مطلوب");
+  }
+
+  let price = existing.price;
+  if (prod.price !== undefined) {
+    price = Number(prod.price);
+    if (isNaN(price) || price <= 0) {
+      throw new Error("السعر يجب أن يكون أكبر من صفر.");
+    }
+  }
+
+  let oldPrice = existing.old_price ?? existing.original_price ?? null;
+  const rawOldPrice = prod.old_price !== undefined ? prod.old_price : prod.original_price;
+  if (rawOldPrice !== undefined) {
+    if (rawOldPrice !== null && rawOldPrice !== "") {
+      oldPrice = Number(rawOldPrice);
+      if (isNaN(oldPrice) || oldPrice < 0) {
+        throw new Error("السعر قبل الخصم لا يمكن أن يكون رقمًا سالبًا.");
+      }
+      if (oldPrice <= price) {
+        throw new Error("السعر قبل الخصم يجب أن يكون أكبر من سعر البيع الحالي.");
+      }
+    } else {
+      oldPrice = null;
+    }
+  }
+
+  const catName = prod.cat !== undefined ? prod.cat : (prod.category !== undefined ? prod.category : existing.cat);
+  const catId = resolveCategoryId(catName);
+  const brandName = prod.brand !== undefined ? formatBrandWithEnglish(prod.brand) : existing.brand;
+  const brandId = resolveBrandId(brandName);
+  const condition = prod.condition !== undefined ? normalizeCondition(prod.condition) : existing.condition;
+
   let imagesList = prod.images !== undefined
     ? (Array.isArray(prod.images) ? prod.images.filter(Boolean).slice(0, 10) : [prod.image].filter(Boolean))
     : (existing.images || [existing.image]);
 
   if (imagesList.length === 0) {
-    imagesList = [prod.image || existing.image || "/img/iphone-16-pro-max.png"];
+    imagesList = [prod.image || existing.image || "/img/mobile-concept-01.png"];
   }
 
   const mainImage = imagesList[0] || prod.image || existing.image;
@@ -948,132 +1144,172 @@ export async function updateProduct(id: string, prod: any): Promise<Product | nu
     try { specsObj = JSON.parse(specsObj); } catch (e) { specsObj = {}; }
   }
 
+  const updateData = {
+    name,
+    sub: prod.sub !== undefined ? prod.sub : existing.sub,
+    cat: catName,
+    category_id: catId,
+    subcategory: prod.subcategory !== undefined ? prod.subcategory : existing.subcategory,
+    brand_id: brandId,
+    brand: brandName,
+    price,
+    old_price: oldPrice,
+    tag: prod.tag !== undefined ? prod.tag : existing.tag,
+    badge_text: prod.badge_text !== undefined ? prod.badge_text : condition,
+    image: mainImage,
+    images: imagesList,
+    description: desc,
+    overview: prod.overview !== undefined ? prod.overview : (existing.overview || desc),
+    condition,
+    specifications: specsObj,
+    colors: colorsList,
+    variants: variantsList,
+    in_stock: prod.in_stock !== undefined ? (prod.in_stock ? 1 : 0) : (existing.in_stock ? 1 : 0),
+    is_featured: prod.is_featured !== undefined ? (prod.is_featured ? 1 : 0) : (existing.is_featured ? 1 : 0)
+  };
+
+  const updateSqlite = () => {
+    const db = getSqliteDb();
+    const stmt = db.prepare(`
+      UPDATE products SET
+        name = ?, sub = ?, cat = ?, category_id = ?, subcategory = ?, brand_id = ?, brand = ?,
+        price = ?, old_price = ?, tag = ?, badge_text = ?, image = ?, images = ?,
+        overview = ?, description = ?, condition = ?, specifications = ?, colors = ?, variants = ?,
+        in_stock = ?, is_featured = ?
+      WHERE id = ?
+    `);
+
+    stmt.run(
+      name, updateData.sub, catName, catId || "", updateData.subcategory, brandId || "", brandName,
+      price, oldPrice, updateData.tag, updateData.badge_text,
+      mainImage, JSON.stringify(imagesList),
+      updateData.overview, desc, condition,
+      JSON.stringify(specsObj), JSON.stringify(colorsList), JSON.stringify(variantsList),
+      updateData.in_stock, updateData.is_featured,
+      id
+    );
+
+    db.prepare("DELETE FROM product_colors WHERE product_id = ?").run(id);
+    const colorStmt = db.prepare(`
+      INSERT OR REPLACE INTO product_colors (product_id, color_id, color_name, hex_code, quantity)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+    for (const c of colorsList) {
+      if (c.color_id || c.id) {
+        colorStmt.run(id, c.color_id || c.id, c.color_name || c.name_ar || c.name || "", c.hex_code || c.hex || "#111827", c.quantity || 0);
+      }
+    }
+  };
+
   if (isSupabaseConfigured()) {
-    const supabase = getSupabaseAdmin()!;
-    const updateData = {
-      name: prod.name !== undefined ? prod.name : existing.name,
-      sub: prod.sub !== undefined ? prod.sub : existing.sub,
-      cat: prod.cat !== undefined ? prod.cat : existing.cat,
-      category_id: prod.category_id !== undefined ? prod.category_id : existing.category_id,
-      subcategory: prod.subcategory !== undefined ? prod.subcategory : existing.subcategory,
-      brand_id: prod.brand_id !== undefined ? prod.brand_id : existing.brand_id,
-      brand: prod.brand !== undefined ? prod.brand : existing.brand,
-      price: prod.price !== undefined ? Number(prod.price) : Number(existing.price),
-      old_price: prod.old_price !== undefined ? (prod.old_price ? Number(prod.old_price) : null) : existing.old_price,
-      tag: prod.tag !== undefined ? prod.tag : existing.tag,
-      badge_text: prod.badge_text !== undefined ? prod.badge_text : existing.badge_text,
-      image: mainImage,
-      images: imagesList,
-      description: desc,
-      overview: prod.overview !== undefined ? prod.overview : (existing.overview || desc),
-      condition: prod.condition !== undefined ? prod.condition : existing.condition,
-      specifications: specsObj,
-      colors: colorsList,
-      variants: variantsList,
-      in_stock: prod.in_stock !== undefined ? (prod.in_stock ? 1 : 0) : (existing.in_stock ? 1 : 0),
-      is_featured: prod.is_featured !== undefined ? (prod.is_featured ? 1 : 0) : (existing.is_featured ? 1 : 0)
-    };
+    try {
+      const supabase = getSupabaseAdmin()!;
+      const { data, error } = await supabase
+        .from("products")
+        .update(updateData)
+        .eq("id", id)
+        .select()
+        .single();
 
-    const { data, error } = await supabase
-      .from("products")
-      .update(updateData)
-      .eq("id", id)
-      .select()
-      .single();
+      if (error) {
+        if (error.code === "PGRST205" || error.message?.includes("schema cache")) {
+          console.warn("[Supabase] Table 'products' not found in schema cache. Updating locally in SQLite.");
+          updateSqlite();
+          return getProductById(id);
+        }
+        console.error("[Supabase Error - updateProduct]:", error);
+        throw error;
+      }
 
-    if (error) {
-      console.error("[Supabase Error - updateProduct]:", error);
-      throw error;
-    }
-    return formatProduct(data);
-  }
+      if (colorsList.length > 0) {
+        try {
+          await supabase.from("product_colors").delete().eq("product_id", id);
+          const rows = colorsList.map((c: any) => ({
+            product_id: id,
+            color_id: c.color_id || c.id || "black",
+            color_name: c.color_name || c.name_ar || c.name || "أسود",
+            hex_code: c.hex_code || c.hex || "#111827",
+            quantity: Number(c.quantity || 0)
+          }));
+          await supabase.from("product_colors").insert(rows);
+        } catch (cErr) {
+          console.warn("[Supabase] Could not sync product_colors:", cErr);
+        }
+      }
 
-  // SQLite Fallback
-  const db = getSqliteDb();
-  const stmt = db.prepare(`
-    UPDATE products SET
-      name = ?, sub = ?, cat = ?, category_id = ?, subcategory = ?, brand_id = ?, brand = ?,
-      price = ?, old_price = ?, tag = ?, badge_text = ?, image = ?, images = ?,
-      overview = ?, description = ?, condition = ?, specifications = ?, colors = ?, variants = ?,
-      in_stock = ?, is_featured = ?
-    WHERE id = ?
-  `);
-
-  stmt.run(
-    prod.name !== undefined ? prod.name : existing.name,
-    prod.sub !== undefined ? prod.sub : existing.sub,
-    prod.cat !== undefined ? prod.cat : existing.cat,
-    prod.category_id !== undefined ? prod.category_id : existing.category_id,
-    prod.subcategory !== undefined ? prod.subcategory : existing.subcategory,
-    prod.brand_id !== undefined ? prod.brand_id : existing.brand_id,
-    prod.brand !== undefined ? prod.brand : existing.brand,
-    prod.price !== undefined ? Number(prod.price) : Number(existing.price),
-    prod.old_price !== undefined ? (prod.old_price ? Number(prod.old_price) : null) : existing.old_price,
-    prod.tag !== undefined ? prod.tag : existing.tag,
-    prod.badge_text !== undefined ? prod.badge_text : existing.badge_text,
-    mainImage, JSON.stringify(imagesList),
-    prod.overview !== undefined ? prod.overview : (existing.overview || desc),
-    desc,
-    prod.condition !== undefined ? prod.condition : existing.condition,
-    JSON.stringify(specsObj),
-    JSON.stringify(colorsList),
-    JSON.stringify(variantsList),
-    prod.in_stock !== undefined ? (prod.in_stock ? 1 : 0) : (existing.in_stock ? 1 : 0),
-    prod.is_featured !== undefined ? (prod.is_featured ? 1 : 0) : (existing.is_featured ? 1 : 0),
-    id
-  );
-
-  // Sync color inventory
-  const colorStmt = db.prepare(`
-    INSERT OR REPLACE INTO product_colors (product_id, color_id, color_name, hex_code, quantity)
-    VALUES (?, ?, ?, ?, ?)
-  `);
-  for (const c of colorsList) {
-    if (c.color_id) {
-      colorStmt.run(id, c.color_id, c.color_name || c.name_ar || c.name || "", c.hex_code || c.hex || "#111827", c.quantity || 0);
+      try { updateSqlite(); } catch (e) {}
+      return formatProduct(data);
+    } catch (err: any) {
+      if (err.code === "PGRST205" || err.message?.includes("schema cache")) {
+        updateSqlite();
+        return getProductById(id);
+      }
+      throw err;
     }
   }
 
+  updateSqlite();
   return getProductById(id);
 }
 
 export async function deleteProduct(id: string): Promise<boolean> {
+  const existing = await getProductById(id);
+  if (!existing) return false;
+
   try {
-    const existing = await getProductById(id);
-    if (existing) {
-      const images = Array.isArray(existing.images) ? existing.images : (existing.image ? [existing.image] : []);
-      for (const imgUrl of images) {
-        if (typeof imgUrl === "string" && (imgUrl.startsWith("/uploads/") || imgUrl.includes("/uploads/"))) {
-          const filename = path.basename(imgUrl.split("?")[0]);
-          const filePath = path.join(process.cwd(), "public", "uploads", filename);
-          try { await fs.unlink(filePath); } catch (e) {}
-        }
+    const images = Array.isArray(existing.images) ? existing.images : (existing.image ? [existing.image] : []);
+    for (const imgUrl of images) {
+      if (typeof imgUrl === "string" && (imgUrl.startsWith("/uploads/") || imgUrl.includes("/uploads/"))) {
+        const filename = path.basename(imgUrl.split("?")[0]);
+        const filePath = path.join(process.cwd(), "public", "uploads", filename);
+        try { await fs.unlink(filePath); } catch (e) {}
       }
     }
   } catch (err) {
     console.error("Error cleaning up product images on delete:", err);
   }
 
+  let deletedFromSupabase = false;
   if (isSupabaseConfigured()) {
-    const supabase = getSupabaseAdmin()!;
-    const { error, count } = await supabase
-      .from("products")
-      .delete({ count: "exact" })
-      .eq("id", id);
+    try {
+      const supabase = getSupabaseAdmin()!;
+      try {
+        await supabase.from("product_colors").delete().eq("product_id", id);
+        await supabase.from("product_variants").delete().eq("product_id", id);
+        await supabase.from("order_items").update({ product_id: null }).eq("product_id", id);
+      } catch (e) {}
 
-    if (error) {
-      console.error("[Supabase Error - deleteProduct]:", error);
-      throw error;
+      const { error, count } = await supabase
+        .from("products")
+        .delete({ count: "exact" })
+        .eq("id", id);
+
+      if (error) {
+        if (error.code !== "PGRST205" && !error.message?.includes("schema cache")) {
+          console.error("[Supabase Error - deleteProduct]:", error);
+          throw error;
+        }
+      } else {
+        deletedFromSupabase = (count ?? 0) > 0;
+      }
+    } catch (err: any) {
+      if (err.code !== "PGRST205" && !err.message?.includes("schema cache")) {
+        throw err;
+      }
     }
-    return (count || 0) > 0;
   }
 
-  // SQLite Fallback
   const db = getSqliteDb();
-  db.prepare("DELETE FROM product_colors WHERE product_id = ?").run(id);
+  try {
+    db.prepare("DELETE FROM product_colors WHERE product_id = ?").run(id);
+    db.prepare("UPDATE order_items SET product_id = NULL WHERE product_id = ?").run(id);
+  } catch (e) {}
+
   const stmt = db.prepare("DELETE FROM products WHERE id = ?");
   const result = stmt.run(id);
-  return result.changes > 0;
+  const deletedFromSqlite = result.changes > 0;
+
+  return deletedFromSupabase || deletedFromSqlite;
 }
 
 // ==============================================================================
