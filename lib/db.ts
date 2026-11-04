@@ -1,4 +1,4 @@
-import { DatabaseSync } from "node:sqlite";
+// Safe dynamic loading of SQLite for serverless / Cloudflare compatibility
 import path from "node:path";
 import fs from "node:fs/promises";
 import bcrypt from "bcryptjs";
@@ -6,6 +6,19 @@ import { getSupabaseAdmin, isSupabaseConfigured } from "./supabase";
 import { Product, Order, Category, Brand, PredefinedColor, PREDEFINED_COLORS } from "./types";
 
 let sqliteInstance: any = null;
+let DatabaseSyncClass: any = null;
+
+function getDatabaseSync() {
+  if (DatabaseSyncClass) return DatabaseSyncClass;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const sqlite = require("node:sqlite");
+    DatabaseSyncClass = sqlite.DatabaseSync;
+    return DatabaseSyncClass;
+  } catch {
+    return null;
+  }
+}
 
 // ==============================================================================
 // SQLite Fallback Layer (Seamless local database without external dependencies)
@@ -15,6 +28,10 @@ function getSqliteDb() {
   if (sqliteInstance) return sqliteInstance;
 
   const dbPath = path.join(process.cwd(), "mobile_store.db");
+  const DatabaseSync = getDatabaseSync();
+  if (!DatabaseSync) {
+    throw new Error("SQLite is not supported in this runtime. Please configure Supabase in environment variables.");
+  }
   const db = new DatabaseSync(dbPath);
   db.exec("PRAGMA journal_mode = WAL;");
 
