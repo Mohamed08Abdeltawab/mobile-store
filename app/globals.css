@@ -1,0 +1,122 @@
+@import url('https://fonts.googleapis.com/css2?family=Almarai:wght@300;400;700;800&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-sans: 'Almarai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Almarai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  --color-accent-green: #A3E635;
+  --color-accent-hover: #bef264;
+  --color-accent-glow: rgba(163, 230, 53, 0.35);
+  --color-forest: #244A27;
+  --color-forest-dark: #142a16;
+
+  --color-ink: #0d1210;
+  --color-ink-2: #141c18;
+  --color-ink-3: #1c2621;
+  --color-ink-card: #151d18;
+
+  --color-gold: #D4AF37;
+  --color-gold-2: #F1D9A8;
+  --color-gold-3: #B98C3E;
+}
+
+:root {
+  --background: oklch(0.985 0.005 130);
+  --foreground: oklch(0.14 0.01 130);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.14 0.01 130);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.14 0.01 130);
+  --primary: oklch(0.85 0.22 131);
+  --primary-foreground: oklch(0.12 0.02 130);
+  --secondary: oklch(0.96 0.01 130);
+  --secondary-foreground: oklch(0.2 0.02 130);
+  --muted: oklch(0.95 0.005 130);
+  --muted-foreground: oklch(0.5 0.01 130);
+  --accent: oklch(0.94 0.02 130);
+  --accent-foreground: oklch(0.2 0.02 130);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.9 0.01 130);
+  --input: oklch(0.9 0.01 130);
+  --ring: oklch(0.85 0.22 131);
+  --radius: 0.75rem;
+}
+
+.dark {
+  --background: oklch(0.12 0.02 130);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.15 0.02 130);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.15 0.02 130);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.85 0.22 131);
+  --primary-foreground: oklch(0.12 0.02 130);
+  --secondary: oklch(0.2 0.02 130);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.2 0.02 130);
+  --muted-foreground: oklch(0.65 0 0);
+  --accent: oklch(0.2 0.02 130);
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.25 0.02 130);
+  --input: oklch(0.25 0.02 130);
+  --ring: oklch(0.85 0.22 131);
+}
+
+html {
+  scroll-behavior: smooth;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #f8faf8;
+  color: #131715;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  max-width: 100%;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Scrollbar utilities for horizontal scrolling chips */
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar,
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ==========================================================================
+   Continuous Right-to-Left Infinite Marquee Ticker
+   ========================================================================== */
+@keyframes marquee-rtl {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee-rtl 32s linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation-duration: 90s;
+  }
+}

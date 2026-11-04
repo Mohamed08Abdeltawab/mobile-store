@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+      <defs>
+        <linearGradient id="whiteGloss" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="85%" stop-color="#f1f5f9"/>
+          <stop offset="100%" stop-color="#e2e8f0"/>
+        </linearGradient>
+        <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+          <feDropShadow dx="0" dy="15" stdDeviation="15" flood-opacity="0.25"/>
+        </filter>
+      </defs>
+      
+      <circle cx="200" cy="200" r="140" fill="#A3E635" opacity="0.08" filter="blur(30px)"/>
+      
+      <!-- Charging Case -->
+      <g filter="url(#shadow)">
+        <rect x="110" y="110" width="180" height="150" rx="45" fill="url(#whiteGloss)" stroke="#cbd5e1" stroke-width="1.5"/>
+        <!-- Lid Line -->
+        <line x1="111" y1="160" x2="289" y2="160" stroke="#cbd5e1" stroke-width="1"/>
+        
+        <!-- Status LED -->
+        <circle cx="200" cy="180" r="3.5" fill="#22c55e"/>
+        
+        <!-- Earbuds Stems sticking out subtly or beside -->
+        <!-- Right Earbud -->
+        <path d="M 285,100 C 285,80 310,75 320,95 C 330,115 315,130 305,140 L 310,190 C 310,195 300,195 300,190 Z" fill="url(#whiteGloss)" stroke="#cbd5e1" stroke-width="1"/>
+        <!-- Silicone Tip -->
+        <ellipse cx="280" cy="100" rx="12" ry="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+        
+        <!-- Left Earbud -->
+        <path d="M 115,100 C 115,80 90,75 80,95 C 70,115 85,130 95,140 L 90,190 C 90,195 100,195 100,190 Z" fill="url(#whiteGloss)" stroke="#cbd5e1" stroke-width="1"/>
+        <!-- Silicone Tip -->
+        <ellipse cx="120" cy="100" rx="12" ry="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+        
+        <!-- USB-C Port Base -->
+        <rect x="185" y="258" width="30" height="4" rx="2" fill="#94a3b8"/>
+      </g>
+    </svg>
