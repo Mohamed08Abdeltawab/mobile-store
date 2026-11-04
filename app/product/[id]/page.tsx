@@ -213,11 +213,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               >
                 <img
                   key={activeImgIndex}
-                  src={images[activeImgIndex] || product.image}
+                  src={images[activeImgIndex] || product.image || "/img/mobile-concept-01.png"}
                   alt={product.name}
                   className="max-h-full max-w-full object-contain transition-all duration-300 hover:scale-105 animate-in fade-in zoom-in-95 cursor-zoom-in"
                   onClick={() => setIsLightboxOpen(true)}
                   title="انقر لتكبير ومعاينة الصورة كاملة"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
+                  }}
                 />
 
                 {/* Badges */}
@@ -322,7 +325,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                       onClick={() => setActiveImgIndex(idx)}
                       aria-label={`عرض صورة ${idx + 1}`}
                     >
-                      <img src={imgUrl} alt={`${product.name} - ${idx + 1}`} className="w-full h-full object-contain" />
+                      <img
+                        src={imgUrl || "/img/mobile-concept-01.png"}
+                        alt={`${product.name} - ${idx + 1}`}
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
+                        }}
+                      />
                     </button>
                   ))}
                 </div>
@@ -638,9 +648,12 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           {/* Main Lightbox Image View with Large Arrows */}
           <div className="relative flex-1 flex items-center justify-center p-4">
             <img
-              src={images[activeImgIndex] || product.image}
+              src={images[activeImgIndex] || product.image || "/img/mobile-concept-01.png"}
               alt={product.name}
               className="max-h-[75vh] max-w-[90vw] object-contain transition-all duration-300 drop-shadow-2xl"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
+              }}
             />
 
             {images.length > 1 && (

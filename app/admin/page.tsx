@@ -704,13 +704,14 @@ export default function AdminDashboardPage() {
                             {/* Product Info */}
                             <td className="p-4">
                               <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-xl bg-black/40 border border-white/10 overflow-hidden relative shrink-0">
-                                  <Image
+                                <div className="w-12 h-12 rounded-xl bg-black/40 border border-white/10 overflow-hidden relative shrink-0 flex items-center justify-center p-1">
+                                  <img
                                     src={coverImg}
                                     alt={p.name}
-                                    fill
-                                    className="object-contain p-1"
-                                    unoptimized
+                                    className="w-full h-full object-contain"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
+                                    }}
                                   />
                                 </div>
                                 <div>
@@ -925,13 +926,14 @@ export default function AdminDashboardPage() {
                               key={idx}
                               className="bg-black/30 border border-white/5 rounded-xl p-3 flex items-center gap-3"
                             >
-                              <div className="w-10 h-10 rounded-lg bg-black/50 border border-white/10 relative overflow-hidden shrink-0">
-                                <Image
+                              <div className="w-10 h-10 rounded-lg bg-black/50 border border-white/10 relative overflow-hidden shrink-0 flex items-center justify-center p-1">
+                                <img
                                   src={item.image || "/img/mobile-concept-01.png"}
                                   alt={item.name}
-                                  fill
-                                  className="object-contain p-1"
-                                  unoptimized
+                                  className="w-full h-full object-contain"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
+                                  }}
                                 />
                               </div>
                               <div className="min-w-0 flex-1">
@@ -1477,16 +1479,17 @@ export default function AdminDashboardPage() {
                   {form.images.map((img, idx) => (
                     <div
                       key={idx}
-                      className={`relative aspect-square rounded-lg border overflow-hidden group bg-black/40 ${
+                      className={`relative aspect-square rounded-lg border overflow-hidden group bg-black/40 flex items-center justify-center p-1 ${
                         idx === 0 ? "border-lime-400" : "border-white/10"
                       }`}
                     >
-                      <Image
+                      <img
                         src={img}
                         alt="Product preview"
-                        fill
-                        className="object-contain p-1"
-                        unoptimized
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
+                        }}
                       />
                       {idx === 0 && (
                         <span className="absolute top-1 right-1 bg-lime-400 text-black text-[9px] font-black px-1 rounded">

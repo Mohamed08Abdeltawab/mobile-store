@@ -110,9 +110,12 @@ export default function SearchModal() {
                   className="flex items-center gap-3 flex-1 min-w-0"
                 >
                   <img
-                    src={p.image}
+                    src={p.image || "/img/mobile-concept-01.png"}
                     alt={p.name}
                     className="w-14 h-14 object-contain bg-white rounded-xl p-1 border border-neutral-100 shrink-0"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
+                    }}
                   />
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 mb-0.5">

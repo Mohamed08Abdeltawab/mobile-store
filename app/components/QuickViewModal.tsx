@@ -50,9 +50,12 @@ export default function QuickViewModal() {
           {/* Product Image */}
           <div className="aspect-square bg-neutral-100 rounded-2xl p-4 flex items-center justify-center relative overflow-hidden">
             <img
-              src={quickProduct.image}
+              src={quickProduct.image || "/img/mobile-concept-01.png"}
               alt={quickProduct.name}
               className="max-h-full max-w-full object-contain"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
+              }}
             />
             {quickProduct.condition && (
               <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-black bg-lime-400 text-black shadow-xs">

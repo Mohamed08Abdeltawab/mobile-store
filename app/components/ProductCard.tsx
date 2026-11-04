@@ -43,9 +43,12 @@ export default function ProductCard({ product }: { product: Product }) {
         <Link href={`/product/${product.id}`} className="block w-full h-full">
           <img
             className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
-            src={product.image}
+            src={product.image || "/img/mobile-concept-01.png"}
             alt={product.name}
             loading="lazy"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
+            }}
           />
         </Link>
 

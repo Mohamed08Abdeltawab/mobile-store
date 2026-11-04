@@ -70,8 +70,11 @@ export default function WishlistDrawer() {
               >
                 <img
                   className="w-16 h-16 rounded-xl object-contain bg-neutral-50 p-1 border border-neutral-100 shrink-0"
-                  src={p.image}
+                  src={p.image || "/img/mobile-concept-01.png"}
                   alt={p.name}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
+                  }}
                 />
                 
                 <div className="flex-1 min-w-0">

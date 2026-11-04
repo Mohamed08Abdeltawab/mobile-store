@@ -133,6 +133,9 @@ export default function HomePage() {
                     src="/img/iphone-16-pro-max.png"
                     alt="آيفون 16 برو ماكس"
                     className="max-h-full max-w-full object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] hover:scale-105 transition-transform duration-500"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
+                    }}
                   />
                 </div>
 
@@ -234,6 +237,9 @@ export default function HomePage() {
                     src={cat.img}
                     alt={cat.title}
                     className="max-h-full max-w-full object-contain group-hover:scale-110 transition-transform duration-500"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
+                    }}
                   />
                 </div>
               </Link>
@@ -416,6 +422,9 @@ export default function HomePage() {
                   src={dealProduct?.image || "/img/iphone-16-pro-max.png"}
                   alt={dealProduct?.name || "عرض اليوم"}
                   className="relative z-10 w-full h-full object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
+                  }}
                 />
               </div>
             </div>
