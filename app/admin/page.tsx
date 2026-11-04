@@ -68,7 +68,7 @@ export default function AdminDashboardPage() {
     description: "",
     is_featured: false,
     is_published: true,
-    images: ["/img/mobile-concept-01.png"],
+    images: ["https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-9inch-deserttitanium?wid=1000&hei=1000&fmt=jpeg&qlt=90"],
     // Specifications
     ram: "8GB",
     storage: "256GB",

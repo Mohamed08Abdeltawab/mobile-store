@@ -130,11 +130,11 @@ export default function HomePage() {
                 {/* Smartphone Concept Image */}
                 <div className="relative z-10 w-full h-full p-4 flex items-center justify-center">
                   <img
-                    src="/img/iphone-16-pro-max.png"
+                    src="https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-9inch-deserttitanium?wid=1000&hei=1000&fmt=jpeg&qlt=90"
                     alt="آيفون 16 برو ماكس"
                     className="max-h-full max-w-full object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] hover:scale-105 transition-transform duration-500"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
+                      (e.target as HTMLImageElement).src = "/img/placeholder.png";
                     }}
                   />
                 </div>
@@ -188,28 +188,28 @@ export default function HomePage() {
             {[
               {
                 href: "/shop?category=phones",
-                img: "/img/iphone-16-pro-max.png",
+                img: "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-9inch-deserttitanium?wid=1000&hei=1000&fmt=jpeg&qlt=90",
                 tag: "أحدث هواتف 2026",
                 title: "الهواتف الذكية (الموبايلات)",
                 sub: "آيفون، سامسونج، شاومي، وأقوى الإصدارات"
               },
               {
                 href: "/shop?condition=used",
-                img: "/img/samsung-s24-ultra.png",
+                img: "https://upload.wikimedia.org/wikipedia/commons/e/ed/Samsung_S24_Ultra_Phone.png",
                 tag: "توفير حتى 35%",
                 title: "كسر زيرو ومستعمل",
                 sub: "أجهزة بحالة المصنع مفحوصة 100% وبطاريات 95%+"
               },
               {
                 href: "/shop?category=tablets",
-                img: "/img/ipad-pro-m4.png",
+                img: "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/ipad-pro-model-select-gallery-2-202405_FMT_WHH?wid=1000&hei=1000&fmt=jpeg&qlt=90",
                 tag: "إنتاجية ودراسة",
                 title: "التابلت والآيباد",
                 sub: "آيباد برو M4 وجالاكسي تاب بشاشات سينمائية"
               },
               {
                 href: "/shop?category=headphones",
-                img: "/img/airpods-pro-2.png",
+                img: "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/MTJV3?wid=1000&hei=1000&fmt=jpeg&qlt=90",
                 tag: "عزل ضوضاء متطور",
                 title: "السماعات وإيربودز",
                 sub: "AirPods Pro 2 وSony وعزل ضوضاء فائق"
