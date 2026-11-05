@@ -157,12 +157,12 @@ export default function ProductCard({ product }: { product: Product }) {
         {product.colors && product.colors.length > 0 && (
           <div className="flex items-center gap-1 mb-2.5">
             <span className="text-[10px] text-neutral-400 ml-1">الألوان:</span>
-            {product.colors.slice(0, 4).map((c, i) => (
+            {product.colors.slice(0, 4).map((c: any, i) => (
               <span
                 key={i}
                 className="w-3.5 h-3.5 rounded-full border border-neutral-300 shrink-0 shadow-2xs"
-                style={{ backgroundColor: c.hex_code }}
-                title={c.color_name}
+                style={{ backgroundColor: c.hex_code || c.hex }}
+                title={c.color_name || c.name_ar || c.name}
               />
             ))}
             {product.colors.length > 4 && (

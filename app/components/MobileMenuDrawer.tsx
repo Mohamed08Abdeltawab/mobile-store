@@ -13,19 +13,59 @@ export default function MobileMenuDrawer() {
 
   const categories = [
     { href: "/shop", label: "📱 جميع الأجهزة والمنتجات", badge: null },
-    { href: "/shop?filter=bestseller", label: "🔥 الأكثر طلباً ومبيعاً", badge: "مميز" },
-    { href: "/shop?category=phones", label: "الهواتف الذكية (الموبايلات)", badge: null },
-    { href: "/shop?condition=used", label: "💎 هواتف كسر زيرو ومستعملة", badge: "فحص 100%" },
-    { href: "/shop?category=tablets", label: "الأجهزة اللوحية (التابلت والآيباد)", badge: null },
-    { href: "/shop?category=headphones", label: "السماعات وإيربودز", badge: null },
-    { href: "/shop?category=chargers-cables", label: "الشواحن والكابلات والباوربانك", badge: null },
-    { href: "/shop?category=smart-watches", label: "الساعات والأساور الذكية", badge: null },
-    { href: "/shop?category=cases-protection", label: "الجرابات واسكرينات الحماية", badge: null },
-    { href: "/shop?category=accessories", label: "إكسسوارات إلكترونية أخرى", badge: null },
+    {
+      href: "/shop?filter=bestseller",
+      label: "🔥 الأكثر طلباً ومبيعاً",
+      badge: "مميز",
+    },
+    {
+      href: "/shop?category=phones",
+      label: "الهواتف الذكية (الموبايلات)",
+      badge: null,
+    },
+    {
+      href: "/shop?condition=used",
+      label: "💎 هواتف كسر زيرو ومستعملة",
+      badge: "فحص 100%",
+    },
+    {
+      href: "/shop?category=tablets",
+      label: "الأجهزة اللوحية (التابلت والآيباد)",
+      badge: null,
+    },
+    {
+      href: "/shop?category=headphones",
+      label: "السماعات وإيربودز",
+      badge: null,
+    },
+    {
+      href: "/shop?category=chargers-cables",
+      label: "الشواحن والكابلات والباوربانك",
+      badge: null,
+    },
+    {
+      href: "/shop?category=smart-watches",
+      label: "الساعات والأساور الذكية",
+      badge: null,
+    },
+    {
+      href: "/shop?category=cases-protection",
+      label: "الجرابات واسكرينات الحماية",
+      badge: null,
+    },
+    {
+      href: "/shop?category=accessories",
+      label: "إكسسوارات إلكترونية أخرى",
+      badge: null,
+    },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden" role="dialog" aria-modal="true">
+    <div
+      className="fixed inset-0 z-50 overflow-hidden"
+      role="dialog"
+      aria-modal="true"
+    >
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/75 backdrop-blur-sm transition-opacity animate-in fade-in duration-200"
@@ -34,7 +74,6 @@ export default function MobileMenuDrawer() {
 
       {/* Drawer Panel (slides from right in RTL) */}
       <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-xs bg-[#0d1210] border-l border-white/10 text-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
-        
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-white/10 bg-[#141c18]">
           <Link
@@ -72,7 +111,9 @@ export default function MobileMenuDrawer() {
               href={cat.href}
               onClick={() => setIsMobileMenuOpen(false)}
               className={`min-h-[44px] flex items-center justify-between px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-colors ${
-                pathname === cat.href ? "bg-white/15 text-lime-400" : "text-neutral-300 hover:text-white hover:bg-white/5"
+                pathname === cat.href
+                  ? "bg-white/15 text-lime-400"
+                  : "text-neutral-300 hover:text-white hover:bg-white/5"
               }`}
             >
               <span>{cat.label}</span>
@@ -111,7 +152,9 @@ export default function MobileMenuDrawer() {
               className="min-h-[44px] flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-lime-400 hover:bg-lime-400/10 transition-colors"
             >
               <span>🔐</span>
-              <span>{isAdmin ? "لوحة تحكم المشرف (Dashboard)" : "تسجيل دخول المشرف"}</span>
+              <span>
+                {isAdmin ? "لوحة تحكم المشرف (Dashboard)" : "تسجيل دخول المشرف"}
+              </span>
             </Link>
           </div>
         </div>
@@ -125,10 +168,9 @@ export default function MobileMenuDrawer() {
             className="w-full h-11 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition-transform active:scale-95"
           >
             <span>💬</span>
-            <span>تواصل مباشر عبر واتساب VIP</span>
+            <span>تواصل مباشر عبر واتساب</span>
           </a>
         </div>
-
       </aside>
     </div>
   );

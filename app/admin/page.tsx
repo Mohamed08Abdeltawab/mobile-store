@@ -491,6 +491,16 @@ export default function AdminDashboardPage() {
       ? form.colors.reduce((sum, c) => sum + (c.quantity || 0), 0)
       : Number(form.quantity || 10);
 
+    const formattedColors = form.colors.map(c => ({
+      id: c.id,
+      color_id: c.id,
+      name_ar: c.name_ar,
+      color_name: c.name_ar,
+      hex: c.hex,
+      hex_code: c.hex,
+      quantity: Number(c.quantity || 0)
+    }));
+
     const payload = {
       name: form.name.trim(),
       cat: form.category,
@@ -505,7 +515,7 @@ export default function AdminDashboardPage() {
       is_featured: form.is_featured,
       is_published: form.is_published,
       images: form.images.slice(0, 10),
-      colors: form.colors,
+      colors: formattedColors,
       specifications
     };
 

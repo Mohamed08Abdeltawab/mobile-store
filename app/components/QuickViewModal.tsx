@@ -22,8 +22,12 @@ export default function QuickViewModal() {
     ? Math.round(((Number(quickProduct.old_price) - Number(quickProduct.price)) / Number(quickProduct.old_price)) * 100)
     : 0;
 
-  const colors = quickProduct.colors || [];
-  const activeColor = selectedColor || (colors[0] ? colors[0].color_name : "");
+  const colors = (quickProduct.colors || []).map((c: any) => ({
+    ...c,
+    color_name: c.color_name || c.name_ar || c.name || "لون",
+    hex_code: c.hex_code || c.hex || "#111827"
+  }));
+  const activeColor = selectedColor || (colors[0] ? (colors[0].color_name || colors[0].name_ar || colors[0].name) : "");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto" role="dialog" aria-modal="true">

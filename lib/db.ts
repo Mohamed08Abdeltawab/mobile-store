@@ -779,12 +779,30 @@ function formatProduct(r: any): Product | null {
     images = r.image ? [r.image] : [];
   }
 
-  let colors: any[] = [];
+  let rawColors: any[] = [];
   if (Array.isArray(r.colors)) {
-    colors = r.colors;
+    rawColors = r.colors;
   } else if (typeof r.colors === "string") {
-    try { colors = JSON.parse(r.colors); } catch (e) { colors = []; }
+    try { rawColors = JSON.parse(r.colors); } catch (e) { rawColors = []; }
   }
+
+  // Normalize colors so both front-end and admin panel have unified properties
+  const colors = rawColors.map((c: any) => {
+    const id = c.color_id || c.id || "black";
+    const name = c.color_name || c.name_ar || c.name || "أسود";
+    const hex = c.hex_code || c.hex || "#111827";
+    const quantity = c.quantity !== undefined ? Number(c.quantity) : 5;
+    return {
+      id,
+      color_id: id,
+      name,
+      name_ar: name,
+      color_name: name,
+      hex,
+      hex_code: hex,
+      quantity
+    };
+  });
 
   let variants: any[] = [];
   if (Array.isArray(r.variants)) {

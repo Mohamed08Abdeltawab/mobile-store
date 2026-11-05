@@ -211,7 +211,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     storage: string = ""
   ) {
     if (!product) return;
-    const vName = variant || (color ? `لون: ${color}` : (product.colors && product.colors[0] ? `لون: ${product.colors[0].color_name}` : ""));
+    const defaultColorName = product.colors && product.colors[0] 
+      ? (product.colors[0].color_name || (product.colors[0] as any).name_ar || (product.colors[0] as any).name || "") 
+      : "";
+    const chosenColor = color || defaultColorName;
+    const vName = variant || (chosenColor ? `لون: ${chosenColor}` : "");
 
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id && item.variant === vName);
@@ -224,7 +228,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         price: product.price,
         image: product.image,
         variant: vName,
-        color: color || (product.colors && product.colors[0] ? product.colors[0].color_name : ""),
+        color: chosenColor,
         ram: ram || (product.specifications?.ram || ""),
         storage: storage || (product.specifications?.storage || ""),
         condition: product.condition,
@@ -280,7 +284,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCart(prev => {
       let updated = [...prev];
       for (const product of favProducts) {
-        const vName = product.colors && product.colors[0] ? `لون: ${product.colors[0].color_name}` : "";
+        const defaultColorName = product.colors && product.colors[0] 
+          ? (product.colors[0].color_name || (product.colors[0] as any).name_ar || (product.colors[0] as any).name || "") 
+          : "";
+        const vName = defaultColorName ? `لون: ${defaultColorName}` : "";
         const existingIdx = updated.findIndex(item => item.id === product.id && item.variant === vName);
         if (existingIdx > -1) {
           updated[existingIdx] = {
@@ -294,7 +301,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             price: product.price,
             image: product.image,
             variant: vName,
-            color: (product.colors && product.colors[0] ? product.colors[0].color_name : ""),
+            color: defaultColorName,
             ram: (product.specifications?.ram || ""),
             storage: (product.specifications?.storage || ""),
             condition: product.condition,

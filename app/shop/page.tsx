@@ -110,7 +110,11 @@ function ShopContent() {
     if (activeColor !== "all") {
       list = list.filter(p => {
         const colors = p.colors || [];
-        return colors.some(c => c.color_id === activeColor || c.color_name.includes(activeColor));
+        return colors.some((c: any) => {
+          const cId = c.color_id || c.id || "";
+          const cName = c.color_name || c.name_ar || c.name || "";
+          return cId === activeColor || cName.includes(activeColor);
+        });
       });
     }
 

@@ -172,8 +172,12 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     : 0;
 
   const isFav = isWishlisted(product.id);
-  const colors = product.colors || [];
-  const currentColor = selectedColor || (colors[0] ? colors[0].color_name : "");
+  const colors = (product.colors || []).map((c: any) => ({
+    ...c,
+    color_name: c.color_name || c.name_ar || c.name || "لون",
+    hex_code: c.hex_code || c.hex || "#111827"
+  }));
+  const currentColor = selectedColor || (colors[0] ? (colors[0].color_name || colors[0].name_ar || colors[0].name) : "");
 
   // Related products
   const relatedProducts = products
