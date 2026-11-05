@@ -119,7 +119,7 @@ export default function AdminLoginPage() {
               disabled={loading}
               className="w-full bg-lime-400 hover:bg-lime-500 text-black font-extrabold h-12 rounded-xl text-sm shadow-lg shadow-lime-400/25 transition-transform active:scale-[0.99] mt-2 cursor-pointer"
             >
-              {loading ? "جاري التحقق والدخول..." : "تسجيل الدخول (admin / admin)"}
+              {loading ? "جاري التحقق والدخول..." : "تسجيل الدخول"}
             </Button>
 
             <Link

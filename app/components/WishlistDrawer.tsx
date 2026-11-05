@@ -11,7 +11,8 @@ export default function WishlistDrawer() {
     setIsWishlistOpen,
     products,
     toggleWishlist,
-    addToCart
+    addToCart,
+    addAllWishlistToCart
   } = useCart();
 
   if (!isWishlistOpen) return null;
@@ -27,7 +28,7 @@ export default function WishlistDrawer() {
       />
 
       {/* Drawer Panel */}
-      <aside className="fixed inset-y-0 left-0 z-50 w-full max-w-md bg-white shadow-2xl flex flex-col animate-in slide-in-from-left duration-300">
+      <aside className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
         
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-neutral-100 bg-neutral-50/50">
@@ -111,6 +112,23 @@ export default function WishlistDrawer() {
             ))
           )}
         </div>
+
+        {/* Footer Actions */}
+        {favProducts.length > 0 && (
+          <div className="p-4 sm:p-5 border-t border-neutral-100 bg-neutral-50/50 space-y-2">
+            <Button
+              className="w-full bg-lime-400 hover:bg-lime-500 text-black font-extrabold h-12 rounded-xl text-sm shadow-md shadow-lime-400/25 transition-transform active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
+              onClick={() => {
+                if (addAllWishlistToCart) {
+                  addAllWishlistToCart();
+                }
+              }}
+            >
+              <span>🛒</span>
+              <span>إضافة جميع المنتجات إلى السلة ({favProducts.length})</span>
+            </Button>
+          </div>
+        )}
 
       </aside>
     </div>

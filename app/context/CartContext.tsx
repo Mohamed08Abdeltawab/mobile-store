@@ -38,6 +38,7 @@ interface CartContextType {
   updateCartQty: (index: number, delta: number) => void;
   removeFromCart: (index: number) => void;
   toggleWishlist: (productId: string) => void;
+  addAllWishlistToCart?: () => void;
   isWishlisted: (productId: string) => boolean;
   sendDirectWhatsApp: (product: Product) => void;
   openCheckoutWithProduct: (product: Product) => void;
@@ -272,6 +273,43 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return wishlist.includes(productId);
   }
 
+  function addAllWishlistToCart() {
+    const favProducts = products.filter(p => wishlist.includes(p.id));
+    if (favProducts.length === 0) return;
+
+    setCart(prev => {
+      let updated = [...prev];
+      for (const product of favProducts) {
+        const vName = product.colors && product.colors[0] ? `لون: ${product.colors[0].color_name}` : "";
+        const existingIdx = updated.findIndex(item => item.id === product.id && item.variant === vName);
+        if (existingIdx > -1) {
+          updated[existingIdx] = {
+            ...updated[existingIdx],
+            qty: updated[existingIdx].qty + 1
+          };
+        } else {
+          updated.push({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image: product.image,
+            variant: vName,
+            color: (product.colors && product.colors[0] ? product.colors[0].color_name : ""),
+            ram: (product.specifications?.ram || ""),
+            storage: (product.specifications?.storage || ""),
+            condition: product.condition,
+            qty: 1
+          });
+        }
+      }
+      return updated;
+    });
+
+    showToast(`تمت إضافة ${favProducts.length} من عناصر المفضلة إلى السلة`);
+    setIsWishlistOpen(false);
+    setIsCartOpen(true);
+  }
+
   // Quick WhatsApp Purchase
   function sendDirectWhatsApp(product: Product) {
     if (!product) return;
@@ -361,6 +399,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         updateCartQty,
         removeFromCart,
         toggleWishlist,
+        addAllWishlistToCart,
         isWishlisted,
         sendDirectWhatsApp,
         openCheckoutWithProduct,
