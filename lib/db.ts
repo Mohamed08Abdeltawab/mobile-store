@@ -991,6 +991,17 @@ export async function createProduct(prod: any): Promise<Product | null> {
     try { specsObj = JSON.parse(specsObj); } catch (e) { specsObj = {}; }
   }
 
+  // Random rating and reviews algorithm for newly created products:
+  // Reviews count: 20 to 150
+  // Rating score: 4.0 to 5.0 (rounded to 1 decimal place)
+  const randomReviews = Math.floor(Math.random() * (150 - 20 + 1)) + 20;
+  const randomRating = Math.round((4.0 + Math.random() * 0.95) * 10) / 10;
+
+  const generatedRating = prod.rating && Number(prod.rating) > 0 ? Number(prod.rating) : randomRating;
+  const generatedReviews = prod.reviews && Number(prod.reviews) > 0 ? Number(prod.reviews) : randomReviews;
+
+  const badgeText = prod.badge_text !== undefined ? (prod.badge_text ? String(prod.badge_text).trim() : null) : null;
+
   const newProduct = {
     id,
     name,
@@ -1002,10 +1013,10 @@ export async function createProduct(prod: any): Promise<Product | null> {
     brand: brandName,
     price,
     old_price: oldPrice,
-    rating: prod.rating ? Number(prod.rating) : 5.0,
-    reviews: prod.reviews ? Number(prod.reviews) : 0,
+    rating: generatedRating,
+    reviews: generatedReviews,
     tag: prod.tag || "new",
-    badge_text: prod.badge_text || condition,
+    badge_text: badgeText,
     image: mainImage,
     images: imagesList,
     description: desc,
@@ -1190,7 +1201,7 @@ export async function updateProduct(id: string, prod: any): Promise<Product | nu
     price,
     old_price: oldPrice,
     tag: prod.tag !== undefined ? prod.tag : existing.tag,
-    badge_text: prod.badge_text !== undefined ? prod.badge_text : condition,
+    badge_text: prod.badge_text !== undefined ? (prod.badge_text ? String(prod.badge_text).trim() : null) : (existing.badge_text || null),
     image: mainImage,
     images: imagesList,
     description: desc,

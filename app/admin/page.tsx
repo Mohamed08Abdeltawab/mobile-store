@@ -59,6 +59,18 @@ export const WARRANTY_OPTIONS = [
   "ضمان آخر"
 ] as const;
 
+export const BADGE_OPTIONS = [
+  "بدون شارة إضافية",
+  "الأكثر طلباً 🔥",
+  "الأعلى تقييماً ⭐",
+  "الأكثر مبيعاً 💯",
+  "وصل حديثاً ⚡",
+  "عرض خاص 🎁",
+  "كمية محدودة ⏳",
+  "خصم مميز 💥",
+  "كتابة شارة مخصصة..."
+] as const;
+
 export const CONDITION_OPTIONS: ProductCondition[] = ["جديد", "كسر زيرو", "مستعمل"];
 
 const STORAGE_OPTIONS = ["32GB", "64GB", "128GB", "256GB", "512GB", "1TB"];
@@ -94,6 +106,8 @@ export default function AdminDashboardPage() {
     original_price: "",
     quantity: 10,
     condition: "جديد" as ProductCondition,
+    badge_choice: "بدون شارة إضافية",
+    custom_badge: "",
     description: "",
     is_featured: false,
     is_published: true,
@@ -361,6 +375,19 @@ export default function AdminDashboardPage() {
       customWarranty = savedWarranty;
     }
 
+    // Determine badge choice & custom badge
+    const savedBadge = (p.badge_text || "").trim();
+    let badgeChoice = "بدون شارة إضافية";
+    let customBadge = "";
+    if (savedBadge && savedBadge !== normalizedCondition) {
+      if ((BADGE_OPTIONS as readonly string[]).includes(savedBadge)) {
+        badgeChoice = savedBadge;
+      } else {
+        badgeChoice = "كتابة شارة مخصصة...";
+        customBadge = savedBadge;
+      }
+    }
+
     setForm({
       name: p.name,
       category: p.category || p.cat || "الموبايلات",
@@ -369,6 +396,8 @@ export default function AdminDashboardPage() {
       original_price: p.original_price ? String(p.original_price) : (p.old_price ? String(p.old_price) : ""),
       quantity: Number(p.quantity ?? 10),
       condition: normalizedCondition,
+      badge_choice: badgeChoice,
+      custom_badge: customBadge,
       description: p.description || p.overview || "",
       is_featured: !!p.is_featured,
       is_published: p.is_published !== undefined ? !!p.is_published : true,
@@ -501,6 +530,14 @@ export default function AdminDashboardPage() {
       quantity: Number(c.quantity || 0)
     }));
 
+    // Resolve badge_text
+    let badgeText: string | null = null;
+    if (form.badge_choice === "كتابة شارة مخصصة...") {
+      badgeText = form.custom_badge.trim() || null;
+    } else if (form.badge_choice && form.badge_choice !== "بدون شارة إضافية") {
+      badgeText = form.badge_choice.trim();
+    }
+
     const payload = {
       name: form.name.trim(),
       cat: form.category,
@@ -511,6 +548,7 @@ export default function AdminDashboardPage() {
       original_price: numOriginal,
       quantity: totalQty,
       condition: form.condition,
+      badge_text: badgeText,
       description: form.description,
       is_featured: form.is_featured,
       is_published: form.is_published,
@@ -1110,6 +1148,42 @@ export default function AdminDashboardPage() {
                         <option key={c} value={c}>{c}</option>
                       ))}
                     </select>
+                  </div>
+
+                  {/* الشارة الترويجية الإضافية (اختياري - تظهر كبادج أخضر أعلى الكارت) */}
+                  <div className="sm:col-span-2 bg-white/[0.02] border border-white/10 rounded-xl p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold text-lime-400">
+                        الشارة الترويجية أعلى الكارت (Badge Text)
+                      </label>
+                      <span className="text-[10px] text-neutral-400">اختياري</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <select
+                          value={form.badge_choice}
+                          onChange={(e) => setForm({ ...form, badge_choice: e.target.value })}
+                          className="w-full bg-black/50 border border-white/15 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-lime-400 font-medium cursor-pointer"
+                        >
+                          {BADGE_OPTIONS.map(opt => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {form.badge_choice === "كتابة شارة مخصصة..." && (
+                        <div>
+                          <input
+                            type="text"
+                            placeholder="اكتب نص الشارة المخصصة (مثال: شحن مجاني، كاش باك)"
+                            value={form.custom_badge}
+                            onChange={(e) => setForm({ ...form, custom_badge: e.target.value })}
+                            className="w-full bg-black/50 border border-lime-400/50 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-lime-400"
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
