@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useCart } from "../context/CartContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import LazyImage from "./LazyImage";
 
 export default function QuickViewModal() {
   const {
@@ -53,16 +54,14 @@ export default function QuickViewModal() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 sm:p-6 items-center">
           {/* Product Image */}
           <div className="aspect-square bg-neutral-100 rounded-2xl p-4 flex items-center justify-center relative overflow-hidden">
-            <img
+            <LazyImage
               src={quickProduct.image || "/img/mobile-concept-01.png"}
               alt={quickProduct.name}
+              wrapperClassName="max-h-full max-w-full flex items-center justify-center bg-transparent"
               className="max-h-full max-w-full object-contain"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
-              }}
             />
             {quickProduct.condition && (
-              <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-black bg-lime-400 text-black shadow-xs">
+              <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-black bg-lime-400 text-black shadow-xs z-10">
                 {quickProduct.condition}
               </span>
             )}

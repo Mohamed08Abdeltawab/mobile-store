@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import ScrollReveal from "./ScrollReveal";
 
 export default function WhatsAppSection() {
   const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201065712366";
@@ -13,7 +14,7 @@ export default function WhatsAppSection() {
       {/* Ambient Glow */}
       <div className="absolute top-1/2 left-10 -translate-y-1/2 w-80 h-80 rounded-full bg-[#25D366]/10 blur-3xl pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <ScrollReveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="bg-[#141c18] border border-white/10 rounded-3xl p-6 sm:p-10 lg:p-12 flex flex-col lg:flex-row items-center justify-between gap-8 shadow-2xl">
           <div className="space-y-4 text-center lg:text-right max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#25D366]/15 border border-[#25D366]/30 text-[#25D366] text-xs font-bold">
@@ -64,7 +65,7 @@ export default function WhatsAppSection() {
             </span>
           </div>
         </div>
-      </div>
+      </ScrollReveal>
     </section>
   );
 }

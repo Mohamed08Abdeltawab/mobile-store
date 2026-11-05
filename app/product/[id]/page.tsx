@@ -7,6 +7,8 @@ import ProductCard from "../../components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Product } from "../../../lib/types";
+import ScrollReveal from "../../components/ScrollReveal";
+import LazyImage from "../../components/LazyImage";
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = use(params);
@@ -329,13 +331,11 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                       onClick={() => setActiveImgIndex(idx)}
                       aria-label={`عرض صورة ${idx + 1}`}
                     >
-                      <img
+                      <LazyImage
                         src={imgUrl || "/img/mobile-concept-01.png"}
                         alt={`${product.name} - ${idx + 1}`}
+                        wrapperClassName="w-full h-full flex items-center justify-center bg-transparent"
                         className="w-full h-full object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
-                        }}
                       />
                     </button>
                   ))}
@@ -592,7 +592,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
           {/* Related Products */}
           {relatedProducts.length > 0 && (
-            <div className="mt-14 pt-10 border-t border-neutral-200">
+            <ScrollReveal className="mt-14 pt-10 border-t border-neutral-200">
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
                 <div>
                   <Badge variant="outline" className="mb-2 text-xs font-bold text-emerald-800 border-emerald-300 bg-emerald-50">
@@ -615,7 +615,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   <ProductCard key={p.id} product={p} />
                 ))}
               </div>
-            </div>
+            </ScrollReveal>
           )}
 
         </div>

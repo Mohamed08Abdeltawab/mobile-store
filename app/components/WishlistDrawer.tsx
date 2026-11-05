@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCart } from "../context/CartContext";
 import { Button } from "@/components/ui/button";
+import LazyImage from "./LazyImage";
 
 export default function WishlistDrawer() {
   const {
@@ -69,13 +70,11 @@ export default function WishlistDrawer() {
                 key={p.id}
                 className="flex items-center gap-3 p-3 rounded-2xl border border-neutral-100 bg-white hover:border-neutral-200 transition-colors shadow-sm"
               >
-                <img
-                  className="w-16 h-16 rounded-xl object-contain bg-neutral-50 p-1 border border-neutral-100 shrink-0"
+                <LazyImage
+                  wrapperClassName="w-16 h-16 rounded-xl bg-neutral-50 p-1 border border-neutral-100 shrink-0 flex items-center justify-center"
+                  className="w-full h-full object-contain"
                   src={p.image || "/img/mobile-concept-01.png"}
                   alt={p.name}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
-                  }}
                 />
                 
                 <div className="flex-1 min-w-0">

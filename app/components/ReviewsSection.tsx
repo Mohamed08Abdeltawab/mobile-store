@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import ScrollReveal from "./ScrollReveal";
 
 export default function ReviewsSection() {
   const reviews = [
@@ -40,7 +41,7 @@ export default function ReviewsSection() {
 
   return (
     <section className="py-14 sm:py-20 bg-neutral-100/60" id="reviews">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <ScrollReveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
           <div>
@@ -88,7 +89,7 @@ export default function ReviewsSection() {
           ))}
         </div>
 
-      </div>
+      </ScrollReveal>
     </section>
   );
 }

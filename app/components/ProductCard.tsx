@@ -5,6 +5,7 @@ import { useCart } from "../context/CartContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Product } from "../../lib/types";
+import LazyImage from "./LazyImage";
 
 export default function ProductCard({ product }: { product: Product }) {
   const {
@@ -41,14 +42,11 @@ export default function ProductCard({ product }: { product: Product }) {
       {/* Product Image Frame */}
       <div className="relative aspect-square w-full overflow-hidden bg-neutral-100/70 p-2 sm:p-4 flex items-center justify-center">
         <Link href={`/product/${product.id}`} className="block w-full h-full">
-          <img
-            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+          <LazyImage
             src={product.image || "/img/mobile-concept-01.png"}
             alt={product.name}
-            loading="lazy"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
-            }}
+            wrapperClassName="w-full h-full flex items-center justify-center bg-transparent"
+            className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
           />
         </Link>
 

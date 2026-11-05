@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useCart } from "../context/CartContext";
 import { Badge } from "@/components/ui/badge";
+import LazyImage from "./LazyImage";
 
 export default function SearchModal() {
   const { isSearchOpen, setIsSearchOpen, products, addToCart } = useCart();
@@ -109,13 +110,11 @@ export default function SearchModal() {
                   onClick={() => setIsSearchOpen(false)}
                   className="flex items-center gap-3 flex-1 min-w-0"
                 >
-                  <img
+                  <LazyImage
                     src={p.image || "/img/mobile-concept-01.png"}
                     alt={p.name}
-                    className="w-14 h-14 object-contain bg-white rounded-xl p-1 border border-neutral-100 shrink-0"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
-                    }}
+                    wrapperClassName="w-14 h-14 bg-white rounded-xl p-1 border border-neutral-100 shrink-0 flex items-center justify-center"
+                    className="w-full h-full object-contain"
                   />
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 mb-0.5">

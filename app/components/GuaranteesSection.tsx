@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import ScrollReveal from "./ScrollReveal";
 
 export default function GuaranteesSection() {
   const guarantees = [
@@ -28,7 +29,7 @@ export default function GuaranteesSection() {
 
   return (
     <section className="py-14 sm:py-20 bg-white border-t border-neutral-100" id="guarantees">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <ScrollReveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14 space-y-2">
           <Badge variant="outline" className="text-xs font-bold text-emerald-800 border-emerald-300 bg-emerald-50">
@@ -61,7 +62,7 @@ export default function GuaranteesSection() {
           ))}
         </div>
 
-      </div>
+      </ScrollReveal>
     </section>
   );
 }

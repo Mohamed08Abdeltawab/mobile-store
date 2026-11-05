@@ -11,6 +11,8 @@ import GuaranteesSection from "./components/GuaranteesSection";
 import ReviewsSection from "./components/ReviewsSection";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import ScrollReveal from "./components/ScrollReveal";
+import LazyImage from "./components/LazyImage";
 
 export default function HomePage() {
   const { products, openCheckoutWithProduct } = useCart();
@@ -129,13 +131,11 @@ export default function HomePage() {
 
                 {/* Smartphone Concept Image */}
                 <div className="relative z-10 w-full h-full p-4 flex items-center justify-center">
-                  <img
+                  <LazyImage
                     src="https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-9inch-deserttitanium?wid=1000&hei=1000&fmt=jpeg&qlt=90"
                     alt="آيفون 16 برو ماكس"
+                    wrapperClassName="max-h-full max-w-full flex items-center justify-center bg-transparent"
                     className="max-h-full max-w-full object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] hover:scale-105 transition-transform duration-500"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "/img/placeholder.png";
-                    }}
                   />
                 </div>
 
@@ -165,7 +165,7 @@ export default function HomePage() {
 
       {/* 1. Categories Bento Grid */}
       <section className="py-14 sm:py-20 bg-white" id="categories">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <ScrollReveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
             <div>
@@ -233,25 +233,23 @@ export default function HomePage() {
                 </div>
 
                 <div className="relative mt-4 flex items-center justify-center h-32">
-                  <img
+                  <LazyImage
                     src={cat.img}
                     alt={cat.title}
+                    wrapperClassName="max-h-full max-w-full flex items-center justify-center bg-transparent"
                     className="max-h-full max-w-full object-contain group-hover:scale-110 transition-transform duration-500"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
-                    }}
                   />
                 </div>
               </Link>
             ))}
           </div>
 
-        </div>
+        </ScrollReveal>
       </section>
 
       {/* 2. Best Sellers Section */}
       <section className="py-14 sm:py-20 bg-neutral-100/70" id="best-sellers">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <ScrollReveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
             <div>
@@ -279,12 +277,12 @@ export default function HomePage() {
             ))}
           </div>
 
-        </div>
+        </ScrollReveal>
       </section>
 
       {/* 3. Used & Like-New Phones Showcase */}
       <section className="py-14 sm:py-20 bg-white" id="used-phones">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <ScrollReveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
             <div>
@@ -312,12 +310,12 @@ export default function HomePage() {
             ))}
           </div>
 
-        </div>
+        </ScrollReveal>
       </section>
 
       {/* 4. Trending & Flagships Section */}
       <section className="py-14 sm:py-20 bg-neutral-100/70" id="trending">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <ScrollReveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
             <div>
@@ -345,7 +343,7 @@ export default function HomePage() {
             ))}
           </div>
 
-        </div>
+        </ScrollReveal>
       </section>
 
       {/* 5. Explore Collections Full Banner CTA */}
@@ -353,7 +351,7 @@ export default function HomePage() {
 
       {/* 6. Deal of the Day Countdown */}
       <section className="py-14 sm:py-20 bg-[#0d1210] text-white" id="deal">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <ScrollReveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             
             <div className="lg:col-span-7 space-y-4 sm:space-y-5">
@@ -418,19 +416,17 @@ export default function HomePage() {
                 </div>
 
                 <div className="absolute inset-0 rounded-full bg-lime-400/20 blur-2xl pointer-events-none" />
-                <img
+                <LazyImage
                   src={dealProduct?.image || "/img/iphone-16-pro-max.png"}
                   alt={dealProduct?.name || "عرض اليوم"}
+                  wrapperClassName="relative z-10 w-full h-full flex items-center justify-center bg-transparent"
                   className="relative z-10 w-full h-full object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = "/img/mobile-concept-01.png";
-                  }}
                 />
               </div>
             </div>
 
           </div>
-        </div>
+        </ScrollReveal>
       </section>
 
       {/* 7. WhatsApp VIP Concierge Support & Order */}

@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import ScrollReveal from "./ScrollReveal";
 
 export default function CollectionCTA() {
   return (
     <section className="py-14 sm:py-20 bg-gradient-to-r from-[#0d1210] via-[#15231c] to-[#0d1210] text-white border-y border-white/10 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(163,230,53,0.15),transparent_50%)] pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-5">
+      <ScrollReveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center space-y-5">
         <span className="text-lime-400 font-extrabold text-xs tracking-widest uppercase bg-lime-400/15 border border-lime-400/30 px-3.5 py-1 rounded-full inline-block">
           كتالوج الأجهزة الإلكترونية 2026
         </span>
@@ -35,7 +36,7 @@ export default function CollectionCTA() {
             </Link>
           </Button>
         </div>
-      </div>
+      </ScrollReveal>
     </section>
   );
 }
