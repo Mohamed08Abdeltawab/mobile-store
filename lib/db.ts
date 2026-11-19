@@ -32,7 +32,12 @@ function getSqliteDb() {
   if (!DatabaseSync) {
     throw new Error("SQLite is not supported in this runtime. Please configure Supabase in environment variables.");
   }
-  const db = new DatabaseSync(dbPath);
+  let db: any;
+  try {
+    db = new DatabaseSync(dbPath);
+  } catch (err: any) {
+    throw new Error("SQLite is not supported in this runtime. Please configure Supabase in environment variables: " + (err?.message || ""));
+  }
   db.exec("PRAGMA journal_mode = WAL;");
 
   // 1. Categories Table

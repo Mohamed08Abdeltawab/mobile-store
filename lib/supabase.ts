@@ -1,25 +1,44 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
+let cfEnv: any = null;
+try {
+  // @ts-ignore
+  const cfWorkers = await import("cloudflare:workers");
+  cfEnv = cfWorkers.env;
+} catch {
+  // Not running in Cloudflare workerd runtime
+}
+
+function getEnvVar(key: string): string {
+  if (typeof process !== "undefined" && process.env && process.env[key]) {
+    return process.env[key]!;
+  }
+  if (cfEnv && cfEnv[key]) {
+    return cfEnv[key];
+  }
+  return "";
+}
+
 function getSupabaseUrl(): string {
   return (
-    process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    process.env.SUPABASE_URL ||
+    getEnvVar("NEXT_PUBLIC_SUPABASE_URL") ||
+    getEnvVar("SUPABASE_URL") ||
     ""
   );
 }
 
 function getSupabaseAnonKey(): string {
   return (
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    process.env.SUPABASE_ANON_KEY ||
+    getEnvVar("NEXT_PUBLIC_SUPABASE_ANON_KEY") ||
+    getEnvVar("SUPABASE_ANON_KEY") ||
     ""
   );
 }
 
 function getSupabaseServiceKey(): string {
   return (
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_SECRET_KEY ||
+    getEnvVar("SUPABASE_SERVICE_ROLE_KEY") ||
+    getEnvVar("SUPABASE_SECRET_KEY") ||
     ""
   );
 }
