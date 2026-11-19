@@ -13,8 +13,8 @@
     "preview": "vite preview",
     "start": "vite preview",
     "start:vinext": "vite preview",
-    "deploy": "vinext-cloudflare deploy",
-    "deploy:vinext": "vinext-cloudflare deploy",
+    "deploy": "vinext-cloudflare deploy --force",
+    "deploy:vinext": "vinext-cloudflare deploy --force",
     "lint": "next lint"
   },
   "keywords": [
