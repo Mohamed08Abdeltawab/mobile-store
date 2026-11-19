@@ -2,7 +2,7 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import bcrypt from "bcryptjs";
-import { getSupabaseAdmin, isSupabaseConfigured } from "./supabase";
+import { getSupabaseAdmin, isSupabaseConfigured, getEnvVar } from "./supabase";
 import { Product, Order, Category, Brand, PredefinedColor, PREDEFINED_COLORS } from "./types";
 
 let sqliteInstance: any = null;
@@ -146,10 +146,13 @@ function getSqliteDb() {
   // Seed default admin
   const adminCheck = db.prepare("SELECT COUNT(*) as count FROM admins").get() as any;
   if (!adminCheck || adminCheck.count === 0) {
-    const defaultPassword = process.env.ADMIN_PASSWORD || "admin";
-    const salt = bcrypt.genSaltSync(10);
-    const hash = bcrypt.hashSync(defaultPassword, salt);
-    db.prepare("INSERT INTO admins (username, password_hash) VALUES (?, ?)").run("admin", hash);
+    const defaultPassword = getEnvVar("ADMIN_PASSWORD") || process.env.ADMIN_PASSWORD;
+    if (defaultPassword) {
+      const salt = bcrypt.genSaltSync(10);
+      const hash = bcrypt.hashSync(defaultPassword, salt);
+      const adminUser = getEnvVar("ADMIN_USERNAME") || process.env.ADMIN_USERNAME || "admin";
+      db.prepare("INSERT INTO admins (username, password_hash) VALUES (?, ?)").run(adminUser, hash);
+    }
   }
 
   // Seed predefined colors
@@ -1626,10 +1629,13 @@ export async function updateOrderStatus(orderRef: string, status: string): Promi
 // ==============================================================================
 
 export async function verifyAdmin(username: string, password: string): Promise<boolean> {
+  const adminPassword = getEnvVar("ADMIN_PASSWORD") || process.env.ADMIN_PASSWORD;
+  const adminUsername = getEnvVar("ADMIN_USERNAME") || process.env.ADMIN_USERNAME || "admin";
+
   if (
-    process.env.ADMIN_PASSWORD &&
-    password === process.env.ADMIN_PASSWORD &&
-    username === (process.env.ADMIN_USERNAME || "admin")
+    adminPassword &&
+    password === adminPassword &&
+    username === adminUsername
   ) {
     return true;
   }

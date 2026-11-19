@@ -1,20 +1,19 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-let cfEnv: any = null;
+let cfWorkers: any = null;
 try {
   // @ts-ignore
-  const cfWorkers = await import("cloudflare:workers");
-  cfEnv = cfWorkers.env;
+  cfWorkers = await import("cloudflare:workers");
 } catch {
   // Not running in Cloudflare workerd runtime
 }
 
-function getEnvVar(key: string): string {
+export function getEnvVar(key: string): string {
   if (typeof process !== "undefined" && process.env && process.env[key]) {
     return process.env[key]!;
   }
-  if (cfEnv && cfEnv[key]) {
-    return cfEnv[key];
+  if (cfWorkers?.env && cfWorkers.env[key]) {
+    return String(cfWorkers.env[key]);
   }
   return "";
 }
