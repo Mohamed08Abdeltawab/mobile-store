@@ -5,7 +5,14 @@ import { cookies } from "next/headers";
 export async function GET() {
   try {
     const products = await getAllProducts();
-    return NextResponse.json({ success: true, products });
+    return NextResponse.json(
+      { success: true, products },
+      {
+        headers: {
+          "Cache-Control": "public, max-age=60, stale-while-revalidate=300",
+        },
+      }
+    );
   } catch (err: any) {
     console.error("GET /api/products error:", err);
     return NextResponse.json({ success: false, error: "فشل جلب المنتجات: " + err.message }, { status: 500 });

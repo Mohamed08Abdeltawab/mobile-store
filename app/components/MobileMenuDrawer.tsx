@@ -109,6 +109,7 @@ export default function MobileMenuDrawer() {
             <Link
               key={idx}
               href={cat.href}
+              prefetch={false}
               onClick={() => setIsMobileMenuOpen(false)}
               className={`min-h-[44px] flex items-center justify-between px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-colors ${
                 pathname === cat.href
@@ -132,6 +133,7 @@ export default function MobileMenuDrawer() {
 
             <Link
               href="/why-us"
+              prefetch={false}
               onClick={() => setIsMobileMenuOpen(false)}
               className="min-h-[44px] flex items-center px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-neutral-300 hover:text-white hover:bg-white/5 transition-colors"
             >
@@ -140,6 +142,7 @@ export default function MobileMenuDrawer() {
 
             <Link
               href="/customer-service"
+              prefetch={false}
               onClick={() => setIsMobileMenuOpen(false)}
               className="min-h-[44px] flex items-center px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-neutral-300 hover:text-white hover:bg-white/5 transition-colors"
             >
@@ -148,6 +151,7 @@ export default function MobileMenuDrawer() {
 
             <Link
               href={isAdmin ? "/admin" : "/admin/login"}
+              prefetch={false}
               onClick={() => setIsMobileMenuOpen(false)}
               className="min-h-[44px] flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-lime-400 hover:bg-lime-400/10 transition-colors"
             >

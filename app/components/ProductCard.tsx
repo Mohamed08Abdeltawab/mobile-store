@@ -41,7 +41,7 @@ export default function ProductCard({ product }: { product: Product }) {
       
       {/* Product Image Frame */}
       <div className="relative aspect-square w-full overflow-hidden bg-neutral-100/70 p-2 sm:p-4 flex items-center justify-center">
-        <Link href={`/product/${product.id}`} className="block w-full h-full">
+        <Link href={`/product/${product.id}`} prefetch={false} className="block w-full h-full">
           <LazyImage
             src={product.image || "/img/mobile-concept-01.png"}
             alt={product.name}
@@ -141,7 +141,7 @@ export default function ProductCard({ product }: { product: Product }) {
 
         {/* Title */}
         <h3 className="font-bold text-xs sm:text-base text-neutral-900 group-hover:text-emerald-700 transition-colors line-clamp-1 mb-0.5 sm:mb-1">
-          <Link href={`/product/${product.id}`}>
+          <Link href={`/product/${product.id}`} prefetch={false}>
             {product.name}
           </Link>
         </h3>

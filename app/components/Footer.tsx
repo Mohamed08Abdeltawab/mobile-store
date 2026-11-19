@@ -44,14 +44,14 @@ export default function Footer() {
               أقسام وتشكيلات المتجر
             </h3>
             <ul className="space-y-2 text-xs">
-              <li><Link href="/" className="hover:text-lime-400 transition-colors">الرئيسية</Link></li>
-              <li><Link href="/shop" className="hover:text-lime-400 transition-colors">كل الأجهزة والإلكترونيات</Link></li>
-              <li><Link href="/shop?filter=bestseller" className="hover:text-lime-400 transition-colors">🔥 الأكثر طلباً ومبيعاً</Link></li>
-              <li><Link href="/shop?category=phones" className="hover:text-lime-400 transition-colors">الهواتف الذكية (الموبايلات)</Link></li>
-              <li><Link href="/shop?condition=used" className="hover:text-lime-400 transition-colors text-sky-400 font-bold">هواتف كسر زيرو ومستعملة 💎</Link></li>
-              <li><Link href="/shop?category=tablets" className="hover:text-lime-400 transition-colors">التابلت والآيباد</Link></li>
-              <li><Link href="/shop?category=headphones" className="hover:text-lime-400 transition-colors">السماعات وإيربودز</Link></li>
-              <li><Link href="/shop?category=chargers-cables" className="hover:text-lime-400 transition-colors">الشواحن والباوربانك</Link></li>
+              <li><Link href="/" prefetch={false} className="hover:text-lime-400 transition-colors">الرئيسية</Link></li>
+              <li><Link href="/shop" prefetch={false} className="hover:text-lime-400 transition-colors">كل الأجهزة والإلكترونيات</Link></li>
+              <li><Link href="/shop?filter=bestseller" prefetch={false} className="hover:text-lime-400 transition-colors">🔥 الأكثر طلباً ومبيعاً</Link></li>
+              <li><Link href="/shop?category=phones" prefetch={false} className="hover:text-lime-400 transition-colors">الهواتف الذكية (الموبايلات)</Link></li>
+              <li><Link href="/shop?condition=used" prefetch={false} className="hover:text-lime-400 transition-colors text-sky-400 font-bold">هواتف كسر زيرو ومستعملة 💎</Link></li>
+              <li><Link href="/shop?category=tablets" prefetch={false} className="hover:text-lime-400 transition-colors">التابلت والآيباد</Link></li>
+              <li><Link href="/shop?category=headphones" prefetch={false} className="hover:text-lime-400 transition-colors">السماعات وإيربودز</Link></li>
+              <li><Link href="/shop?category=chargers-cables" prefetch={false} className="hover:text-lime-400 transition-colors">الشواحن والباوربانك</Link></li>
               <li>
                 <button
                   type="button"
@@ -70,11 +70,11 @@ export default function Footer() {
               خدمة العملاء والضمان
             </h3>
             <ul className="space-y-2 text-xs">
-              <li><Link href="/customer-service" className="hover:text-lime-400 transition-colors font-bold text-white">مركز خدمة العملاء والضمان المعتمد</Link></li>
-              <li><Link href="/why-us" className="hover:text-lime-400 transition-colors font-bold text-white">لماذا موبايل ستور؟ (الفحص قبل الدفع)</Link></li>
+              <li><Link href="/customer-service" prefetch={false} className="hover:text-lime-400 transition-colors font-bold text-white">مركز خدمة العملاء والضمان المعتمد</Link></li>
+              <li><Link href="/why-us" prefetch={false} className="hover:text-lime-400 transition-colors font-bold text-white">لماذا موبايل ستور؟ (الفحص قبل الدفع)</Link></li>
               <li><a href={`tel:+${waNumber}`} className="hover:text-lime-400 transition-colors">هاتف المبيعات: 0106 571 2366</a></li>
               <li><a href={`https://wa.me/${waNumber}`} target="_blank" rel="noopener noreferrer" className="hover:text-lime-400 transition-colors">المحادثة والمساعدة عبر واتساب</a></li>
-              <li><Link href="/admin" className="hover:text-lime-400 transition-colors">لوحة تحكم الإدارة (Dashboard)</Link></li>
+              <li><Link href="/admin" prefetch={false} className="hover:text-lime-400 transition-colors">لوحة تحكم الإدارة (Dashboard)</Link></li>
             </ul>
           </div>
 

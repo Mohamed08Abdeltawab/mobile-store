@@ -31,6 +31,9 @@ export default function AdminLoginPage() {
 
       const data = await res.json();
       if (data.success) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("mobile_admin_hint", "true");
+        }
         await checkAdminAuth();
         router.push("/admin");
       } else {

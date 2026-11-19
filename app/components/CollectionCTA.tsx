@@ -31,7 +31,7 @@ export default function CollectionCTA() {
           </Button>
 
           <Button asChild variant="outline" className="border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold h-12 px-6 rounded-full text-sm sm:text-base">
-            <Link href="/shop?condition=used">
+            <Link href="/shop?condition=used" prefetch={false}>
               تصفح أجهزة كسر زيرو بأسعار مخفضة 💎
             </Link>
           </Button>

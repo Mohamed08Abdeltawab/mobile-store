@@ -115,11 +115,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   async function checkAdminAuth(): Promise<boolean> {
+    const shouldCheck = typeof window !== "undefined" && (
+      window.location.pathname.startsWith("/admin") ||
+      localStorage.getItem("mobile_admin_hint") === "true"
+    );
+
+    if (!shouldCheck) {
+      setIsAdmin(false);
+      return false;
+    }
+
     try {
       const res = await fetch("/api/admin/login");
       const data = await res.json();
       const authed = Boolean(data.authenticated);
       setIsAdmin(authed);
+      if (!authed && typeof window !== "undefined") {
+        localStorage.removeItem("mobile_admin_hint");
+      }
       return authed;
     } catch (e) {
       setIsAdmin(false);
@@ -127,12 +140,59 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function loadInitialData() {
+    // 1. Try instant load from sessionStorage cache (for instant rendering on refresh)
+    if (typeof window !== "undefined") {
+      try {
+        const cached = sessionStorage.getItem("mobile_store_bootstrap");
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && parsed.products && parsed.timestamp && Date.now() - parsed.timestamp < 120000) {
+            setProducts(parsed.products || []);
+            setCategories(parsed.categories || []);
+            setBrands(parsed.brands || []);
+            setColors(parsed.colors || []);
+          }
+        }
+      } catch (e) {}
+    }
+
+    // 2. Single consolidated request for all store data
+    try {
+      const res = await fetch("/api/bootstrap");
+      const data = await res.json();
+      if (data.success) {
+        if (Array.isArray(data.products)) setProducts(data.products);
+        if (Array.isArray(data.categories)) setCategories(data.categories);
+        if (Array.isArray(data.brands)) setBrands(data.brands);
+        if (Array.isArray(data.colors)) setColors(data.colors);
+
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem("mobile_store_bootstrap", JSON.stringify({
+              products: data.products,
+              categories: data.categories,
+              brands: data.brands,
+              colors: data.colors,
+              timestamp: Date.now()
+            }));
+          } catch (e) {}
+        }
+      }
+    } catch (err) {
+      console.error("Error loading bootstrap data:", err);
+    }
+  }
+
   async function refreshProducts() {
     try {
-      const res = await fetch("/api/products");
+      const res = await fetch("/api/products", { cache: "no-store" });
       const data = await res.json();
       if (data.success && Array.isArray(data.products)) {
         setProducts(data.products);
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem("mobile_store_bootstrap");
+        }
       }
     } catch (err) {
       console.error("Error loading products:", err);
@@ -142,22 +202,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Load Initial Products, Categories & Auth
   useEffect(() => {
     checkAdminAuth();
-    refreshProducts();
-
-    fetch("/api/categories")
-      .then(res => res.json())
-      .then(data => { if (data.success) setCategories(data.categories); })
-      .catch(() => {});
-
-    fetch("/api/brands")
-      .then(res => res.json())
-      .then(data => { if (data.success) setBrands(data.brands); })
-      .catch(() => {});
-
-    fetch("/api/colors")
-      .then(res => res.json())
-      .then(data => { if (data.success) setColors(data.colors); })
-      .catch(() => {});
+    loadInitialData();
 
     // Load saved cart & wishlist from localStorage
     try {

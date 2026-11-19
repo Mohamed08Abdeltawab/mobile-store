@@ -183,6 +183,7 @@ export default function Navbar() {
             {isAdmin ? (
               <Link
                 href="/admin"
+                prefetch={false}
                 className="hidden md:inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 h-8 sm:h-9 rounded-full bg-lime-400 text-black font-black text-xs shadow-md shadow-lime-400/25 hover:bg-lime-300 active:scale-95 transition-all shrink-0"
                 title="لوحة تحكم المتجر"
                 aria-label="لوحة تحكم المتجر"
@@ -204,6 +205,7 @@ export default function Navbar() {
             ) : (
               <Link
                 href="/admin/login"
+                prefetch={false}
                 className="hidden md:inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 h-8 sm:h-9 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white font-bold text-xs active:scale-95 transition-all shrink-0"
                 title="تسجيل الدخول للإدارة"
                 aria-label="تسجيل الدخول"
@@ -238,60 +240,70 @@ export default function Navbar() {
             </Link>
             <Link
               href="/shop"
+              prefetch={false}
               className={`px-3 py-1.5 rounded-lg transition-colors shrink-0 ${pathname === "/shop" && !pathname.includes("?") ? "bg-white/15 text-lime-400 font-bold" : "hover:text-white hover:bg-white/5"}`}
             >
               كل الأجهزة
             </Link>
             <Link
               href="/shop?filter=bestseller"
+              prefetch={false}
               className="px-3 py-1.5 rounded-lg text-amber-300 hover:bg-amber-400/10 transition-colors font-bold flex items-center gap-1 shrink-0"
             >
               🔥 الأكثر طلباً
             </Link>
             <Link
               href="/shop?category=phones"
+              prefetch={false}
               className="px-3 py-1.5 rounded-lg hover:text-white hover:bg-white/5 transition-colors shrink-0"
             >
               📱 الموبايلات
             </Link>
             <Link
               href="/shop?condition=used"
+              prefetch={false}
               className="px-3 py-1.5 rounded-lg hover:text-white hover:bg-white/5 text-sky-400 font-bold transition-colors shrink-0"
             >
               💎 كسر زيرو ومستعمل
             </Link>
             <Link
               href="/shop?category=tablets"
+              prefetch={false}
               className="px-3 py-1.5 rounded-lg hover:text-white hover:bg-white/5 transition-colors shrink-0"
             >
               التابلت
             </Link>
             <Link
               href="/shop?category=headphones"
+              prefetch={false}
               className="px-3 py-1.5 rounded-lg hover:text-white hover:bg-white/5 transition-colors shrink-0"
             >
               السماعات
             </Link>
             <Link
               href="/shop?category=chargers-cables"
+              prefetch={false}
               className="px-3 py-1.5 rounded-lg hover:text-white hover:bg-white/5 transition-colors shrink-0"
             >
               الشواحن والكابلات
             </Link>
             <Link
               href="/shop?category=smart-watches"
+              prefetch={false}
               className="px-3 py-1.5 rounded-lg hover:text-white hover:bg-white/5 transition-colors shrink-0"
             >
               الساعات الذكية
             </Link>
             <Link
               href="/shop?category=cases-protection"
+              prefetch={false}
               className="px-3 py-1.5 rounded-lg hover:text-white hover:bg-white/5 transition-colors shrink-0"
             >
               الجرابات والحماية
             </Link>
             <Link
               href="/shop?category=accessories"
+              prefetch={false}
               className="px-3 py-1.5 rounded-lg hover:text-white hover:bg-white/5 transition-colors shrink-0"
             >
               إكسسوارات أخرى
@@ -306,12 +318,14 @@ export default function Navbar() {
           <div className="flex items-center gap-2 shrink-0 mr-auto">
             <Link
               href="/why-us"
+              prefetch={false}
               className="px-3 py-1.5 rounded-lg text-xs font-bold text-neutral-400 hover:text-white transition-colors shrink-0"
             >
               لماذا نحن؟
             </Link>
             <Link
               href="/customer-service"
+              prefetch={false}
               className="px-3 py-1.5 rounded-lg text-xs font-bold text-neutral-400 hover:text-white transition-colors shrink-0"
             >
               خدمة العملاء والضمان

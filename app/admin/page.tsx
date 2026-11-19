@@ -180,6 +180,9 @@ export default function AdminDashboardPage() {
 
   async function handleLogout() {
     await fetch("/api/admin/logout", { method: "POST" });
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("mobile_admin_hint");
+    }
     setIsAdmin(false);
     router.push("/admin/login");
   }
