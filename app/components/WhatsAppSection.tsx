@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import ScrollReveal from "./ScrollReveal";
 
 export default function WhatsAppSection() {
-  const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201065712366";
+  const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
 
   return (
     <section

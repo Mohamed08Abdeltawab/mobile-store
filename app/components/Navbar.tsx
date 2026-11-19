@@ -17,7 +17,7 @@ export default function Navbar() {
   } = useCart();
 
   const pathname = usePathname();
-  const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201065712366";
+  const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
 
   return (
     <header

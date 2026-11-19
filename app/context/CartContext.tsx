@@ -1,7 +1,20 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { Product, CartItem, Order, Category, Brand, PredefinedColor } from "../../lib/types";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import {
+  Product,
+  CartItem,
+  Order,
+  Category,
+  Brand,
+  PredefinedColor,
+} from "../../lib/types";
 
 export interface Governorate {
   id: string;
@@ -14,10 +27,30 @@ export const GOVERNORATES: Governorate[] = [
   { id: "cairo", name: "القاهرة", shipping: 50, days: "24-48 ساعة" },
   { id: "giza", name: "الجيزة", shipping: 50, days: "24-48 ساعة" },
   { id: "alex", name: "الإسكندرية", shipping: 60, days: "48 ساعة" },
-  { id: "delta", name: "محافظات الدلتا (المنصورة، طنطا، الزقازيق...)", shipping: 65, days: "48-72 ساعة" },
-  { id: "canal", name: "مدن القناة (الإسماعيلية، بورسعيد، السويس)", shipping: 70, days: "48-72 ساعة" },
-  { id: "upper", name: "محافظات الصعيد (بني سويف، أسيوط، سوهاج...)", shipping: 80, days: "3-4 أيام" },
-  { id: "remote", name: "المحافظات الحدودية (البحر الأحمر، مطروح...)", shipping: 95, days: "4-5 أيام" }
+  {
+    id: "delta",
+    name: "محافظات الدلتا (المنصورة، طنطا، الزقازيق...)",
+    shipping: 65,
+    days: "48-72 ساعة",
+  },
+  {
+    id: "canal",
+    name: "مدن القناة (الإسماعيلية، بورسعيد، السويس)",
+    shipping: 70,
+    days: "48-72 ساعة",
+  },
+  {
+    id: "upper",
+    name: "محافظات الصعيد (بني سويف، أسيوط، سوهاج...)",
+    shipping: 80,
+    days: "3-4 أيام",
+  },
+  {
+    id: "remote",
+    name: "المحافظات الحدودية (البحر الأحمر، مطروح...)",
+    shipping: 95,
+    days: "4-5 أيام",
+  },
 ];
 
 interface Toast {
@@ -34,7 +67,14 @@ interface CartContextType {
   cart: CartItem[];
   setCart: React.Dispatch<React.SetStateAction<CartItem[]>>;
   wishlist: string[];
-  addToCart: (product: Product, qty?: number, variant?: string, color?: string, ram?: string, storage?: string) => void;
+  addToCart: (
+    product: Product,
+    qty?: number,
+    variant?: string,
+    color?: string,
+    ram?: string,
+    storage?: string,
+  ) => void;
   updateCartQty: (index: number, delta: number) => void;
   removeFromCart: (index: number) => void;
   toggleWishlist: (productId: string) => void;
@@ -115,10 +155,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
   async function checkAdminAuth(): Promise<boolean> {
-    const shouldCheck = typeof window !== "undefined" && (
-      window.location.pathname.startsWith("/admin") ||
-      localStorage.getItem("mobile_admin_hint") === "true"
-    );
+    const shouldCheck =
+      typeof window !== "undefined" &&
+      (window.location.pathname.startsWith("/admin") ||
+        localStorage.getItem("mobile_admin_hint") === "true");
 
     if (!shouldCheck) {
       setIsAdmin(false);
@@ -147,7 +187,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const cached = sessionStorage.getItem("mobile_store_bootstrap");
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (parsed && parsed.products && parsed.timestamp && Date.now() - parsed.timestamp < 120000) {
+          if (
+            parsed &&
+            parsed.products &&
+            parsed.timestamp &&
+            Date.now() - parsed.timestamp < 120000
+          ) {
             setProducts(parsed.products || []);
             setCategories(parsed.categories || []);
             setBrands(parsed.brands || []);
@@ -169,13 +214,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
         if (typeof window !== "undefined") {
           try {
-            sessionStorage.setItem("mobile_store_bootstrap", JSON.stringify({
-              products: data.products,
-              categories: data.categories,
-              brands: data.brands,
-              colors: data.colors,
-              timestamp: Date.now()
-            }));
+            sessionStorage.setItem(
+              "mobile_store_bootstrap",
+              JSON.stringify({
+                products: data.products,
+                categories: data.categories,
+                brands: data.brands,
+                colors: data.colors,
+                timestamp: Date.now(),
+              }),
+            );
           } catch (e) {}
         }
       }
@@ -233,16 +281,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Save Wishlist to LocalStorage
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem("mobile_store_wishlist", JSON.stringify([...new Set(wishlist)]));
+      localStorage.setItem(
+        "mobile_store_wishlist",
+        JSON.stringify([...new Set(wishlist)]),
+      );
     }
   }, [wishlist, isLoaded]);
 
   // Toast notifications
   function showToast(msg: string) {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    setToasts(prev => [...prev, { id, msg }]);
+    setToasts((prev) => [...prev, { id, msg }]);
     setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
+      setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 3000);
   }
 
@@ -253,32 +304,43 @@ export function CartProvider({ children }: { children: ReactNode }) {
     variant: string = "",
     color: string = "",
     ram: string = "",
-    storage: string = ""
+    storage: string = "",
   ) {
     if (!product) return;
-    const defaultColorName = product.colors && product.colors[0] 
-      ? (product.colors[0].color_name || (product.colors[0] as any).name_ar || (product.colors[0] as any).name || "") 
-      : "";
+    const defaultColorName =
+      product.colors && product.colors[0]
+        ? product.colors[0].color_name ||
+          (product.colors[0] as any).name_ar ||
+          (product.colors[0] as any).name ||
+          ""
+        : "";
     const chosenColor = color || defaultColorName;
     const vName = variant || (chosenColor ? `لون: ${chosenColor}` : "");
 
-    setCart(prev => {
-      const existing = prev.find(item => item.id === product.id && item.variant === vName);
+    setCart((prev) => {
+      const existing = prev.find(
+        (item) => item.id === product.id && item.variant === vName,
+      );
       if (existing) {
-        return prev.map(item => item === existing ? { ...item, qty: item.qty + qty } : item);
+        return prev.map((item) =>
+          item === existing ? { ...item, qty: item.qty + qty } : item,
+        );
       }
-      return [...prev, {
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        image: product.image,
-        variant: vName,
-        color: chosenColor,
-        ram: ram || (product.specifications?.ram || ""),
-        storage: storage || (product.specifications?.storage || ""),
-        condition: product.condition,
-        qty
-      }];
+      return [
+        ...prev,
+        {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.image,
+          variant: vName,
+          color: chosenColor,
+          ram: ram || product.specifications?.ram || "",
+          storage: storage || product.specifications?.storage || "",
+          condition: product.condition,
+          qty,
+        },
+      ];
     });
 
     showToast(`تمت إضافة "${product.name}" إلى سلة التسوق`);
@@ -286,7 +348,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   function updateCartQty(index: number, delta: number) {
-    setCart(prev => {
+    setCart((prev) => {
       return prev
         .map((item, i) => {
           if (i === index) {
@@ -294,12 +356,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
           }
           return item;
         })
-        .filter(item => item.qty > 0);
+        .filter((item) => item.qty > 0);
     });
   }
 
   function removeFromCart(index: number) {
-    setCart(prev => prev.filter((_, i) => i !== index));
+    setCart((prev) => prev.filter((_, i) => i !== index));
     showToast("تم حذف المنتج من السلة");
   }
 
@@ -307,10 +369,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   function toggleWishlist(productId: string) {
     const isCurrentlyFav = wishlist.includes(productId);
     if (isCurrentlyFav) {
-      setWishlist(prev => prev.filter(id => id !== productId));
+      setWishlist((prev) => prev.filter((id) => id !== productId));
       showToast("تمت الإزالة من المفضلة");
     } else {
-      setWishlist(prev => {
+      setWishlist((prev) => {
         if (prev.includes(productId)) return prev;
         return [...prev, productId];
       });
@@ -323,21 +385,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   function addAllWishlistToCart() {
-    const favProducts = products.filter(p => wishlist.includes(p.id));
+    const favProducts = products.filter((p) => wishlist.includes(p.id));
     if (favProducts.length === 0) return;
 
-    setCart(prev => {
+    setCart((prev) => {
       let updated = [...prev];
       for (const product of favProducts) {
-        const defaultColorName = product.colors && product.colors[0] 
-          ? (product.colors[0].color_name || (product.colors[0] as any).name_ar || (product.colors[0] as any).name || "") 
-          : "";
+        const defaultColorName =
+          product.colors && product.colors[0]
+            ? product.colors[0].color_name ||
+              (product.colors[0] as any).name_ar ||
+              (product.colors[0] as any).name ||
+              ""
+            : "";
         const vName = defaultColorName ? `لون: ${defaultColorName}` : "";
-        const existingIdx = updated.findIndex(item => item.id === product.id && item.variant === vName);
+        const existingIdx = updated.findIndex(
+          (item) => item.id === product.id && item.variant === vName,
+        );
         if (existingIdx > -1) {
           updated[existingIdx] = {
             ...updated[existingIdx],
-            qty: updated[existingIdx].qty + 1
+            qty: updated[existingIdx].qty + 1,
           };
         } else {
           updated.push({
@@ -347,10 +415,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
             image: product.image,
             variant: vName,
             color: defaultColorName,
-            ram: (product.specifications?.ram || ""),
-            storage: (product.specifications?.storage || ""),
+            ram: product.specifications?.ram || "",
+            storage: product.specifications?.storage || "",
             condition: product.condition,
-            qty: 1
+            qty: 1,
           });
         }
       }
@@ -365,8 +433,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Quick WhatsApp Purchase
   function sendDirectWhatsApp(product: Product) {
     if (!product) return;
-    const num = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201065712366";
-    const conditionText = product.condition ? ` (حالة: ${product.condition})` : "";
+    const num = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
+    const conditionText = product.condition
+      ? ` (حالة: ${product.condition})`
+      : "";
     const text = `مرحباً، أود الاستفسار وطلب جهاز *${product.name}*${conditionText} بسعر *${Number(product.price).toLocaleString("ar-EG")} ج.م* مع ميزة الفحص والمعاينة قبل الدفع.`;
     const url = `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
     window.open(url, "_blank");
@@ -382,7 +452,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Calculations
   const totalCartCount = cart.reduce((sum, item) => sum + item.qty, 0);
-  const cartSubtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  const cartSubtotal = cart.reduce(
+    (sum, item) => sum + item.price * item.qty,
+    0,
+  );
   const isFreeShipping = cartSubtotal >= 5000;
   const shippingFee = isFreeShipping ? 0 : selectedGov.shipping;
   const cartTotal = cartSubtotal + shippingFee;
@@ -393,7 +466,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const errs: Record<string, boolean> = {};
 
     if (!customerName.trim()) errs.name = true;
-    if (!customerPhone.trim() || !/^01[0125][0-9]{8}$/.test(customerPhone.trim())) errs.phone = true;
+    if (
+      !customerPhone.trim() ||
+      !/^01[0125][0-9]{8}$/.test(customerPhone.trim())
+    )
+      errs.phone = true;
     if (!customerAddress.trim()) errs.addr = true;
 
     if (Object.keys(errs).length > 0) {
@@ -415,8 +492,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
           items: cart,
           subtotal: cartSubtotal,
           shipping: shippingFee,
-          total: cartTotal
-        })
+          total: cartTotal,
+        }),
       });
 
       const data = await res.json();
@@ -492,7 +569,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         isAdmin,
         setIsAdmin,
         checkAdminAuth,
-        refreshProducts
+        refreshProducts,
       }}
     >
       {children}

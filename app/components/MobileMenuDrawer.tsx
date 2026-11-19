@@ -7,7 +7,7 @@ import { useCart } from "../context/CartContext";
 export default function MobileMenuDrawer() {
   const { isMobileMenuOpen, setIsMobileMenuOpen, isAdmin } = useCart();
   const pathname = usePathname();
-  const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201065712366";
+  const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
 
   if (!isMobileMenuOpen) return null;
 
