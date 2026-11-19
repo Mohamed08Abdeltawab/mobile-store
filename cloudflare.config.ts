@@ -13,14 +13,6 @@ export default defineConfig({
     },
     env: {
       ASSETS: bindings.assets(),
-      NEXT_PUBLIC_SUPABASE_URL: bindings.secret(),
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: bindings.secret(),
-      SUPABASE_SERVICE_ROLE_KEY: bindings.secret(),
-      NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET: bindings.secret(),
-      ADMIN_USERNAME: bindings.secret(),
-      ADMIN_PASSWORD: bindings.secret(),
-      NEXT_PUBLIC_WHATSAPP_NUMBER: bindings.secret(),
-      NEXT_PUBLIC_STORE_NAME: bindings.secret(),
     },
   }),
 });
