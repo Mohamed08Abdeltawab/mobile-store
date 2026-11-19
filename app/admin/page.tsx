@@ -1648,30 +1648,40 @@ export default function AdminDashboardPage() {
                           }}
                         />
                         {idx === 0 && (
-                          <span className="absolute top-1 right-1 bg-lime-400 text-black text-[9px] font-black px-1 rounded shadow">
+                          <span className="absolute top-1 right-1 bg-lime-400 text-black text-[9px] font-black px-1 rounded shadow z-10 pointer-events-none">
                             غلاف
                           </span>
                         )}
-                        <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1">
-                          {idx !== 0 && (
+
+                        {/* زر حذف الصورة ثابت دائماً في أقصى الشمال فوق الصورة */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveImage(idx);
+                          }}
+                          title="حذف الصورة"
+                          className="absolute top-1 left-1 z-20 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center shadow-md transition-transform hover:scale-110 cursor-pointer"
+                        >
+                          <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                          </svg>
+                        </button>
+
+                        {/* خيار تعيين كغلاف عند الوقوف على الصورة إن لم تكن هي الغلاف */}
+                        {idx !== 0 && (
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                             <button
                               type="button"
                               onClick={() => handleSetAsCover(idx)}
                               title="تعيين كغلاف رئيسي"
-                              className="text-[10px] bg-lime-400 text-black px-1.5 py-0.5 rounded font-bold cursor-pointer"
+                              className="pointer-events-auto text-[10px] bg-lime-400 hover:bg-lime-300 text-black px-2 py-0.5 rounded font-black cursor-pointer shadow"
                             >
                               غلاف
                             </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveImage(idx)}
-                            title="حذف الصورة"
-                            className="text-[10px] bg-rose-500 text-white px-1.5 py-0.5 rounded font-bold cursor-pointer"
-                          >
-                            ✕
-                          </button>
-                        </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

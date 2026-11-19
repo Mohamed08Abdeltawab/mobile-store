@@ -99,9 +99,8 @@ export default function AdminLoginPage() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="admin"
                 required
-                className="h-11 rounded-xl bg-[#090d0b] border-white/15 text-white placeholder-neutral-500 text-sm focus:border-lime-400 focus:ring-lime-400"
+                className="h-11 rounded-xl bg-[#090d0b] border-white/15 text-white text-sm focus:border-lime-400 focus:ring-lime-400"
               />
             </div>
 
@@ -111,9 +110,8 @@ export default function AdminLoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••••••"
                 required
-                className="h-11 rounded-xl bg-[#090d0b] border-white/15 text-white placeholder-neutral-500 text-sm focus:border-lime-400 focus:ring-lime-400"
+                className="h-11 rounded-xl bg-[#090d0b] border-white/15 text-white text-sm focus:border-lime-400 focus:ring-lime-400"
               />
             </div>
 
