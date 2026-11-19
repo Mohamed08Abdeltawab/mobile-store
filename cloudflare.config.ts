@@ -16,6 +16,7 @@ export default defineConfig({
     env: {
       ASSETS: bindings.assets(),
       BUCKET: bindings.r2({ name: bucketName }),
+      NEXT_PUBLIC_R2_PUBLIC_URL: bindings.text("https://pub-adb4eb88caee427c81d59dcb6b02510e.r2.dev"),
     },
   }),
 });
