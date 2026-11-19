@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import fs from "node:fs/promises";
 import path from "node:path";
+import { uploadImageToStorage, deleteImageFromStorage } from "../../../lib/r2";
 import { getSupabaseAdmin, isSupabaseConfigured } from "../../../lib/supabase";
 
 export async function POST(req: Request) {
@@ -22,9 +22,6 @@ export async function POST(req: Request) {
     const allowedExts = [".png", ".jpg", ".jpeg", ".webp", ".svg", ".gif"];
     const uploadedUrls: string[] = [];
 
-    const bucketName = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || "mobiles";
-    const useSupabase = isSupabaseConfigured();
-
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const rawExt = path.extname(file.name) || ".png";
@@ -35,36 +32,11 @@ export async function POST(req: Request) {
 
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
+      const mimeType = file.type || (ext === ".png" ? "image/png" : ext === ".webp" ? "image/webp" : ext === ".svg" ? "image/svg+xml" : "image/jpeg");
 
-      if (useSupabase) {
-        const supabase = getSupabaseAdmin()!;
-        const mimeType = file.type || (ext === ".png" ? "image/png" : ext === ".webp" ? "image/webp" : "image/jpeg");
-
-        const { data, error } = await supabase.storage
-          .from(bucketName)
-          .upload(filename, buffer, {
-            contentType: mimeType,
-            upsert: true
-          });
-
-        if (error) {
-          console.error("[Supabase Storage Upload Error]:", error);
-          throw new Error("فشل الرفع إلى Supabase Storage: " + error.message);
-        }
-
-        const { data: publicUrlData } = supabase.storage
-          .from(bucketName)
-          .getPublicUrl(filename);
-
-        uploadedUrls.push(publicUrlData.publicUrl);
-      } else {
-        // Local filesystem fallback
-        const uploadsDir = path.join(process.cwd(), "public", "uploads");
-        await fs.mkdir(uploadsDir, { recursive: true });
-        const destination = path.join(uploadsDir, filename);
-        await fs.writeFile(destination, buffer);
-        uploadedUrls.push(`/uploads/${filename}`);
-      }
+      // Upload to Cloudflare R2 (or fallback to local uploads)
+      const uploadResult = await uploadImageToStorage(filename, buffer, mimeType);
+      uploadedUrls.push(uploadResult.url);
     }
 
     return NextResponse.json({
@@ -94,10 +66,13 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ success: false, error: "رابط الصورة مطلوب لحذفها" }, { status: 400 });
     }
 
+    // 1. Delete from Cloudflare R2 / Local storage
+    await deleteImageFromStorage(url);
+
+    // 2. Legacy fallback: Check if it was stored in Supabase Storage previously
     const bucketName = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || "mobiles";
     const useSupabase = isSupabaseConfigured();
 
-    // Check if it's stored in Supabase Storage
     if (useSupabase && (url.includes(bucketName) || url.includes("supabase.co"))) {
       try {
         const supabase = getSupabaseAdmin()!;
@@ -109,21 +84,6 @@ export async function DELETE(req: Request) {
         }
       } catch (err) {
         console.error("Supabase Storage deletion error:", err);
-      }
-    }
-
-    // Check if it's stored in local public/uploads directory
-    if (url.startsWith("/uploads/") || url.includes("/uploads/")) {
-      const cleanUrl = url.split("?")[0];
-      const filename = path.basename(cleanUrl);
-      const filePath = path.join(process.cwd(), "public", "uploads", filename);
-
-      try {
-        await fs.unlink(filePath);
-      } catch (err: any) {
-        if (err.code !== "ENOENT") {
-          console.error("Local file deletion error:", err);
-        }
       }
     }
 
