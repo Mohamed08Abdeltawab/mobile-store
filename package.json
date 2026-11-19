@@ -49,5 +49,11 @@
     "tailwindcss": "^4.3.3",
     "typescript": "^5.7.0",
     "wrangler": "^4.157.0"
+  },
+  "pnpm": {
+    "allowBuilds": {
+      "esbuild": true,
+      "workerd": true
+    }
   }
 }
