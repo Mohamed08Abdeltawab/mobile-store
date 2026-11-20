@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import LazyImage from "./LazyImage";
 
 export default function SearchModal() {
-  const { isSearchOpen, setIsSearchOpen, products, addToCart } = useCart();
+  const { isSearchOpen, setIsSearchOpen, products, addToCart, formatPrice } = useCart();
   const [query, setQuery] = useState("");
 
   const results = useMemo(() => {
@@ -129,7 +129,7 @@ export default function SearchModal() {
                       {p.name}
                     </h4>
                     <span className="text-xs font-black text-emerald-800 block mt-0.5">
-                      {Number(p.price).toLocaleString("ar-EG")} ج.م
+                      {formatPrice(p.price)}
                     </span>
                   </div>
                 </Link>

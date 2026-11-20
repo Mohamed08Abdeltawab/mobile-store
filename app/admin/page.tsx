@@ -79,7 +79,7 @@ const RAM_OPTIONS = ["2GB", "3GB", "4GB", "6GB", "8GB", "12GB", "16GB", "24GB"];
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const { setIsAdmin, settings, setSettings } = useCart();
+  const { setIsAdmin, settings, setSettings, formatPrice } = useCart();
   const [activeTab, setActiveTab] = useState<"products" | "orders" | "settings">("products");
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -691,7 +691,7 @@ export default function AdminDashboardPage() {
           <div className="bg-[#141c18] border border-white/10 rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5">
             <span className="text-[11px] sm:text-xs text-neutral-400 block font-medium">حجم المبيعات الإجمالي</span>
             <div className="text-lg sm:text-2xl md:text-3xl font-black text-lime-400 mt-1">
-              {totalSales.toLocaleString("ar-EG")} <small className="text-xs sm:text-sm text-white font-bold">ج.م</small>
+              {formatPrice(totalSales)}
             </div>
           </div>
         </div>
@@ -840,10 +840,10 @@ export default function AdminDashboardPage() {
 
                             {/* Price */}
                             <td className="p-4 font-bold text-white">
-                              <div>{Number(p.price).toLocaleString("ar-EG")} ج.م</div>
+                              <div>{formatPrice(p.price)}</div>
                               {(p.original_price || p.old_price) && (Number(p.original_price || p.old_price) > p.price) && (
                                 <div className="text-[11px] text-neutral-500 line-through">
-                                  {Number(p.original_price || p.old_price).toLocaleString("ar-EG")} ج.م
+                                  {formatPrice(p.original_price || p.old_price)}
                                 </div>
                               )}
                             </td>
@@ -1030,7 +1030,7 @@ export default function AdminDashboardPage() {
                               <div className="min-w-0 flex-1">
                                 <div className="text-xs font-bold text-white truncate">{item.name}</div>
                                 <div className="text-[11px] text-neutral-400 flex items-center gap-2 mt-0.5">
-                                  <span>{item.quantity} × {item.price?.toLocaleString("ar-EG")} ج.م</span>
+                                  <span>{item.quantity} × {formatPrice(item.price)}</span>
                                   {item.selectedColor && (
                                     <span className="flex items-center gap-1">
                                       <span
@@ -1053,7 +1053,7 @@ export default function AdminDashboardPage() {
                           طريقة الدفع: {order.payment_method === "cod" ? "الدفع عند الاستلام (COD)" : "أونلاين"}
                         </span>
                         <div className="text-sm font-black text-lime-400">
-                          الإجمالي: {(parseFloat(order.total_price || order.total) || 0).toLocaleString("ar-EG")} ج.م
+                          الإجمالي: {formatPrice(parseFloat(order.total_price || order.total) || 0)}
                         </div>
                       </div>
                     </div>
@@ -1072,6 +1072,9 @@ export default function AdminDashboardPage() {
             initialSettings={settings}
             onSaved={(updated) => {
               setSettings(updated);
+              if (typeof window !== "undefined") {
+                sessionStorage.removeItem("mobile_store_bootstrap");
+              }
               setNotification("تم حفظ وتحديث إعدادات المتجر بنجاح ✓");
               setTimeout(() => setNotification(""), 4000);
             }}

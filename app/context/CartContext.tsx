@@ -293,7 +293,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     // 2. Single consolidated request for all store data
     try {
-      const res = await fetch("/api/bootstrap");
+      const res = await fetch(`/api/bootstrap?t=${Date.now()}`, { cache: "no-store" });
       const data: any = await res.json();
       if (data.success) {
         if (Array.isArray(data.products)) setProducts(data.products);

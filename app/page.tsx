@@ -79,6 +79,10 @@ export default function HomePage() {
 
   // Featured Deal product
   const dealProduct = products.find(p => p.id === "iphone-16-pro-max") || products[0];
+  const dealDiscount =
+    dealProduct?.old_price && Number(dealProduct.old_price) > Number(dealProduct.price)
+      ? Number(dealProduct.old_price) - Number(dealProduct.price)
+      : 5500;
 
   return (
     <>
@@ -439,7 +443,7 @@ export default function HomePage() {
 
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white leading-tight">
                 {dealProduct?.name || "آيفون 16 برو ماكس (iPhone 16 Pro Max)"}<br />
-                <span className="text-lime-400">بخصم استثنائي 5,500 ج.م</span>
+                <span className="text-lime-400">بخصم استثنائي {formatPrice(dealDiscount)}</span>
               </h2>
 
               <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed max-w-xl">
@@ -490,7 +494,7 @@ export default function HomePage() {
                 {/* Save discount badge */}
                 <div className="absolute top-2 left-2 z-20 flex flex-col items-center justify-center w-16 h-16 rounded-full bg-rose-600 text-white font-black text-xs shadow-xl rotate-12">
                   <span>وفر</span>
-                  <span className="text-[10px]">5,500 ج.م</span>
+                  <span className="text-[10px]">{formatPrice(dealDiscount)}</span>
                 </div>
 
                 <div className="absolute inset-0 rounded-full bg-lime-400/20 blur-2xl pointer-events-none" />

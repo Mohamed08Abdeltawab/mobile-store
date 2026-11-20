@@ -13,7 +13,8 @@ export default function WishlistDrawer() {
     products,
     toggleWishlist,
     addToCart,
-    addAllWishlistToCart
+    addAllWishlistToCart,
+    formatPrice
   } = useCart();
 
   if (!isWishlistOpen) return null;
@@ -88,7 +89,7 @@ export default function WishlistDrawer() {
                     </Link>
                   </h4>
                   <div className="text-xs font-black text-emerald-800 mb-1">
-                    {Number(p.price).toLocaleString("ar-EG")} ج.م
+                    {formatPrice(p.price)}
                   </div>
                   <div className="flex items-center gap-2">
                     <button

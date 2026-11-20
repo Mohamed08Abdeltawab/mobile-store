@@ -255,7 +255,7 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
 
   currency: "EGP",
   currency_format: "symbol_after_arabic",
-  custom_currency_symbol: "ج.م",
+  custom_currency_symbol: "",
 
   social_facebook: "https://facebook.com",
   social_facebook_enabled: true,
@@ -362,16 +362,31 @@ export function formatCurrency(
     }
   }
 
-  // Default: EGP
+  if (currency === "EGP") {
+    switch (format) {
+      case "symbol_before_english":
+        return `LE ${numStrEn}`;
+      case "symbol_after_english":
+        return `${numStrEn} LE`;
+      case "symbol_before_arabic":
+        return `ج.م ${numStrAr}`;
+      case "symbol_after_arabic":
+      default:
+        return `${numStrAr} ج.م`;
+    }
+  }
+
+  // Custom or other currencies
+  const customSymbol = settings?.custom_currency_symbol?.trim() || String(currency);
   switch (format) {
     case "symbol_before_english":
-      return `LE ${numStrEn}`;
+      return `${customSymbol} ${numStrEn}`;
     case "symbol_after_english":
-      return `${numStrEn} LE`;
+      return `${numStrEn} ${customSymbol}`;
     case "symbol_before_arabic":
-      return `ج.م ${numStrAr}`;
+      return `${customSymbol} ${numStrAr}`;
     case "symbol_after_arabic":
     default:
-      return `${numStrAr} ج.م`;
+      return `${numStrAr} ${customSymbol}`;
   }
 }

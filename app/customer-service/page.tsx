@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useCart } from "../context/CartContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 export default function CustomerServicePage() {
-  const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
+  const { settings } = useCart();
+  const waNumber = settings?.whatsapp_number || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
+  const storeName = settings?.store_name || "موبايل ستور";
+  const salesHours = settings?.sales_hours || "يومياً من 10 صباحاً حتى 11 مساءً";
 
   return (
     <div className="pb-20">
@@ -74,8 +78,7 @@ export default function CustomerServicePage() {
               تحتاج مساعدة فورية أو تتبع لطلبك؟
             </h3>
             <p className="text-xs text-neutral-400">
-              فريق خدمة العملاء متواجد لمساعدتك يومياً من 10 صباحاً حتى 11 مساءً
-              عبر واتساب المباشر.
+              فريق خدمة العملاء متواجد لمساعدتك {salesHours} عبر واتساب المباشر.
             </p>
           </div>
           <Button
@@ -83,7 +86,7 @@ export default function CustomerServicePage() {
             className="bg-[#25D366] hover:bg-[#20ba59] text-white font-extrabold h-12 px-7 rounded-full shrink-0"
           >
             <a
-              href={`https://wa.me/${waNumber}?text=${encodeURIComponent("مرحباً خدمة عملاء موبايل ستور، أود الاستفسار بخصوص طلبي")}`}
+              href={`https://wa.me/${waNumber}?text=${encodeURIComponent(`مرحباً خدمة عملاء ${storeName}، أود الاستفسار بخصوص طلبي`)}`}
               target="_blank"
               rel="noreferrer"
             >

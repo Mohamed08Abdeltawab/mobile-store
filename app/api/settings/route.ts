@@ -10,7 +10,9 @@ export async function GET() {
       { success: true, settings },
       {
         headers: {
-          "Cache-Control": "public, max-age=30, stale-while-revalidate=120",
+          "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+          "Pragma": "no-cache",
+          "Expires": "0",
         },
       }
     );
@@ -61,14 +63,14 @@ export async function PUT(req: Request) {
       body.free_shipping_threshold = threshold;
     }
 
-    if (body.primary_color && !/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(body.primary_color)) {
+    if (body.primary_color && !/^#([0-9A-Fa-f]{3,4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/.test(body.primary_color.trim())) {
       return NextResponse.json(
         { success: false, error: "كود اللون الأساسي غير صالح (يجب أن يكون بصيغة Hex مثل #A3E635)." },
         { status: 400 }
       );
     }
 
-    if (body.secondary_color && !/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(body.secondary_color)) {
+    if (body.secondary_color && !/^#([0-9A-Fa-f]{3,4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/.test(body.secondary_color.trim())) {
       return NextResponse.json(
         { success: false, error: "كود اللون الثانوي غير صالح (يجب أن يكون بصيغة Hex مثل #10B981)." },
         { status: 400 }

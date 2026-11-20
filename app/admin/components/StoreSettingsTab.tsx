@@ -58,27 +58,37 @@ export default function StoreSettingsTab({
     is_active: true
   });
 
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
+
   // Track unsaved changes
   const hasUnsavedChanges = JSON.stringify(settings) !== JSON.stringify(savedSettings);
 
-  // Fetch fresh settings on mount if not provided
+  // Always fetch fresh settings from database on mount (no-store)
   useEffect(() => {
-    async function fetchSettings() {
+    let isMounted = true;
+    async function fetchFreshSettings() {
       try {
-        const res = await fetch("/api/settings");
+        setIsLoadingSettings(true);
+        const res = await fetch(`/api/settings?t=${Date.now()}`, {
+          cache: "no-store",
+          headers: { "Cache-Control": "no-cache" },
+        });
         const data: any = await res.json();
-        if (data.success && data.settings) {
+        if (isMounted && data.success && data.settings) {
           setSettings(data.settings);
           setSavedSettings(data.settings);
         }
       } catch (err) {
         console.error("Error fetching settings:", err);
+      } finally {
+        if (isMounted) setIsLoadingSettings(false);
       }
     }
-    if (!initialSettings) {
-      fetchSettings();
-    }
-  }, [initialSettings]);
+    fetchFreshSettings();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Flash notification helper
   function notify(type: "success" | "error", text: string) {
@@ -129,14 +139,20 @@ export default function StoreSettingsTab({
     try {
       const res = await fetch("/api/settings", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache",
+        },
         body: JSON.stringify(settings),
       });
       const data: any = await res.json();
       if (data.success && data.settings) {
         setSettings(data.settings);
         setSavedSettings(data.settings);
-        notify("success", "تم حفظ إعدادات المتجر وتحديث الواجهة بنجاح! ✓");
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem("mobile_store_bootstrap");
+        }
+        notify("success", "تم حفظ وتحديث كافة إعدادات المتجر في قاعدة البيانات بنجاح! ✓");
         if (onSaved) onSaved(data.settings);
       } else {
         notify("error", data.error || "فشل حفظ التعديلات");
@@ -286,9 +302,17 @@ export default function StoreSettingsTab({
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-black text-white">إعدادات المتجر وهوية العلامة التجارية</h2>
-            {hasUnsavedChanges && (
+            {isLoadingSettings ? (
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-sky-400/20 text-sky-300 border border-sky-400/40 animate-pulse">
+                جاري التحميل من قاعدة البيانات...
+              </span>
+            ) : hasUnsavedChanges ? (
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-400/20 text-amber-300 border border-amber-400/40 animate-pulse">
                 تعديلات غير محفوظة
+              </span>
+            ) : (
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-lime-400/15 text-lime-400 border border-lime-400/30">
+                متصل ومحدث مع قاعدة البيانات ✓
               </span>
             )}
           </div>
@@ -864,6 +888,23 @@ export default function StoreSettingsTab({
                   </label>
                 </div>
               </div>
+
+              {/* Optional Custom Currency Symbol */}
+              <div className="pt-2 border-t border-white/10">
+                <label className="block text-xs font-bold text-neutral-300 mb-1.5">
+                  رمز العملة المخصص (اختياري - يترك فارغاً لاستخدام الرمز القياسي للعملة)
+                </label>
+                <input
+                  type="text"
+                  value={settings.custom_currency_symbol || ""}
+                  onChange={(e) => setSettings({ ...settings, custom_currency_symbol: e.target.value })}
+                  placeholder="مثال: ج.م أو USD أو ر.س أو $"
+                  className="w-full bg-black/50 border border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-lime-400 font-mono"
+                />
+                <span className="text-[10px] text-neutral-500 mt-1 block">
+                  إذا أردت تخصيص رمز خاص لعملتك يتجاوز الرموز القياسية.
+                </span>
+              </div>
             </div>
           </div>
 
@@ -1039,9 +1080,22 @@ export default function StoreSettingsTab({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-neutral-300 mb-1.5">
-                    رقم الواتساب الرسمي (بدون علامة +) *
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-neutral-300">
+                      رقم الواتساب الرسمي (بدون علامة +) *
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <span className="text-xs text-neutral-400 font-medium">
+                        {settings.whatsapp_enabled ? "ظاهر في المتجر" : "مخفي"}
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={settings.whatsapp_enabled}
+                        onChange={(e) => setSettings({ ...settings, whatsapp_enabled: e.target.checked })}
+                        className="w-4 h-4 accent-lime-400 rounded cursor-pointer"
+                      />
+                    </label>
+                  </div>
                   <input
                     type="text"
                     value={settings.whatsapp_number}

@@ -1710,10 +1710,27 @@ export async function getStoreSettings(): Promise<StoreSettings> {
         memorySettings = {
           ...DEFAULT_STORE_SETTINGS,
           ...parsed,
-          shipping_cities: parsed.shipping_cities || DEFAULT_STORE_SETTINGS.shipping_cities,
-          hero_slides: parsed.hero_slides || DEFAULT_STORE_SETTINGS.hero_slides
+          shipping_cities: (Array.isArray(parsed.shipping_cities) && parsed.shipping_cities.length > 0)
+            ? parsed.shipping_cities
+            : (parsed.shipping_cities ?? DEFAULT_STORE_SETTINGS.shipping_cities),
+          hero_slides: (Array.isArray(parsed.hero_slides) && parsed.hero_slides.length > 0)
+            ? parsed.hero_slides
+            : (parsed.hero_slides ?? DEFAULT_STORE_SETTINGS.hero_slides)
         };
         return memorySettings;
+      } else if (!error && !data) {
+        // Table exists but row is missing; initialize default row
+        await supabase
+          .from("store_settings")
+          .upsert(
+            {
+              id: "default",
+              settings: DEFAULT_STORE_SETTINGS,
+              updated_at: new Date().toISOString()
+            },
+            { onConflict: "id" }
+          );
+        return { ...DEFAULT_STORE_SETTINGS };
       }
     } catch (e) {
       console.error("[Supabase getStoreSettings Error]:", e);
