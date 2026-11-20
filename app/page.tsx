@@ -164,14 +164,16 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Concept Banner Image */}
-                <div className="relative z-10 w-full h-full p-4 flex items-center justify-center">
-                  <LazyImage
-                    src={currentSlide?.image || "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-9inch-deserttitanium?wid=1000&hei=1000&fmt=jpeg&qlt=90"}
-                    alt={currentSlide?.title || "بانر العرض الرئيسي"}
-                    wrapperClassName="max-h-full max-w-full flex items-center justify-center bg-transparent"
-                    className="max-h-full max-w-full object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] hover:scale-105 transition-transform duration-500"
-                  />
+                {/* Concept Banner Image (Circular framed) */}
+                <div className="relative z-10 w-full h-full p-2 sm:p-3 flex items-center justify-center">
+                  <div className="w-full h-full rounded-full overflow-hidden border-2 border-lime-400/30 bg-black/40 shadow-2xl flex items-center justify-center">
+                    <LazyImage
+                      src={currentSlide?.image || "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-9inch-deserttitanium?wid=1000&hei=1000&fmt=jpeg&qlt=90"}
+                      alt={currentSlide?.title || "بانر العرض الرئيسي"}
+                      wrapperClassName="w-full h-full rounded-full flex items-center justify-center bg-transparent"
+                      className="w-full h-full object-cover sm:object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] hover:scale-110 transition-transform duration-500"
+                    />
+                  </div>
                 </div>
 
                 {/* Floating Chip Bottom */}
