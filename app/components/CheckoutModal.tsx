@@ -53,7 +53,7 @@ export default function CheckoutModal() {
   const hasInstapay = settings?.payment_instapay_enabled ?? true;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden" role="dialog" aria-modal="true">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity animate-in fade-in duration-200"
@@ -61,10 +61,10 @@ export default function CheckoutModal() {
       />
 
       {/* Modal Dialog */}
-      <div className="relative z-10 w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-neutral-100 overflow-hidden my-8 animate-in zoom-in-95 duration-200">
+      <div className="relative z-10 w-full max-w-xl max-h-[70vh] flex flex-col bg-white rounded-3xl shadow-2xl border border-neutral-100 overflow-hidden animate-in zoom-in-95 duration-200">
         
         {/* Header */}
-        <div className="flex items-start justify-between p-5 sm:p-6 border-b border-neutral-100 bg-neutral-50/70">
+        <div className="flex items-start justify-between p-5 sm:p-6 border-b border-neutral-100 bg-neutral-50/70 shrink-0">
           <div>
             <h3 className="font-extrabold text-lg sm:text-xl text-neutral-900">
               تأكيد الطلب وحجز مرجع الفاتورة
@@ -88,7 +88,7 @@ export default function CheckoutModal() {
 
         {/* Content */}
         {orderCompleted ? (
-          <div className="p-6 sm:p-8 text-center space-y-4">
+          <div className="p-6 sm:p-8 text-center space-y-4 overflow-y-auto">
             <div className="text-5xl">🎉</div>
             <h3 className="font-extrabold text-xl text-neutral-900">
               تم استلام طلبك وتسجيله بنجاح!
@@ -133,7 +133,7 @@ export default function CheckoutModal() {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleOrderSubmit} className="p-5 sm:p-6 space-y-4">
+          <form onSubmit={handleOrderSubmit} className="p-5 sm:p-6 space-y-4 overflow-y-auto">
             
             {/* Customer Name */}
             <div className="space-y-1">
