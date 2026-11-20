@@ -90,7 +90,24 @@ interface CartContextType {
   addAllWishlistToCart?: () => void;
   isWishlisted: (productId: string) => boolean;
   sendDirectWhatsApp: (product: Product) => void;
-  openCheckoutWithProduct: (product: Product) => void;
+  openCheckoutWithProduct: (
+    product: Product,
+    options?: {
+      qty?: number;
+      variant?: string;
+      color?: string;
+      ram?: string;
+      storage?: string;
+    }
+  ) => void;
+  directBuyItem: CartItem | null;
+  setDirectBuyItem: (item: CartItem | null) => void;
+  checkoutItems: CartItem[];
+  totalCheckoutCount: number;
+  checkoutSubtotal: number;
+  isCheckoutFreeShipping: boolean;
+  checkoutShippingFee: number;
+  checkoutTotal: number;
   totalCartCount: number;
   cartSubtotal: number;
   isFreeShipping: boolean;
@@ -170,6 +187,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   // Checkout State
+  const [directBuyItem, setDirectBuyItem] = useState<CartItem | null>(null);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [selectedGov, setSelectedGov] = useState<Governorate>(GOVERNORATES[0]);
@@ -627,15 +645,47 @@ export function CartProvider({ children }: { children: ReactNode }) {
     window.open(url, "_blank");
   }
 
-  // Fast Checkout opener for single product
-  function openCheckoutWithProduct(product: Product) {
+  // Fast Checkout opener for single product (Direct Buy - separate from cart)
+  function openCheckoutWithProduct(
+    product: Product,
+    options?: {
+      qty?: number;
+      variant?: string;
+      color?: string;
+      ram?: string;
+      storage?: string;
+    }
+  ) {
     if (!product) return;
-    addToCart(product, 1);
+    const defaultColorName =
+      product.colors && product.colors[0]
+        ? product.colors[0].color_name ||
+          (product.colors[0] as any).name_ar ||
+          (product.colors[0] as any).name ||
+          ""
+        : "";
+    const chosenColor = options?.color || defaultColorName;
+    const vName = options?.variant || (chosenColor ? `لون: ${chosenColor}` : "");
+
+    const singleItem: CartItem = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      variant: vName,
+      color: chosenColor,
+      ram: options?.ram || product.specifications?.ram || "",
+      storage: options?.storage || product.specifications?.storage || "",
+      condition: product.condition,
+      qty: options?.qty || 1,
+    };
+
+    setDirectBuyItem(singleItem);
     setIsCartOpen(false);
     setIsCheckoutOpen(true);
   }
 
-  // Calculations
+  // Calculations for general cart
   const totalCartCount = cart.reduce((sum, item) => sum + item.qty, 0);
   const cartSubtotal = cart.reduce(
     (sum, item) => sum + item.price * item.qty,
@@ -644,6 +694,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const isFreeShipping = Boolean(settings.free_shipping_enabled && cartSubtotal >= settings.free_shipping_threshold);
   const shippingFee = isFreeShipping ? 0 : (selectedGov?.shipping ?? 0);
   const cartTotal = cartSubtotal + shippingFee;
+
+  // Active checkout items: either directBuyItem or entire cart
+  const checkoutItems: CartItem[] = directBuyItem ? [directBuyItem] : cart;
+  const totalCheckoutCount = checkoutItems.reduce((sum, item) => sum + item.qty, 0);
+  const checkoutSubtotal = checkoutItems.reduce(
+    (sum, item) => sum + item.price * item.qty,
+    0,
+  );
+  const isCheckoutFreeShipping = Boolean(
+    settings.free_shipping_enabled && checkoutSubtotal >= settings.free_shipping_threshold
+  );
+  const checkoutShippingFee = isCheckoutFreeShipping ? 0 : (selectedGov?.shipping ?? 0);
+  const checkoutTotal = checkoutSubtotal + checkoutShippingFee;
 
   // Checkout submission
   async function handleOrderSubmit(e: React.FormEvent) {
@@ -674,17 +737,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
           governorate: selectedGov.name,
           address: customerAddress.trim(),
           payment_method: paymentMethod,
-          items: cart,
-          subtotal: cartSubtotal,
-          shipping: shippingFee,
-          total: cartTotal,
+          items: checkoutItems,
+          subtotal: checkoutSubtotal,
+          shipping: checkoutShippingFee,
+          total: checkoutTotal,
         }),
       });
 
       const data: any = await res.json();
       if (data.success) {
         setOrderCompleted(data);
-        setCart([]);
+        if (directBuyItem) {
+          setDirectBuyItem(null);
+        } else {
+          setCart([]);
+        }
         if (data.whatsappUrl) {
           window.open(data.whatsappUrl, "_blank");
         }
@@ -723,6 +790,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
         isWishlisted,
         sendDirectWhatsApp,
         openCheckoutWithProduct,
+        directBuyItem,
+        setDirectBuyItem,
+        checkoutItems,
+        totalCheckoutCount,
+        checkoutSubtotal,
+        isCheckoutFreeShipping,
+        checkoutShippingFee,
+        checkoutTotal,
         totalCartCount,
         cartSubtotal,
         isFreeShipping,

@@ -10,11 +10,14 @@ export default function CheckoutModal() {
   const {
     isCheckoutOpen,
     setIsCheckoutOpen,
-    totalCartCount,
-    cartSubtotal,
-    isFreeShipping,
-    shippingFee,
-    cartTotal,
+    directBuyItem,
+    setDirectBuyItem,
+    checkoutItems,
+    totalCheckoutCount,
+    checkoutSubtotal,
+    isCheckoutFreeShipping,
+    checkoutShippingFee,
+    checkoutTotal,
     customerName,
     setCustomerName,
     customerPhone,
@@ -57,7 +60,10 @@ export default function CheckoutModal() {
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity animate-in fade-in duration-200"
-        onClick={() => setIsCheckoutOpen(false)}
+        onClick={() => {
+          setIsCheckoutOpen(false);
+          setDirectBuyItem(null);
+        }}
       />
 
       {/* Modal Dialog */}
@@ -66,9 +72,16 @@ export default function CheckoutModal() {
         {/* Header */}
         <div className="flex items-start justify-between p-5 sm:p-6 border-b border-neutral-100 bg-neutral-50/70 shrink-0">
           <div>
-            <h3 className="font-extrabold text-lg sm:text-xl text-neutral-900">
-              تأكيد الطلب وحجز مرجع الفاتورة
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-extrabold text-lg sm:text-xl text-neutral-900">
+                تأكيد الطلب وحجز مرجع الفاتورة
+              </h3>
+              {directBuyItem && (
+                <span className="px-2 py-0.5 rounded-full bg-lime-100 text-lime-900 text-[10px] font-black border border-lime-300">
+                  طلب سريع فوري ⚡
+                </span>
+              )}
+            </div>
             <p className="text-xs text-neutral-500 mt-1">
               سجل بياناتك وسيتم إنشاء كود مرجعي فريد #MOB للطلب وتأكيده مع الفحص والمعاينة قبل الدفع
             </p>
@@ -78,6 +91,7 @@ export default function CheckoutModal() {
             type="button"
             onClick={() => {
               setIsCheckoutOpen(false);
+              setDirectBuyItem(null);
               setOrderCompleted(null);
             }}
             aria-label="إغلاق"
@@ -125,6 +139,7 @@ export default function CheckoutModal() {
                 className="w-full rounded-xl text-xs font-bold"
                 onClick={() => {
                   setIsCheckoutOpen(false);
+                  setDirectBuyItem(null);
                   setOrderCompleted(null);
                 }}
               >
@@ -134,6 +149,33 @@ export default function CheckoutModal() {
           </div>
         ) : (
           <form onSubmit={handleOrderSubmit} className="p-5 sm:p-6 space-y-4 overflow-y-auto">
+
+            {/* If direct buy, show a clean badge summary of the single item */}
+            {directBuyItem && (
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-lime-50/60 border border-lime-200">
+                <img
+                  src={directBuyItem.image}
+                  alt={directBuyItem.name}
+                  className="w-14 h-14 object-contain rounded-xl bg-white p-1 border border-neutral-150 shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="font-extrabold text-xs sm:text-sm text-neutral-900 truncate">
+                    {directBuyItem.name}
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px] text-neutral-600 mt-0.5">
+                    {directBuyItem.variant && <span>{directBuyItem.variant}</span>}
+                    {directBuyItem.condition && (
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-neutral-200 text-neutral-700 font-bold">
+                        {directBuyItem.condition}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs font-black text-emerald-800 mt-1">
+                    {formatPrice(directBuyItem.price)} × {directBuyItem.qty}
+                  </div>
+                </div>
+              </div>
+            )}
             
             {/* Customer Name */}
             <div className="space-y-1">
@@ -340,16 +382,16 @@ export default function CheckoutModal() {
             {/* Price Summary */}
             <div className="p-3.5 rounded-2xl bg-neutral-100/70 space-y-1.5 text-xs text-neutral-700">
               <div className="flex justify-between">
-                <span>إجمالي الأجهزة ({totalCartCount}):</span>
-                <span className="font-bold">{formatPrice(cartSubtotal)}</span>
+                <span>{directBuyItem ? "سعر الجهاز:" : `إجمالي الأجهزة (${totalCheckoutCount}):`}</span>
+                <span className="font-bold">{formatPrice(checkoutSubtotal)}</span>
               </div>
               <div className="flex justify-between">
                 <span>تكلفة الشحن إلى {selectedGov.name}:</span>
-                <span className="font-bold text-emerald-700">{isFreeShipping ? "شحن مجاني 🎉" : formatPrice(shippingFee)}</span>
+                <span className="font-bold text-emerald-700">{isCheckoutFreeShipping ? "شحن مجاني 🎉" : formatPrice(checkoutShippingFee)}</span>
               </div>
               <div className="flex justify-between text-sm font-black text-neutral-900 pt-1.5 border-t border-neutral-200">
                 <span>المبلغ الإجمالي للدفع:</span>
-                <span className="text-emerald-800 text-base">{formatPrice(cartTotal)}</span>
+                <span className="text-emerald-800 text-base">{formatPrice(checkoutTotal)}</span>
               </div>
             </div>
 
@@ -360,7 +402,7 @@ export default function CheckoutModal() {
                 disabled={submittingOrder}
                 className="w-full bg-lime-400 hover:bg-lime-500 text-black font-extrabold h-12 rounded-xl text-sm shadow-md shadow-lime-400/25 transition-transform active:scale-[0.99] cursor-pointer"
               >
-                {submittingOrder ? "جاري تسجيل وتأكيد الطلب..." : `تأكيد حجز الطلب (${formatPrice(cartTotal)}) ⚡`}
+                {submittingOrder ? "جاري تسجيل وتأكيد الطلب..." : `تأكيد حجز الطلب (${formatPrice(checkoutTotal)}) ⚡`}
               </Button>
             </div>
 

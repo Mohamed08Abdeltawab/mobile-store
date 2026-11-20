@@ -521,7 +521,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   <Button
                     variant="outline"
                     className="w-full text-neutral-900 font-extrabold h-11 rounded-xl border-neutral-300 hover:bg-neutral-100 cursor-pointer"
-                    onClick={() => openCheckoutWithProduct(product)}
+                    onClick={() =>
+                      openCheckoutWithProduct(product, {
+                        qty: 1,
+                        variant: currentColor ? `لون: ${currentColor}` : "",
+                        color: currentColor,
+                      })
+                    }
                   >
                     شراء سريع فوري (معاينة قبل الدفع)
                   </Button>
