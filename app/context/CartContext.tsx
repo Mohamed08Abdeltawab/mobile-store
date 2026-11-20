@@ -237,6 +237,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       root.setProperty("--brand-secondary-light", `rgba(${sRgb.r}, ${sRgb.g}, ${sRgb.b}, 0.15)`);
 
       root.setProperty("--color-accent-green", primary);
+
+      // Persist to localStorage for instant blocking hydration on next page load/refresh
+      try {
+        localStorage.setItem(
+          "mobile_brand_colors",
+          JSON.stringify({ primary, secondary })
+        );
+      } catch (e) {}
     }
   }, [settings.primary_color, settings.secondary_color]);
 
