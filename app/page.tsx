@@ -17,10 +17,20 @@ import LazyImage from "./components/LazyImage";
 export default function HomePage() {
   const { products, openCheckoutWithProduct, settings, formatPrice } = useCart();
 
-  // Active hero slides from store settings
-  const activeHeroSlides = (settings?.hero_slides || []).filter(s => s.is_active);
+  // Active hero slides from store settings (with fallback)
+  const defaultHeroSlide = {
+    badge: "أحدث الهواتف الذكية والإلكترونيات لعام 2026",
+    title: "هواتف ذكية تصنع الفرق، وقوة تليق باختياراتك",
+    subtitle: "استكشف عالم Mobile Store المتخصص في أحدث هواتف آيفون، سامسونج، شاومي، وأجهزة التابلت والسماعات الأصلية. مع ميزة الفحص والمعاينة الكاملة قبل الدفع، وضمان محلي معتمد مع استبدال فوري.",
+    image: "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-9inch-deserttitanium?wid=1000&hei=1000&fmt=jpeg&qlt=90",
+    button_text: "تصفح كل الأجهزة",
+    button_link: "/shop",
+    is_active: true
+  };
+
+  const rawSlides = (settings?.hero_slides || []).filter(s => s.is_active);
+  const activeHeroSlides = rawSlides.length > 0 ? rawSlides : [defaultHeroSlide];
   const [currentSlideIdx, setCurrentSlideIdx] = useState(0);
-  const currentSlide = activeHeroSlides[currentSlideIdx] || activeHeroSlides[0];
 
   // Auto-advance hero slides
   useEffect(() => {
@@ -84,38 +94,55 @@ export default function HomePage() {
             
             {/* Copy Column */}
             <div className="lg:col-span-7 space-y-5 text-right">
-              <Badge className="bg-lime-400/15 text-lime-400 border border-lime-400/30 text-xs font-bold px-3 py-1 gap-2">
-                <span className="w-2 h-2 rounded-full bg-lime-400 animate-pulse" />
-                <span>{currentSlide?.badge || "أحدث الهواتف الذكية والإلكترونيات لعام 2026"}</span>
-              </Badge>
+              {/* Stacked Slides for Smooth Crossfade */}
+              <div className="relative min-h-[290px] sm:min-h-[270px]">
+                {activeHeroSlides.map((slide, sIdx) => {
+                  const isActive = sIdx === currentSlideIdx;
+                  return (
+                    <div
+                      key={sIdx}
+                      className={`space-y-4 sm:space-y-5 transition-all duration-700 ease-in-out ${
+                        isActive
+                          ? "opacity-100 translate-y-0 relative z-10 pointer-events-auto"
+                          : "opacity-0 translate-y-3 absolute inset-0 pointer-events-none z-0"
+                      }`}
+                    >
+                      <Badge className="bg-lime-400/15 text-lime-400 border border-lime-400/30 text-xs font-bold px-3 py-1 gap-2">
+                        <span className="w-2 h-2 rounded-full bg-lime-400 animate-pulse" />
+                        <span>{slide.badge || "أحدث الهواتف الذكية والإلكترونيات لعام 2026"}</span>
+                      </Badge>
 
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-[1.2] tracking-tight">
-                {currentSlide?.title || (
-                  <>
-                    هواتف ذكية تصنع الفرق،<br />
-                    <span className="text-lime-400">وقوة تليق باختياراتك</span>
-                  </>
-                )}
-              </h1>
+                      <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-[1.2] tracking-tight">
+                        {slide.title || (
+                          <>
+                            هواتف ذكية تصنع الفرق،<br />
+                            <span className="text-lime-400">وقوة تليق باختياراتك</span>
+                          </>
+                        )}
+                      </h1>
 
-              <p className="text-xs sm:text-sm md:text-base text-neutral-300 leading-relaxed max-w-xl">
-                {currentSlide?.subtitle || "استكشف عالم Mobile Store المتخصص في أحدث هواتف آيفون، سامسونج، شاومي، وأجهزة التابلت والسماعات الأصلية. مع ميزة الفحص والمعاينة الكاملة قبل الدفع، وضمان محلي معتمد مع استبدال فوري."}
-              </p>
+                      <p className="text-xs sm:text-sm md:text-base text-neutral-300 leading-relaxed max-w-xl">
+                        {slide.subtitle || "استكشف عالم Mobile Store المتخصص في أحدث هواتف آيفون، سامسونج، شاومي، وأجهزة التابلت والسماعات الأصلية. مع ميزة الفحص والمعاينة الكاملة قبل الدفع، وضمان محلي معتمد مع استبدال فوري."}
+                      </p>
 
-              {/* Action Buttons */}
-              <div className="flex items-center gap-3 pt-2 flex-wrap">
-                <Button asChild className="bg-lime-400 hover:bg-lime-500 text-black font-extrabold h-12 px-7 rounded-full shadow-lg shadow-lime-400/25 text-sm sm:text-base cursor-pointer">
-                  <Link href={currentSlide?.button_link || "/shop"} className="flex items-center gap-2">
-                    <span>{currentSlide?.button_text || "تصفح كل الأجهزة"}</span>
-                    <span>←</span>
-                  </Link>
-                </Button>
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-3 pt-2 flex-wrap">
+                        <Button asChild className="bg-lime-400 hover:bg-lime-500 text-black font-extrabold h-12 px-7 rounded-full shadow-lg shadow-lime-400/25 text-sm sm:text-base cursor-pointer">
+                          <Link href={slide.button_link || "/shop"} className="flex items-center gap-2">
+                            <span>{slide.button_text || "تصفح كل الأجهزة"}</span>
+                            <span>←</span>
+                          </Link>
+                        </Button>
 
-                <Button asChild variant="outline" className="border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold h-12 px-6 rounded-full text-sm sm:text-base cursor-pointer">
-                  <a href="#deal">
-                    عروض التخفيض الحصرية 🔥
-                  </a>
-                </Button>
+                        <Button asChild variant="outline" className="border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold h-12 px-6 rounded-full text-sm sm:text-base cursor-pointer">
+                          <a href="#deal">
+                            عروض التخفيض الحصرية 🔥
+                          </a>
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Slider Navigation Dots if multiple slides */}
@@ -126,7 +153,7 @@ export default function HomePage() {
                       key={sIdx}
                       type="button"
                       onClick={() => setCurrentSlideIdx(sIdx)}
-                      className={`h-2.5 rounded-full transition-all cursor-pointer ${
+                      className={`h-2.5 rounded-full transition-all duration-500 cursor-pointer ${
                         sIdx === currentSlideIdx ? "w-8 bg-lime-400" : "w-2.5 bg-white/20 hover:bg-white/40"
                       }`}
                       aria-label={`شريحة رقم ${sIdx + 1}`}
@@ -164,15 +191,29 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Concept Banner Image (Circular framed) */}
+                {/* Concept Banner Image (Circular framed with smooth crossfade) */}
                 <div className="relative z-10 w-full h-full p-2 sm:p-3 flex items-center justify-center">
-                  <div className="w-full h-full rounded-full overflow-hidden border-2 border-lime-400/30 bg-black/40 shadow-2xl flex items-center justify-center">
-                    <LazyImage
-                      src={currentSlide?.image || "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-9inch-deserttitanium?wid=1000&hei=1000&fmt=jpeg&qlt=90"}
-                      alt={currentSlide?.title || "بانر العرض الرئيسي"}
-                      wrapperClassName="w-full h-full rounded-full flex items-center justify-center bg-transparent"
-                      className="w-full h-full object-cover sm:object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] hover:scale-110 transition-transform duration-500"
-                    />
+                  <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-lime-400/30 bg-black/40 shadow-2xl flex items-center justify-center">
+                    {activeHeroSlides.map((slide, sIdx) => {
+                      const isActive = sIdx === currentSlideIdx;
+                      return (
+                        <div
+                          key={sIdx}
+                          className={`absolute inset-0 w-full h-full flex items-center justify-center transition-all duration-700 ease-in-out ${
+                            isActive
+                              ? "opacity-100 scale-100 z-10 pointer-events-auto"
+                              : "opacity-0 scale-95 z-0 pointer-events-none"
+                          }`}
+                        >
+                          <LazyImage
+                            src={slide.image || "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-9inch-deserttitanium?wid=1000&hei=1000&fmt=jpeg&qlt=90"}
+                            alt={slide.title || "بانر العرض الرئيسي"}
+                            wrapperClassName="w-full h-full rounded-full flex items-center justify-center bg-transparent"
+                            className="w-full h-full object-cover sm:object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] hover:scale-110 transition-transform duration-500"
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
