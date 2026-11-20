@@ -29,6 +29,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const [loading, setLoading] = useState(true);
   const [activeImgIndex, setActiveImgIndex] = useState(0);
   const [selectedColor, setSelectedColor] = useState<string>("");
+  const [quantity, setQuantity] = useState(1);
   const [selectedGov, setSelectedGov] = useState(GOVERNORATES[0]);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -494,17 +495,47 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 </div>
               </div>
 
+              {/* Quantity Selector */}
+              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-neutral-50 border border-neutral-200">
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-neutral-800">الكمية المطلوبة:</span>
+                  <span className="text-[11px] text-neutral-500">حدد عدد الأجهزة التي تود حجزها</span>
+                </div>
+                <div className="flex items-center gap-3 bg-white border border-neutral-200 rounded-xl px-2 py-1 shadow-xs">
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                    disabled={quantity <= 1}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-base text-neutral-700 hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    aria-label="تقليل الكمية"
+                  >
+                    -
+                  </button>
+                  <span className="w-8 text-center font-extrabold text-sm text-neutral-900 select-none">
+                    {quantity}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => q + 1)}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-base text-neutral-700 hover:bg-neutral-100 transition-colors cursor-pointer"
+                    aria-label="زيادة الكمية"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
               {/* Action Buttons */}
               <div className="space-y-3 pt-2">
                 <Button
                   className="w-full bg-lime-400 hover:bg-lime-500 text-black font-extrabold h-12 rounded-2xl text-base shadow-lg shadow-lime-400/25 transition-transform active:scale-[0.99] gap-2 cursor-pointer"
-                  onClick={() => addToCart(product, 1, currentColor ? `لون: ${currentColor}` : "", currentColor)}
+                  onClick={() => addToCart(product, quantity, currentColor ? `لون: ${currentColor}` : "", currentColor)}
                 >
                   <svg className="w-5 h-5 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                   </svg>
-                  <span>أضف إلى السلة للمعاينة والشراء</span>
+                  <span>أضف إلى السلة للمعاينة والشراء ({quantity})</span>
                 </Button>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -522,13 +553,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     className="w-full bg-neutral-900 hover:bg-black text-white font-extrabold h-11 rounded-xl border border-neutral-800 shadow-sm transition-colors cursor-pointer"
                     onClick={() =>
                       openCheckoutWithProduct(product, {
-                        qty: 1,
+                        qty: quantity,
                         variant: currentColor ? `لون: ${currentColor}` : "",
                         color: currentColor,
                       })
                     }
                   >
-                    شراء سريع فوري (معاينة قبل الدفع)
+                    شراء سريع فوري ({quantity})
                   </Button>
                 </div>
               </div>
