@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useCart } from "@/app/context/CartContext";
 import Image from "next/image";
 import {
   StoreSettings,
@@ -23,6 +24,7 @@ export default function StoreSettingsTab({
   onSaved,
   showToast
 }: StoreSettingsTabProps) {
+  const { updateSettings } = useCart();
   const [settings, setSettings] = useState<StoreSettings>(initialSettings || DEFAULT_STORE_SETTINGS);
   const [savedSettings, setSavedSettings] = useState<StoreSettings>(initialSettings || DEFAULT_STORE_SETTINGS);
   const [subTab, setSubTab] = useState<"brand" | "localization" | "social" | "shipping" | "payment" | "theme">("brand");
@@ -151,6 +153,19 @@ export default function StoreSettingsTab({
         setSavedSettings(data.settings);
         if (typeof window !== "undefined") {
           sessionStorage.removeItem("mobile_store_bootstrap");
+          try {
+            localStorage.setItem("mobile_store_settings", JSON.stringify(data.settings));
+            localStorage.setItem(
+              "mobile_brand_colors",
+              JSON.stringify({
+                primary: data.settings.primary_color,
+                secondary: data.settings.secondary_color,
+              })
+            );
+          } catch (e) {}
+        }
+        if (typeof updateSettings === "function") {
+          updateSettings(data.settings);
         }
         notify("success", "تم حفظ وتحديث كافة إعدادات المتجر في قاعدة البيانات بنجاح! ✓");
         if (onSaved) onSaved(data.settings);

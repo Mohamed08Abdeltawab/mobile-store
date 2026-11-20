@@ -15,6 +15,7 @@ export default function Navbar() {
     setIsMobileMenuOpen,
     isAdmin,
     settings,
+    isSettingsLoaded,
   } = useCart();
 
   const pathname = usePathname();
@@ -60,7 +61,15 @@ export default function Navbar() {
               className="flex items-center gap-2 sm:gap-2.5 group shrink-0"
               href="/"
             >
-              {settings?.logo_url ? (
+              {!isSettingsLoaded ? (
+                <div className="flex items-center gap-2 sm:gap-2.5">
+                  <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-white/10 animate-pulse shrink-0" />
+                  <div className="flex flex-col gap-1.5 hidden sm:flex">
+                    <div className="h-4 sm:h-5 w-24 sm:w-32 bg-white/10 rounded animate-pulse" />
+                    <div className="h-2.5 w-16 bg-white/5 rounded animate-pulse" />
+                  </div>
+                </div>
+              ) : settings?.logo_url ? (
                 <div className="flex items-center gap-2">
                   <img
                     src={settings.logo_url}

@@ -131,6 +131,7 @@ interface CartContextType {
   checkAdminAuth: () => Promise<boolean>;
   refreshProducts: () => Promise<void>;
   isSettingsLoaded: boolean;
+  updateSettings: (newSettings: StoreSettings) => void;
 }
 
 const CartContext = createContext<CartContextType | null>(null);
@@ -189,66 +190,85 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [activeGovernorates]);
 
-  // Apply Brand Colors dynamically to CSS variables with contrast and shades
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      const primary = settings.primary_color || "#A3E635";
-      const secondary = settings.secondary_color || "#10B981";
+  function applyBrandTheme(primaryColor?: string, secondaryColor?: string) {
+  if (typeof document === "undefined") return;
+  const primary = primaryColor || "#A3E635";
+  const secondary = secondaryColor || "#10B981";
 
-      const hexToRgb = (hex: string) => {
-        const clean = hex.replace("#", "").trim();
-        const full = clean.length === 3 ? clean.split("").map((c) => c + c).join("") : clean;
-        const num = parseInt(full, 16);
-        if (isNaN(num)) return { r: 163, g: 230, b: 53 };
-        return {
-          r: (num >> 16) & 255,
-          g: (num >> 8) & 255,
-          b: num & 255,
-        };
-      };
+  const hexToRgb = (hex: string) => {
+    const clean = hex.replace("#", "").trim();
+    const full = clean.length === 3 ? clean.split("").map((c) => c + c).join("") : clean;
+    const num = parseInt(full, 16);
+    if (isNaN(num)) return { r: 163, g: 230, b: 53 };
+    return {
+      r: (num >> 16) & 255,
+      g: (num >> 8) & 255,
+      b: num & 255,
+    };
+  };
 
-      const getContrast = (hex: string) => {
-        const { r, g, b } = hexToRgb(hex);
-        // Calculate YIQ brightness ratio (>= 140 is bright, needs dark text)
-        const yiq = (r * 299 + g * 587 + b * 114) / 1000;
-        return yiq >= 140 ? "#000000" : "#ffffff";
-      };
+  const getContrast = (hex: string) => {
+    const { r, g, b } = hexToRgb(hex);
+    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+    return yiq >= 140 ? "#000000" : "#ffffff";
+  };
 
-      const adjustBrightness = (hex: string, factor: number) => {
-        const { r, g, b } = hexToRgb(hex);
-        const adjR = Math.min(255, Math.max(0, Math.round(r * factor)));
-        const adjG = Math.min(255, Math.max(0, Math.round(g * factor)));
-        const adjB = Math.min(255, Math.max(0, Math.round(b * factor)));
-        return `#${((1 << 24) + (adjR << 16) + (adjG << 8) + adjB).toString(16).slice(1)}`;
-      };
+  const adjustBrightness = (hex: string, factor: number) => {
+    const { r, g, b } = hexToRgb(hex);
+    const adjR = Math.min(255, Math.max(0, Math.round(r * factor)));
+    const adjG = Math.min(255, Math.max(0, Math.round(g * factor)));
+    const adjB = Math.min(255, Math.max(0, Math.round(b * factor)));
+    return `#${((1 << 24) + (adjR << 16) + (adjG << 8) + adjB).toString(16).slice(1)}`;
+  };
 
-      const pRgb = hexToRgb(primary);
-      const sRgb = hexToRgb(secondary);
+  const pRgb = hexToRgb(primary);
+  const sRgb = hexToRgb(secondary);
 
-      const root = document.documentElement.style;
-      root.setProperty("--brand-primary", primary);
-      root.setProperty("--brand-primary-hover", adjustBrightness(primary, 0.88));
-      root.setProperty("--brand-primary-text", getContrast(primary));
-      root.setProperty("--brand-primary-glow", `rgba(${pRgb.r}, ${pRgb.g}, ${pRgb.b}, 0.35)`);
-      root.setProperty("--brand-primary-light", `rgba(${pRgb.r}, ${pRgb.g}, ${pRgb.b}, 0.15)`);
+  const root = document.documentElement.style;
+  root.setProperty("--brand-primary", primary);
+  root.setProperty("--brand-primary-hover", adjustBrightness(primary, 0.88));
+  root.setProperty("--brand-primary-text", getContrast(primary));
+  root.setProperty("--brand-primary-glow", `rgba(${pRgb.r}, ${pRgb.g}, ${pRgb.b}, 0.35)`);
+  root.setProperty("--brand-primary-light", `rgba(${pRgb.r}, ${pRgb.g}, ${pRgb.b}, 0.15)`);
 
-      root.setProperty("--brand-secondary", secondary);
-      root.setProperty("--brand-secondary-hover", adjustBrightness(secondary, 0.88));
-      root.setProperty("--brand-secondary-text", getContrast(secondary));
-      root.setProperty("--brand-secondary-glow", `rgba(${sRgb.r}, ${sRgb.g}, ${sRgb.b}, 0.35)`);
-      root.setProperty("--brand-secondary-light", `rgba(${sRgb.r}, ${sRgb.g}, ${sRgb.b}, 0.15)`);
+  root.setProperty("--brand-secondary", secondary);
+  root.setProperty("--brand-secondary-hover", adjustBrightness(secondary, 0.88));
+  root.setProperty("--brand-secondary-text", getContrast(secondary));
+  root.setProperty("--brand-secondary-glow", `rgba(${sRgb.r}, ${sRgb.g}, ${sRgb.b}, 0.35)`);
+  root.setProperty("--brand-secondary-light", `rgba(${sRgb.r}, ${sRgb.g}, ${sRgb.b}, 0.15)`);
 
-      root.setProperty("--color-accent-green", primary);
+  root.setProperty("--color-accent-green", primary);
+  root.setProperty("--color-lime-400", primary);
+  root.setProperty("--color-lime-500", adjustBrightness(primary, 0.88));
+  root.setProperty("--primary", primary);
+  root.setProperty("--primary-foreground", getContrast(primary));
 
-      // Persist to localStorage for instant blocking hydration on next page load/refresh
+  try {
+    localStorage.setItem(
+      "mobile_brand_colors",
+      JSON.stringify({ primary, secondary })
+    );
+  } catch (e) {}
+}
+
+  // Update settings in memory and localStorage immediately
+  function updateSettings(newSettings: StoreSettings) {
+    const merged = { ...DEFAULT_STORE_SETTINGS, ...newSettings };
+    setSettings(merged);
+    setIsSettingsLoaded(true);
+    if (typeof window !== "undefined") {
       try {
-        localStorage.setItem(
-          "mobile_brand_colors",
-          JSON.stringify({ primary, secondary })
-        );
+        localStorage.setItem("mobile_store_settings", JSON.stringify(newSettings));
       } catch (e) {}
     }
-  }, [settings.primary_color, settings.secondary_color]);
+    applyBrandTheme(merged.primary_color, merged.secondary_color);
+  }
+
+  // Apply Brand Colors dynamically only once real settings are loaded
+  useEffect(() => {
+    if (!isSettingsLoaded) return;
+    applyBrandTheme(settings.primary_color, settings.secondary_color);
+  }, [settings.primary_color, settings.secondary_color, isSettingsLoaded]);
 
   async function checkAdminAuth(): Promise<boolean> {
     const shouldCheck =
@@ -284,8 +304,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         if (localSettings) {
           const parsedLocal = JSON.parse(localSettings);
           if (parsedLocal && typeof parsedLocal === "object") {
-            setSettings({ ...DEFAULT_STORE_SETTINGS, ...parsedLocal });
+            const mergedLocal = { ...DEFAULT_STORE_SETTINGS, ...parsedLocal };
+            setSettings(mergedLocal);
             setIsSettingsLoaded(true);
+            applyBrandTheme(mergedLocal.primary_color, mergedLocal.secondary_color);
           }
         }
       } catch (e) {}
@@ -327,6 +349,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           const merged = { ...DEFAULT_STORE_SETTINGS, ...data.settings };
           setSettings(merged);
           setIsSettingsLoaded(true);
+          applyBrandTheme(merged.primary_color, merged.secondary_color);
           try {
             localStorage.setItem("mobile_store_settings", JSON.stringify(data.settings));
           } catch (e) {}
@@ -739,6 +762,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         checkAdminAuth,
         refreshProducts,
         isSettingsLoaded,
+        updateSettings,
       }}
     >
       {children}

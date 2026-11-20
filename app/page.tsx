@@ -15,7 +15,7 @@ import ScrollReveal from "./components/ScrollReveal";
 import LazyImage from "./components/LazyImage";
 
 export default function HomePage() {
-  const { products, openCheckoutWithProduct, settings, formatPrice } = useCart();
+  const { products, openCheckoutWithProduct, settings, formatPrice, isSettingsLoaded } = useCart();
 
   // Active hero slides from store settings (with fallback)
   const defaultHeroSlide = {
@@ -100,7 +100,24 @@ export default function HomePage() {
             <div className="lg:col-span-7 space-y-5 text-right">
               {/* Stacked Slides for Smooth Crossfade */}
               <div className="relative min-h-[290px] sm:min-h-[270px]">
-                {activeHeroSlides.map((slide, sIdx) => {
+                {!isSettingsLoaded ? (
+                  <div className="space-y-4 sm:space-y-5 animate-pulse">
+                    <div className="h-6 w-52 bg-white/10 rounded-full" />
+                    <div className="space-y-2">
+                      <div className="h-10 sm:h-12 w-4/5 bg-white/10 rounded-xl" />
+                      <div className="h-10 sm:h-12 w-3/5 bg-white/10 rounded-xl" />
+                    </div>
+                    <div className="space-y-2 pt-1 max-w-xl">
+                      <div className="h-3.5 w-full bg-white/5 rounded" />
+                      <div className="h-3.5 w-5/6 bg-white/5 rounded" />
+                    </div>
+                    <div className="flex items-center gap-3 pt-2">
+                      <div className="h-12 w-36 bg-white/10 rounded-full" />
+                      <div className="h-12 w-36 bg-white/5 rounded-full" />
+                    </div>
+                  </div>
+                ) : (
+                  activeHeroSlides.map((slide, sIdx) => {
                   const isActive = sIdx === currentSlideIdx;
                   return (
                     <div
@@ -146,7 +163,7 @@ export default function HomePage() {
                       </div>
                     </div>
                   );
-                })}
+                }))}
               </div>
 
               {/* Slider Navigation Dots if multiple slides */}

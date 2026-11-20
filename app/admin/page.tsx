@@ -1074,6 +1074,16 @@ export default function AdminDashboardPage() {
               setSettings(updated);
               if (typeof window !== "undefined") {
                 sessionStorage.removeItem("mobile_store_bootstrap");
+                try {
+                  localStorage.setItem("mobile_store_settings", JSON.stringify(updated));
+                  localStorage.setItem(
+                    "mobile_brand_colors",
+                    JSON.stringify({
+                      primary: updated.primary_color,
+                      secondary: updated.secondary_color,
+                    })
+                  );
+                } catch (e) {}
               }
               setNotification("تم حفظ وتحديث إعدادات المتجر بنجاح ✓");
               setTimeout(() => setNotification(""), 4000);

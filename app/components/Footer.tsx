@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCart } from "../context/CartContext";
 
 export default function Footer() {
-  const { setIsWishlistOpen, settings } = useCart();
+  const { setIsWishlistOpen, settings, isSettingsLoaded } = useCart();
   const waNumber = settings?.whatsapp_number || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
   const storeName = settings?.store_name || "MOBILE STORE";
   const tagline = settings?.tagline || "موبايلات · تابلت · إلكترونيات";
@@ -24,7 +24,15 @@ export default function Footer() {
           {/* Brand Col */}
           <div className="space-y-4">
             <Link className="flex items-center gap-2.5 group" href="/">
-              {settings?.logo_url ? (
+              {!isSettingsLoaded ? (
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-xl bg-white/10 animate-pulse shrink-0" />
+                  <div className="flex flex-col gap-1.5">
+                    <div className="h-5 w-32 bg-white/10 rounded animate-pulse" />
+                    <div className="h-2.5 w-20 bg-white/5 rounded animate-pulse" />
+                  </div>
+                </div>
+              ) : settings?.logo_url ? (
                 <img
                   src={settings.logo_url}
                   alt={storeName}
@@ -58,9 +66,16 @@ export default function Footer() {
               )}
             </Link>
 
-            <p className="text-xs leading-relaxed text-neutral-400">
-              {description}
-            </p>
+            {!isSettingsLoaded ? (
+              <div className="space-y-1.5 pt-1">
+                <div className="h-3 w-full bg-white/5 rounded animate-pulse" />
+                <div className="h-3 w-5/6 bg-white/5 rounded animate-pulse" />
+              </div>
+            ) : (
+              <p className="text-xs leading-relaxed text-neutral-400">
+                {description}
+              </p>
+            )}
 
             {/* Social Media Links */}
             <div className="pt-2">
