@@ -13,7 +13,8 @@ export default function ProductCard({ product }: { product: Product }) {
     toggleWishlist,
     addToCart,
     setQuickProduct,
-    sendDirectWhatsApp
+    sendDirectWhatsApp,
+    formatPrice,
   } = useCart();
 
   if (!product) return null;
@@ -175,12 +176,11 @@ export default function ProductCard({ product }: { product: Product }) {
           <div className="flex flex-col min-w-0">
             {Boolean(product.old_price && Number(product.old_price) > Number(product.price)) && (
               <s className="text-[10px] sm:text-[11px] text-neutral-400 line-through truncate">
-                {Number(product.old_price).toLocaleString("ar-EG")} ج.م
+                {formatPrice(product.old_price)}
               </s>
             )}
-            <div className="flex items-baseline gap-0.5 sm:gap-1 text-sm sm:text-lg font-extrabold text-neutral-900 truncate">
-              <span>{Number(product.price).toLocaleString("ar-EG")}</span>
-              <span className="text-[10px] sm:text-xs font-bold text-neutral-500">ج.م</span>
+            <div className="text-sm sm:text-base font-extrabold text-neutral-900 truncate">
+              {formatPrice(product.price)}
             </div>
           </div>
 

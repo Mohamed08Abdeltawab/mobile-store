@@ -15,7 +15,21 @@ import ScrollReveal from "./components/ScrollReveal";
 import LazyImage from "./components/LazyImage";
 
 export default function HomePage() {
-  const { products, openCheckoutWithProduct } = useCart();
+  const { products, openCheckoutWithProduct, settings, formatPrice } = useCart();
+
+  // Active hero slides from store settings
+  const activeHeroSlides = (settings?.hero_slides || []).filter(s => s.is_active);
+  const [currentSlideIdx, setCurrentSlideIdx] = useState(0);
+  const currentSlide = activeHeroSlides[currentSlideIdx] || activeHeroSlides[0];
+
+  // Auto-advance hero slides
+  useEffect(() => {
+    if (activeHeroSlides.length <= 1) return;
+    const slideTimer = setInterval(() => {
+      setCurrentSlideIdx(prev => (prev + 1) % activeHeroSlides.length);
+    }, 6500);
+    return () => clearInterval(slideTimer);
+  }, [activeHeroSlides.length]);
 
   // Countdown timer for today's deal
   const [timeLeft, setTimeLeft] = useState({ hours: 14, mins: 32, secs: 45 });
@@ -72,23 +86,27 @@ export default function HomePage() {
             <div className="lg:col-span-7 space-y-5 text-right">
               <Badge className="bg-lime-400/15 text-lime-400 border border-lime-400/30 text-xs font-bold px-3 py-1 gap-2">
                 <span className="w-2 h-2 rounded-full bg-lime-400 animate-pulse" />
-                <span>أحدث الهواتف الذكية والإلكترونيات لعام 2026</span>
+                <span>{currentSlide?.badge || "أحدث الهواتف الذكية والإلكترونيات لعام 2026"}</span>
               </Badge>
 
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-[1.2] tracking-tight">
-                هواتف ذكية تصنع الفرق،<br />
-                <span className="text-lime-400">وقوة تليق باختياراتك</span>
+                {currentSlide?.title || (
+                  <>
+                    هواتف ذكية تصنع الفرق،<br />
+                    <span className="text-lime-400">وقوة تليق باختياراتك</span>
+                  </>
+                )}
               </h1>
 
               <p className="text-xs sm:text-sm md:text-base text-neutral-300 leading-relaxed max-w-xl">
-                استكشف عالم Mobile Store المتخصص في أحدث هواتف آيفون، سامسونج، شاومي، وأجهزة التابلت والسماعات الأصلية. مع ميزة الفحص والمعاينة الكاملة قبل الدفع، وضمان محلي معتمد مع استبدال فوري.
+                {currentSlide?.subtitle || "استكشف عالم Mobile Store المتخصص في أحدث هواتف آيفون، سامسونج، شاومي، وأجهزة التابلت والسماعات الأصلية. مع ميزة الفحص والمعاينة الكاملة قبل الدفع، وضمان محلي معتمد مع استبدال فوري."}
               </p>
 
               {/* Action Buttons */}
               <div className="flex items-center gap-3 pt-2 flex-wrap">
                 <Button asChild className="bg-lime-400 hover:bg-lime-500 text-black font-extrabold h-12 px-7 rounded-full shadow-lg shadow-lime-400/25 text-sm sm:text-base cursor-pointer">
-                  <Link href="/shop" className="flex items-center gap-2">
-                    <span>تصفح كل الأجهزة</span>
+                  <Link href={currentSlide?.button_link || "/shop"} className="flex items-center gap-2">
+                    <span>{currentSlide?.button_text || "تصفح كل الأجهزة"}</span>
                     <span>←</span>
                   </Link>
                 </Button>
@@ -99,6 +117,23 @@ export default function HomePage() {
                   </a>
                 </Button>
               </div>
+
+              {/* Slider Navigation Dots if multiple slides */}
+              {activeHeroSlides.length > 1 && (
+                <div className="flex items-center gap-2 pt-2">
+                  {activeHeroSlides.map((_, sIdx) => (
+                    <button
+                      key={sIdx}
+                      type="button"
+                      onClick={() => setCurrentSlideIdx(sIdx)}
+                      className={`h-2.5 rounded-full transition-all cursor-pointer ${
+                        sIdx === currentSlideIdx ? "w-8 bg-lime-400" : "w-2.5 bg-white/20 hover:bg-white/40"
+                      }`}
+                      aria-label={`شريحة رقم ${sIdx + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
 
               {/* Social Proof */}
               <div className="pt-4 flex items-center gap-3 border-t border-white/10 text-xs text-neutral-300">
@@ -129,11 +164,11 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Smartphone Concept Image */}
+                {/* Concept Banner Image */}
                 <div className="relative z-10 w-full h-full p-4 flex items-center justify-center">
                   <LazyImage
-                    src="https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-9inch-deserttitanium?wid=1000&hei=1000&fmt=jpeg&qlt=90"
-                    alt="آيفون 16 برو ماكس"
+                    src={currentSlide?.image || "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-9inch-deserttitanium?wid=1000&hei=1000&fmt=jpeg&qlt=90"}
+                    alt={currentSlide?.title || "بانر العرض الرئيسي"}
                     wrapperClassName="max-h-full max-w-full flex items-center justify-center bg-transparent"
                     className="max-h-full max-w-full object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] hover:scale-105 transition-transform duration-500"
                   />
@@ -394,7 +429,7 @@ export default function HomePage() {
                     if (dealProduct) openCheckoutWithProduct(dealProduct);
                   }}
                 >
-                  اطلب العرض الآن بـ {Number(dealProduct?.price || 78500).toLocaleString("ar-EG")} ج.م
+                  اطلب العرض الآن بـ {formatPrice(dealProduct?.price || 78500)}
                 </Button>
 
                 <Button asChild variant="outline" className="w-full sm:w-auto border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold h-12 px-6 rounded-full text-sm cursor-pointer">

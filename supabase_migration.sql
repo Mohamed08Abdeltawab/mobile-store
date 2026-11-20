@@ -55,3 +55,16 @@ CREATE POLICY "Public read products" ON products FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Service role full access products" ON products;
 CREATE POLICY "Service role full access products" ON products FOR ALL USING (true) WITH CHECK (true);
+
+-- 7. جدول إعدادات المتجر العامة (Store Settings)
+CREATE TABLE IF NOT EXISTS store_settings (
+  id TEXT PRIMARY KEY DEFAULT 'default',
+  settings JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE store_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read store_settings" ON store_settings;
+CREATE POLICY "Public read store_settings" ON store_settings FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Service role full access store_settings" ON store_settings;
+CREATE POLICY "Service role full access store_settings" ON store_settings FOR ALL USING (true) WITH CHECK (true);

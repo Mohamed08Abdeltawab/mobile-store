@@ -12,7 +12,8 @@ export default function QuickViewModal() {
     quickProduct,
     setQuickProduct,
     addToCart,
-    sendDirectWhatsApp
+    sendDirectWhatsApp,
+    formatPrice,
   } = useCart();
 
   const [selectedColor, setSelectedColor] = useState<string>("");
@@ -88,11 +89,11 @@ export default function QuickViewModal() {
             {/* Price Box */}
             <div className="flex items-baseline gap-2 flex-wrap">
               <span className="text-2xl font-black text-neutral-900">
-                {Number(quickProduct.price).toLocaleString("ar-EG")} <span className="text-xs font-bold text-neutral-500">ج.م</span>
+                {formatPrice(quickProduct.price)}
               </span>
               {Boolean(quickProduct.old_price && Number(quickProduct.old_price) > Number(quickProduct.price)) && (
                 <s className="text-xs text-neutral-400 line-through">
-                  {Number(quickProduct.old_price).toLocaleString("ar-EG")} ج.م
+                  {formatPrice(quickProduct.old_price)}
                 </s>
               )}
               {discount > 0 && (

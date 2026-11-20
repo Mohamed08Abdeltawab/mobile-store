@@ -14,10 +14,16 @@ export default function CartDrawer() {
     isFreeShipping,
     updateCartQty,
     removeFromCart,
-    setIsCheckoutOpen
+    setIsCheckoutOpen,
+    settings,
+    formatPrice,
   } = useCart();
 
   if (!isCartOpen) return null;
+
+  const threshold = settings?.free_shipping_threshold ?? 5000;
+  const isFreeShippingEnabled = settings?.free_shipping_enabled ?? true;
+  const freeShippingMsg = settings?.free_shipping_message || "🎉 مبروك! طلبك مؤهل لشحن مجاني لكافة المحافظات";
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden" role="dialog" aria-modal="true">
@@ -51,21 +57,25 @@ export default function CartDrawer() {
         </div>
 
         {/* Free Shipping Progress */}
-        <div className="p-3.5 bg-neutral-50 border-b border-neutral-100">
-          <div className="text-xs font-semibold text-neutral-700 mb-1.5 flex items-center justify-between">
-            {isFreeShipping ? (
-              <span className="text-emerald-700 font-bold">🎉 مبروك! طلبك مؤهل لشحن مجاني لكافة المحافظات</span>
-            ) : (
-              <span>متبقي <b className="text-emerald-700 font-bold">{(5000 - cartSubtotal).toLocaleString("ar-EG")} ج.م</b> على الشحن المجاني</span>
-            )}
+        {isFreeShippingEnabled && (
+          <div className="p-3.5 bg-neutral-50 border-b border-neutral-100">
+            <div className="text-xs font-semibold text-neutral-700 mb-1.5 flex items-center justify-between">
+              {isFreeShipping ? (
+                <span className="text-emerald-700 font-bold">{freeShippingMsg}</span>
+              ) : (
+                <span>
+                  متبقي <b className="text-emerald-700 font-bold">{formatPrice(Math.max(0, threshold - cartSubtotal))}</b> على الشحن المجاني
+                </span>
+              )}
+            </div>
+            <div className="w-full bg-neutral-200 rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-lime-400 h-full rounded-full transition-all duration-300"
+                style={{ width: `${Math.min(100, (cartSubtotal / (threshold || 1)) * 100)}%` }}
+              />
+            </div>
           </div>
-          <div className="w-full bg-neutral-200 rounded-full h-2 overflow-hidden">
-            <div
-              className="bg-lime-400 h-full rounded-full transition-all duration-300"
-              style={{ width: `${Math.min(100, (cartSubtotal / 5000) * 100)}%` }}
-            />
-          </div>
-        </div>
+        )}
 
         {/* Cart Body */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -107,7 +117,7 @@ export default function CartDrawer() {
                     </div>
                   )}
                   <div className="text-xs font-black text-emerald-800">
-                    {Number(item.price).toLocaleString("ar-EG")} ج.م
+                    {formatPrice(item.price)}
                   </div>
                 </div>
 
@@ -154,15 +164,15 @@ export default function CartDrawer() {
             <div className="space-y-1.5 text-xs text-neutral-600">
               <div className="flex justify-between">
                 <span>المجموع الفرعي:</span>
-                <span className="font-bold text-neutral-900">{cartSubtotal.toLocaleString("ar-EG")} ج.م</span>
+                <span className="font-bold text-neutral-900">{formatPrice(cartSubtotal)}</span>
               </div>
               <div className="flex justify-between">
                 <span>الشحن:</span>
-                <span className="font-bold text-emerald-700">{isFreeShipping ? "شحن مجاني" : "يُحسب عند الدفع"}</span>
+                <span className="font-bold text-emerald-700">{isFreeShipping ? "شحن مجاني 🎉" : "يُحسب عند الدفع"}</span>
               </div>
               <div className="flex justify-between text-sm sm:text-base font-extrabold text-neutral-900 pt-1.5 border-t border-neutral-200">
                 <span>الإجمالي المقدر:</span>
-                <span className="text-emerald-800">{cartSubtotal.toLocaleString("ar-EG")} ج.م</span>
+                <span className="text-emerald-800">{formatPrice(cartSubtotal)}</span>
               </div>
             </div>
 

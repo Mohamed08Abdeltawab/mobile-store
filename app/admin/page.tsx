@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "../context/CartContext";
 import { PREDEFINED_COLORS, Product, ProductCondition } from "@/lib/types";
+import StoreSettingsTab from "./components/StoreSettingsTab";
 
 const CATEGORIES = [
   "الموبايلات",
@@ -78,8 +79,8 @@ const RAM_OPTIONS = ["2GB", "3GB", "4GB", "6GB", "8GB", "12GB", "16GB", "24GB"];
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const { setIsAdmin } = useCart();
-  const [activeTab, setActiveTab] = useState<"products" | "orders">("products");
+  const { setIsAdmin, settings, setSettings } = useCart();
+  const [activeTab, setActiveTab] = useState<"products" | "orders" | "settings">("products");
 
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
@@ -718,6 +719,17 @@ export default function AdminDashboardPage() {
           >
             📋 الطلبات والواتساب ({orders.length})
           </button>
+
+          <button
+            onClick={() => setActiveTab("settings")}
+            className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-extrabold text-xs sm:text-sm cursor-pointer border-0 whitespace-nowrap transition-all ${
+              activeTab === "settings"
+                ? "bg-lime-400 text-black shadow-lg shadow-lime-400/20"
+                : "bg-white/10 text-white hover:bg-white/15"
+            }`}
+          >
+            ⚙️ إعدادات المتجر العامة (Store Settings)
+          </button>
         </div>
 
         {/* ========================================================= */}
@@ -1050,6 +1062,24 @@ export default function AdminDashboardPage() {
               </div>
             )}
           </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* TAB 3: STORE SETTINGS */}
+        {/* ========================================================= */}
+        {activeTab === "settings" && (
+          <StoreSettingsTab
+            initialSettings={settings}
+            onSaved={(updated) => {
+              setSettings(updated);
+              setNotification("تم حفظ وتحديث إعدادات المتجر بنجاح ✓");
+              setTimeout(() => setNotification(""), 4000);
+            }}
+            showToast={(msg) => {
+              setNotification(msg);
+              setTimeout(() => setNotification(""), 4000);
+            }}
+          />
         )}
       </main>
 

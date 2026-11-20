@@ -20,7 +20,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     openCheckoutWithProduct,
     sendDirectWhatsApp,
     isWishlisted,
-    toggleWishlist
+    toggleWishlist,
+    formatPrice,
+    activeGovernorates,
   } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -385,17 +387,17 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               <div className="p-4 rounded-2xl bg-neutral-100/80 border border-neutral-200 space-y-1">
                 <div className="flex items-baseline gap-3 flex-wrap">
                   <span className="text-3xl font-black text-neutral-900">
-                    {Number(product.price).toLocaleString("ar-EG")} <span className="text-sm font-bold text-neutral-500">ج.م</span>
+                    {formatPrice(product.price)}
                   </span>
                   {Boolean(product.old_price && Number(product.old_price) > Number(product.price)) && (
                     <s className="text-sm text-neutral-400 line-through">
-                      {Number(product.old_price).toLocaleString("ar-EG")} ج.م
+                      {formatPrice(product.old_price)}
                     </s>
                   )}
                 </div>
                 {discount > 0 && (
                   <div className="text-xs font-bold text-emerald-800">
-                    🎉 وفرت اليوم {(Number(product.old_price) - Number(product.price)).toLocaleString("ar-EG")} ج.م مع معاينة وفحص مجاني قبل الدفع!
+                    🎉 وفرت اليوم {formatPrice(Number(product.old_price) - Number(product.price))} مع معاينة وفحص مجاني قبل الدفع!
                   </div>
                 )}
               </div>

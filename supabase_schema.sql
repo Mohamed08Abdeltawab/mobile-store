@@ -129,6 +129,19 @@ VALUES ('admin', '$2b$10$rzmW8Z9S9SZzkc6vpTKcJeLdoghftshEu.TvIa7yaWxR8nOslVHzK')
 ON CONFLICT (username) DO UPDATE 
 SET password_hash = '$2b$10$rzmW8Z9S9SZzkc6vpTKcJeLdoghftshEu.TvIa7yaWxR8nOslVHzK';
 
+-- 9b. جدول إعدادات المتجر العامة (Store Settings Table)
+CREATE TABLE IF NOT EXISTS store_settings (
+  id TEXT PRIMARY KEY DEFAULT 'default',
+  settings JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE store_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Public read store_settings" ON store_settings;
+CREATE POLICY "Public read store_settings" ON store_settings FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Service role full access store_settings" ON store_settings;
+CREATE POLICY "Service role full access store_settings" ON store_settings FOR ALL USING (true) WITH CHECK (true);
+
 -- 10. إدخال الألوان الـ 15 المعتمدة
 INSERT INTO colors (id, name, hex_code) VALUES
 ('black', 'أسود', '#111827'),

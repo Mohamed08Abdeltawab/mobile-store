@@ -14,6 +14,9 @@ import {
   Category,
   Brand,
   PredefinedColor,
+  StoreSettings,
+  DEFAULT_STORE_SETTINGS,
+  formatCurrency,
 } from "../../lib/types";
 
 export interface Governorate {
@@ -64,6 +67,12 @@ interface CartContextType {
   categories: Category[];
   brands: Brand[];
   colors: PredefinedColor[];
+  settings: StoreSettings;
+  setSettings: React.Dispatch<React.SetStateAction<StoreSettings>>;
+  updateSettings: (newSettings: Partial<StoreSettings>) => Promise<boolean>;
+  refreshSettings: () => Promise<void>;
+  formatPrice: (amount: number | string | undefined | null) => string;
+  activeGovernorates: Governorate[];
   cart: CartItem[];
   setCart: React.Dispatch<React.SetStateAction<CartItem[]>>;
   wishlist: string[];
@@ -130,9 +139,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [colors, setColors] = useState<PredefinedColor[]>([]);
+  const [settings, setSettings] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // Dynamic active governorates from store settings
+  const activeGovernorates: Governorate[] =
+    settings.shipping_cities && settings.shipping_cities.length > 0
+      ? settings.shipping_cities
+          .filter((c) => c.is_active)
+          .map((c) => ({
+            id: c.id,
+            name: c.name,
+            shipping: c.shipping,
+            days: c.days,
+          }))
+      : GOVERNORATES;
 
   // Modals & Overlays
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -154,6 +177,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [orderCompleted, setOrderCompleted] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Keep selectedGov in sync with activeGovernorates
+  useEffect(() => {
+    if (activeGovernorates.length > 0) {
+      const exists = activeGovernorates.some((g) => g.id === selectedGov?.id);
+      if (!exists) {
+        setSelectedGov(activeGovernorates[0]);
+      }
+    }
+  }, [activeGovernorates]);
+
+  // Apply Brand Colors dynamically to CSS variables
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      if (settings.primary_color) {
+        document.documentElement.style.setProperty("--color-accent-green", settings.primary_color);
+        document.documentElement.style.setProperty("--brand-primary", settings.primary_color);
+      }
+      if (settings.secondary_color) {
+        document.documentElement.style.setProperty("--brand-secondary", settings.secondary_color);
+      }
+    }
+  }, [settings.primary_color, settings.secondary_color]);
+
   async function checkAdminAuth(): Promise<boolean> {
     const shouldCheck =
       typeof window !== "undefined" &&
@@ -167,7 +213,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     try {
       const res = await fetch("/api/admin/login");
-      const data = await res.json();
+      const data: any = await res.json();
       const authed = Boolean(data.authenticated);
       setIsAdmin(authed);
       if (!authed && typeof window !== "undefined") {
@@ -197,6 +243,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
             setCategories(parsed.categories || []);
             setBrands(parsed.brands || []);
             setColors(parsed.colors || []);
+            if (parsed.settings) {
+              setSettings({ ...DEFAULT_STORE_SETTINGS, ...parsed.settings });
+            }
           }
         }
       } catch (e) {}
@@ -205,12 +254,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     // 2. Single consolidated request for all store data
     try {
       const res = await fetch("/api/bootstrap");
-      const data = await res.json();
+      const data: any = await res.json();
       if (data.success) {
         if (Array.isArray(data.products)) setProducts(data.products);
         if (Array.isArray(data.categories)) setCategories(data.categories);
         if (Array.isArray(data.brands)) setBrands(data.brands);
         if (Array.isArray(data.colors)) setColors(data.colors);
+        if (data.settings) {
+          setSettings({ ...DEFAULT_STORE_SETTINGS, ...data.settings });
+        }
 
         if (typeof window !== "undefined") {
           try {
@@ -221,6 +273,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 categories: data.categories,
                 brands: data.brands,
                 colors: data.colors,
+                settings: data.settings,
                 timestamp: Date.now(),
               }),
             );
@@ -235,7 +288,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   async function refreshProducts() {
     try {
       const res = await fetch("/api/products", { cache: "no-store" });
-      const data = await res.json();
+      const data: any = await res.json();
       if (data.success && Array.isArray(data.products)) {
         setProducts(data.products);
         if (typeof window !== "undefined") {
@@ -245,6 +298,47 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error("Error loading products:", err);
     }
+  }
+
+  async function refreshSettings() {
+    try {
+      const res = await fetch("/api/settings", { cache: "no-store" });
+      const data: any = await res.json();
+      if (data.success && data.settings) {
+        setSettings({ ...DEFAULT_STORE_SETTINGS, ...data.settings });
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem("mobile_store_bootstrap");
+        }
+      }
+    } catch (err) {
+      console.error("Error refreshing settings:", err);
+    }
+  }
+
+  async function updateSettings(newSettings: Partial<StoreSettings>): Promise<boolean> {
+    try {
+      const res = await fetch("/api/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newSettings),
+      });
+      const data: any = await res.json();
+      if (data.success && data.settings) {
+        setSettings({ ...DEFAULT_STORE_SETTINGS, ...data.settings });
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem("mobile_store_bootstrap");
+        }
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error("Error updating settings:", err);
+      return false;
+    }
+  }
+
+  function formatPrice(amount: number | string | undefined | null) {
+    return formatCurrency(amount, settings);
   }
 
   // Load Initial Products, Categories & Auth
@@ -433,11 +527,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Quick WhatsApp Purchase
   function sendDirectWhatsApp(product: Product) {
     if (!product) return;
-    const num = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
+    const num = settings.whatsapp_number || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
     const conditionText = product.condition
       ? ` (حالة: ${product.condition})`
       : "";
-    const text = `مرحباً، أود الاستفسار وطلب جهاز *${product.name}*${conditionText} بسعر *${Number(product.price).toLocaleString("ar-EG")} ج.م* مع ميزة الفحص والمعاينة قبل الدفع.`;
+    const text = `مرحباً، أود الاستفسار وطلب جهاز *${product.name}*${conditionText} بسعر *${formatPrice(product.price)}* مع ميزة الفحص والمعاينة قبل الدفع.`;
     const url = `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
     window.open(url, "_blank");
   }
@@ -456,8 +550,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     (sum, item) => sum + item.price * item.qty,
     0,
   );
-  const isFreeShipping = cartSubtotal >= 5000;
-  const shippingFee = isFreeShipping ? 0 : selectedGov.shipping;
+  const isFreeShipping = Boolean(settings.free_shipping_enabled && cartSubtotal >= settings.free_shipping_threshold);
+  const shippingFee = isFreeShipping ? 0 : (selectedGov?.shipping ?? 0);
   const cartTotal = cartSubtotal + shippingFee;
 
   // Checkout submission
@@ -496,7 +590,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }),
       });
 
-      const data = await res.json();
+      const data: any = await res.json();
       if (data.success) {
         setOrderCompleted(data);
         setCart([]);
@@ -521,6 +615,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         categories,
         brands,
         colors,
+        settings,
+        setSettings,
+        updateSettings,
+        refreshSettings,
+        formatPrice,
+        activeGovernorates,
         cart,
         setCart,
         wishlist,

@@ -3,7 +3,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import bcrypt from "bcryptjs";
 import { getSupabaseAdmin, isSupabaseConfigured, getEnvVar } from "./supabase";
-import { Product, Order, Category, Brand, PredefinedColor, PREDEFINED_COLORS } from "./types";
+import { Product, Order, Category, Brand, PredefinedColor, PREDEFINED_COLORS, StoreSettings, DEFAULT_STORE_SETTINGS } from "./types";
 
 let sqliteInstance: any = null;
 let DatabaseSyncClass: any = null;
@@ -142,6 +142,25 @@ function getSqliteDb() {
       created_at TEXT DEFAULT (datetime('now'))
     );
   `);
+
+  // 8. Store Settings Table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS store_settings (
+      id TEXT PRIMARY KEY DEFAULT 'default',
+      settings TEXT NOT NULL,
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+
+  // Seed default store settings
+  try {
+    const settingsCheck = db.prepare("SELECT COUNT(*) as count FROM store_settings WHERE id = 'default'").get() as any;
+    if (!settingsCheck || settingsCheck.count === 0) {
+      db.prepare("INSERT INTO store_settings (id, settings) VALUES ('default', ?)").run(JSON.stringify(DEFAULT_STORE_SETTINGS));
+    }
+  } catch (err) {
+    console.error("Error checking/seeding store_settings:", err);
+  }
 
   // Seed default admin
   const adminCheck = db.prepare("SELECT COUNT(*) as count FROM admins").get() as any;
@@ -1667,4 +1686,107 @@ export async function verifyAdmin(username: string, password: string): Promise<b
   } catch (e) {
     return false;
   }
+}
+
+// ==============================================================================
+// Store Settings
+// ==============================================================================
+
+let memorySettings: StoreSettings = { ...DEFAULT_STORE_SETTINGS };
+
+export async function getStoreSettings(): Promise<StoreSettings> {
+  // 1. Try Supabase
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = getSupabaseAdmin()!;
+      const { data, error } = await supabase
+        .from("store_settings")
+        .select("settings")
+        .eq("id", "default")
+        .maybeSingle();
+
+      if (!error && data && data.settings) {
+        const parsed = typeof data.settings === "string" ? JSON.parse(data.settings) : data.settings;
+        memorySettings = {
+          ...DEFAULT_STORE_SETTINGS,
+          ...parsed,
+          shipping_cities: parsed.shipping_cities || DEFAULT_STORE_SETTINGS.shipping_cities,
+          hero_slides: parsed.hero_slides || DEFAULT_STORE_SETTINGS.hero_slides
+        };
+        return memorySettings;
+      }
+    } catch (e) {
+      console.error("[Supabase getStoreSettings Error]:", e);
+    }
+  }
+
+  // 2. Try SQLite
+  try {
+    const db = getSqliteDb();
+    const row = db.prepare("SELECT settings FROM store_settings WHERE id = 'default'").get() as any;
+    if (row && row.settings) {
+      const parsed = typeof row.settings === "string" ? JSON.parse(row.settings) : row.settings;
+      memorySettings = {
+        ...DEFAULT_STORE_SETTINGS,
+        ...parsed,
+        shipping_cities: parsed.shipping_cities || DEFAULT_STORE_SETTINGS.shipping_cities,
+        hero_slides: parsed.hero_slides || DEFAULT_STORE_SETTINGS.hero_slides
+      };
+      return memorySettings;
+    }
+  } catch (e) {
+    console.error("[SQLite getStoreSettings Error]:", e);
+  }
+
+  return memorySettings;
+}
+
+export async function updateStoreSettings(newSettings: Partial<StoreSettings>): Promise<StoreSettings> {
+  const current = await getStoreSettings();
+  const merged: StoreSettings = {
+    ...current,
+    ...newSettings,
+    updated_at: new Date().toISOString()
+  };
+  memorySettings = merged;
+
+  // 1. Try Supabase
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = getSupabaseAdmin()!;
+      const { error } = await supabase
+        .from("store_settings")
+        .upsert(
+          {
+            id: "default",
+            settings: merged,
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: "id" }
+        );
+
+      if (!error) {
+        return merged;
+      }
+      console.error("[Supabase updateStoreSettings Error]:", error);
+    } catch (e) {
+      console.error("[Supabase updateStoreSettings Exception]:", e);
+    }
+  }
+
+  // 2. Try SQLite
+  try {
+    const db = getSqliteDb();
+    const stmt = db.prepare(`
+      INSERT INTO store_settings (id, settings, updated_at)
+      VALUES ('default', ?, datetime('now'))
+      ON CONFLICT(id) DO UPDATE SET settings = excluded.settings, updated_at = datetime('now')
+    `);
+    stmt.run(JSON.stringify(merged));
+    return merged;
+  } catch (e) {
+    console.error("[SQLite updateStoreSettings Error]:", e);
+  }
+
+  return merged;
 }

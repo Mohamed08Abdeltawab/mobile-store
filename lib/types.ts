@@ -158,3 +158,220 @@ export const PREDEFINED_COLORS: PredefinedColor[] = [
   { id: "transparent", name: "شفاف", name_ar: "شفاف", hex_code: "#F3F4F6", hex: "#F3F4F6" },
   { id: "multicolor", name: "ألوان متعددة", name_ar: "ألوان متعددة", hex_code: "#4F46E5", hex: "#4F46E5" }
 ];
+
+// ==============================================================================
+// Store Settings & Configuration Models
+// ==============================================================================
+
+export type CurrencyCode = "EGP" | "USD" | "SAR";
+
+export type CurrencyFormat =
+  | "symbol_after_arabic" // e.g. "250 ج.م"
+  | "symbol_before_english" // e.g. "LE 250"
+  | "symbol_after_english" // e.g. "250 LE"
+  | "symbol_before_arabic"; // e.g. "ج.م 250"
+
+export interface ShippingCity {
+  id: string;
+  name: string;
+  shipping: number;
+  days: string;
+  is_active: boolean;
+}
+
+export interface HeroSlide {
+  id: string;
+  image: string;
+  title: string;
+  subtitle: string;
+  button_text?: string;
+  button_link?: string;
+  badge?: string;
+  is_active: boolean;
+  sort_order: number;
+}
+
+export interface StoreSettings {
+  // 1. Brand & Identity
+  store_name: string;
+  logo_url: string;
+  logo_dark_url?: string;
+  tagline: string;
+  description: string;
+
+  // 2. Localization & Currency
+  currency: CurrencyCode;
+  currency_format: CurrencyFormat;
+  custom_currency_symbol?: string;
+
+  // 3. Social Media Links (Marketing)
+  social_facebook: string;
+  social_facebook_enabled: boolean;
+  social_instagram: string;
+  social_instagram_enabled: boolean;
+  social_tiktok: string;
+  social_tiktok_enabled: boolean;
+  whatsapp_number: string;
+  whatsapp_enabled: boolean;
+  phone_number: string;
+  sales_hours: string;
+  address_text: string;
+
+  // 4. Shipping Configuration
+  shipping_cities: ShippingCity[];
+  free_shipping_enabled: boolean;
+  free_shipping_threshold: number;
+  free_shipping_message: string;
+
+  // 5. Payment Methods
+  payment_cod_enabled: boolean;
+  payment_cod_title: string;
+  payment_cod_notes: string;
+
+  payment_vodafone_cash_enabled: boolean;
+  payment_vodafone_cash_number: string;
+  payment_vodafone_cash_instructions: string;
+  payment_vodafone_cash_qr?: string;
+
+  payment_instapay_enabled: boolean;
+  payment_instapay_handle: string;
+  payment_instapay_instructions: string;
+  payment_instapay_qr?: string;
+
+  // 6. Theme & Visual Appearance
+  primary_color: string;
+  secondary_color: string;
+  hero_slides: HeroSlide[];
+
+  updated_at?: string;
+}
+
+export const DEFAULT_STORE_SETTINGS: StoreSettings = {
+  store_name: "MOBILE STORE",
+  logo_url: "",
+  logo_dark_url: "",
+  tagline: "موبايلات · تابلت · إلكترونيات",
+  description: "متجر Mobile Store المتخصص في بيع الهواتف الذكية والأجهزة اللوحية والإكسسوارات الأصلية. نحرص على تقديم أعلى معايير الجودة، المعاينة والفحص الكامل قبل الدفع، وضمان محلي معتمد مع استبدال فوري.",
+
+  currency: "EGP",
+  currency_format: "symbol_after_arabic",
+  custom_currency_symbol: "ج.م",
+
+  social_facebook: "https://facebook.com",
+  social_facebook_enabled: true,
+  social_instagram: "https://instagram.com",
+  social_instagram_enabled: true,
+  social_tiktok: "https://tiktok.com",
+  social_tiktok_enabled: true,
+  whatsapp_number: "201131350988",
+  whatsapp_enabled: true,
+  phone_number: "0106 571 2366",
+  sales_hours: "يومياً من 10:00 صباحاً حتى 11:00 مساءً",
+  address_text: "التجمع الخامس، شارع التسعين، القاهرة، جمهورية مصر العربية",
+
+  shipping_cities: [
+    { id: "cairo", name: "القاهرة", shipping: 50, days: "24-48 ساعة", is_active: true },
+    { id: "giza", name: "الجيزة", shipping: 50, days: "24-48 ساعة", is_active: true },
+    { id: "alex", name: "الإسكندرية", shipping: 60, days: "48 ساعة", is_active: true },
+    { id: "delta", name: "محافظات الدلتا (المنصورة، طنطا، الزقازيق...)", shipping: 65, days: "48-72 ساعة", is_active: true },
+    { id: "canal", name: "مدن القناة (الإسماعيلية، بورسعيد، السويس)", shipping: 70, days: "48-72 ساعة", is_active: true },
+    { id: "upper", name: "محافظات الصعيد (بني سويف، أسيوط، سوهاج...)", shipping: 80, days: "3-4 أيام", is_active: true },
+    { id: "remote", name: "المحافظات الحدودية (البحر الأحمر، مطروح...)", shipping: 95, days: "4-5 أيام", is_active: true },
+  ],
+  free_shipping_enabled: true,
+  free_shipping_threshold: 5000,
+  free_shipping_message: "شحن مجاني لكافة المحافظات للطلبات الأعلى من 5000 ج.م",
+
+  payment_cod_enabled: true,
+  payment_cod_title: "الدفع عند الاستلام بعد المعاينة والفحص",
+  payment_cod_notes: "لك كامل الحق في فتح الشحنة وفحص الجهاز والتأكد من حالته ومطابقته للمواصفات قبل دفع أي مبلغ للمندوب.",
+
+  payment_vodafone_cash_enabled: true,
+  payment_vodafone_cash_number: "01012345678",
+  payment_vodafone_cash_instructions: "قم بتحويل قيمة الطلب أو العربون إلى محفظة فودافون كاش، وأرسل صورة رسالة التحويل عبر الواتساب لتأكيد الشحن فوراً.",
+  payment_vodafone_cash_qr: "",
+
+  payment_instapay_enabled: true,
+  payment_instapay_handle: "mobilestore@instapay",
+  payment_instapay_instructions: "قم بالتحويل عبر تطبيق إنستاباي إلى المعرف (IPA) الموضح أعلاه، واحتفظ بإيصال العملية للمعاينة.",
+  payment_instapay_qr: "",
+
+  primary_color: "#A3E635",
+  secondary_color: "#10B981",
+  hero_slides: [
+    {
+      id: "slide-1",
+      image: "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-9inch-deserttitanium?wid=1000&hei=1000&fmt=jpeg&qlt=90",
+      title: "هواتف ذكية تصنع الفرق، وقوة تليق باختياراتك",
+      subtitle: "استكشف عالم Mobile Store المتخصص في أحدث هواتف آيفون، سامسونج، شاومي، وأجهزة التابلت والسماعات الأصلية مع ميزة الفحص قبل الدفع.",
+      button_text: "تصفح كل الأجهزة",
+      button_link: "/shop",
+      badge: "أحدث الهواتف الذكية والإلكترونيات لعام 2026",
+      is_active: true,
+      sort_order: 1
+    }
+  ]
+};
+
+/**
+ * Universal Currency Formatter respecting active store settings
+ */
+export function formatCurrency(
+  amount: number | string | undefined | null,
+  settings?: Partial<StoreSettings>
+): string {
+  const num = typeof amount === "number" ? amount : parseFloat(String(amount || 0));
+  if (isNaN(num)) return "0";
+
+  const currency = settings?.currency || "EGP";
+  const format = settings?.currency_format || "symbol_after_arabic";
+
+  const isInt = Math.round(num) === num;
+  const numStrAr = isInt
+    ? num.toLocaleString("ar-EG")
+    : num.toLocaleString("ar-EG", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const numStrEn = isInt
+    ? num.toLocaleString("en-US")
+    : num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  if (currency === "USD") {
+    switch (format) {
+      case "symbol_before_english":
+        return `$${numStrEn}`;
+      case "symbol_after_english":
+        return `${numStrEn} USD`;
+      case "symbol_before_arabic":
+        return `$ ${numStrEn}`;
+      case "symbol_after_arabic":
+      default:
+        return `${numStrAr} دولار`;
+    }
+  }
+
+  if (currency === "SAR") {
+    switch (format) {
+      case "symbol_before_english":
+        return `SAR ${numStrEn}`;
+      case "symbol_after_english":
+        return `${numStrEn} SAR`;
+      case "symbol_before_arabic":
+        return `ر.س ${numStrAr}`;
+      case "symbol_after_arabic":
+      default:
+        return `${numStrAr} ر.س`;
+    }
+  }
+
+  // Default: EGP
+  switch (format) {
+    case "symbol_before_english":
+      return `LE ${numStrEn}`;
+    case "symbol_after_english":
+      return `${numStrEn} LE`;
+    case "symbol_before_arabic":
+      return `ج.م ${numStrAr}`;
+    case "symbol_after_arabic":
+    default:
+      return `${numStrAr} ج.م`;
+  }
+}

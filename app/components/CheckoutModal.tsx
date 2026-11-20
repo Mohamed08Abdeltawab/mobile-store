@@ -1,6 +1,7 @@
 "use client";
 
-import { useCart, GOVERNORATES } from "../context/CartContext";
+import { useState } from "react";
+import { useCart } from "../context/CartContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,10 +29,28 @@ export default function CheckoutModal() {
     submittingOrder,
     orderCompleted,
     setOrderCompleted,
-    handleOrderSubmit
+    handleOrderSubmit,
+    activeGovernorates,
+    settings,
+    formatPrice,
   } = useCart();
 
+  const [copiedHandle, setCopiedHandle] = useState<string | null>(null);
+
+  function copyToClipboard(text: string, label: string) {
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopiedHandle(label);
+      setTimeout(() => setCopiedHandle(null), 2500);
+    }
+  }
+
   if (!isCheckoutOpen) return null;
+
+  // Active payment options
+  const hasCod = settings?.payment_cod_enabled ?? true;
+  const hasVodafone = settings?.payment_vodafone_cash_enabled ?? true;
+  const hasInstapay = settings?.payment_instapay_enabled ?? true;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true">
@@ -153,14 +172,14 @@ export default function CheckoutModal() {
               <select
                 value={selectedGov.id}
                 onChange={(e) => {
-                  const g = GOVERNORATES.find(gov => gov.id === e.target.value);
+                  const g = activeGovernorates.find(gov => gov.id === e.target.value);
                   if (g) setSelectedGov(g);
                 }}
                 className="w-full h-11 px-3 rounded-xl border border-neutral-200 bg-neutral-50 text-xs font-bold text-neutral-800 outline-none cursor-pointer"
               >
-                {GOVERNORATES.map(gov => (
+                {activeGovernorates.map(gov => (
                   <option key={gov.id} value={gov.id}>
-                    {gov.name} ({gov.shipping === 0 ? "مجاني" : `${gov.shipping} ج.م`} · {gov.days})
+                    {gov.name} ({gov.shipping === 0 ? "شحن مجاني" : formatPrice(gov.shipping)} · {gov.days})
                   </option>
                 ))}
               </select>
@@ -181,30 +200,156 @@ export default function CheckoutModal() {
               )}
             </div>
 
-            {/* Payment Method Notice */}
-            <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-xs text-emerald-950 space-y-1">
-              <div className="font-extrabold flex items-center gap-1.5 text-emerald-900">
-                <span>🛡️</span>
-                <span>طريقة الدفع: الدفع عند الاستلام بعد المعاينة والفحص</span>
+            {/* Payment Method Selector & Information */}
+            <div className="space-y-2 pt-1">
+              <Label className="text-xs font-bold text-neutral-700">طريقة الدفع وتأكيد الحجز *</Label>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {hasCod && (
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("cod")}
+                    className={`p-3 rounded-xl border text-right transition-all cursor-pointer flex flex-col justify-between ${
+                      paymentMethod === "cod"
+                        ? "bg-emerald-50 border-emerald-600 ring-1 ring-emerald-600 text-emerald-950"
+                        : "bg-neutral-50 border-neutral-200 text-neutral-700 hover:bg-neutral-100"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full mb-1">
+                      <span className="text-base">💵</span>
+                      <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${paymentMethod === "cod" ? "border-emerald-600 bg-emerald-600" : "border-neutral-300"}`}>
+                        {paymentMethod === "cod" && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </span>
+                    </div>
+                    <span className="font-extrabold text-xs">الدفع عند الاستلام</span>
+                    <span className="text-[10px] text-neutral-500 mt-0.5">معاينة وفحص قبل الدفع</span>
+                  </button>
+                )}
+
+                {hasVodafone && (
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("vodafone_cash")}
+                    className={`p-3 rounded-xl border text-right transition-all cursor-pointer flex flex-col justify-between ${
+                      paymentMethod === "vodafone_cash"
+                        ? "bg-red-50 border-red-600 ring-1 ring-red-600 text-red-950"
+                        : "bg-neutral-50 border-neutral-200 text-neutral-700 hover:bg-neutral-100"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full mb-1">
+                      <span className="text-base">📱</span>
+                      <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${paymentMethod === "vodafone_cash" ? "border-red-600 bg-red-600" : "border-neutral-300"}`}>
+                        {paymentMethod === "vodafone_cash" && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </span>
+                    </div>
+                    <span className="font-extrabold text-xs">فودافون كاش</span>
+                    <span className="text-[10px] text-neutral-500 mt-0.5">محافظ إلكترونية</span>
+                  </button>
+                )}
+
+                {hasInstapay && (
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("instapay")}
+                    className={`p-3 rounded-xl border text-right transition-all cursor-pointer flex flex-col justify-between ${
+                      paymentMethod === "instapay"
+                        ? "bg-purple-50 border-purple-600 ring-1 ring-purple-600 text-purple-950"
+                        : "bg-neutral-50 border-neutral-200 text-neutral-700 hover:bg-neutral-100"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full mb-1">
+                      <span className="text-base">⚡</span>
+                      <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center ${paymentMethod === "instapay" ? "border-purple-600 bg-purple-600" : "border-neutral-300"}`}>
+                        {paymentMethod === "instapay" && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </span>
+                    </div>
+                    <span className="font-extrabold text-xs">إنستاباي (InstaPay)</span>
+                    <span className="text-[10px] text-neutral-500 mt-0.5">تحويل لحظي بنكي</span>
+                  </button>
+                )}
               </div>
-              <p className="text-[11px] text-emerald-800 leading-relaxed">
-                لك كامل الحق في فتح الشحنة وفحص الجهاز والتأكد من حالته ومطابقته للمواصفات перед دفع أي جنيه للمندوب.
-              </p>
+
+              {/* Method Details Box */}
+              {paymentMethod === "cod" && (
+                <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-xs text-emerald-950 space-y-1">
+                  <div className="font-extrabold flex items-center gap-1.5 text-emerald-900">
+                    <span>🛡️</span>
+                    <span>{settings?.payment_cod_title || "الدفع عند الاستلام بعد المعاينة والفحص"}</span>
+                  </div>
+                  <p className="text-[11px] text-emerald-800 leading-relaxed">
+                    {settings?.payment_cod_notes || "لك كامل الحق في فتح الشحنة وفحص الجهاز والتأكد من حالته ومطابقته للمواصفات قبل دفع أي مبلغ للمندوب."}
+                  </p>
+                </div>
+              )}
+
+              {paymentMethod === "vodafone_cash" && (
+                <div className="p-3.5 rounded-2xl bg-red-50/70 border border-red-200 text-xs text-red-950 space-y-2">
+                  <div className="font-extrabold flex items-center justify-between text-red-900">
+                    <span className="flex items-center gap-1.5">
+                      <span>📱</span>
+                      <span>رقم محفظة فودافون كاش: <b>{settings?.payment_vodafone_cash_number || "01012345678"}</b></span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(settings?.payment_vodafone_cash_number || "01012345678", "vodafone")}
+                      className="px-2.5 py-1 rounded-lg bg-red-600 text-white font-bold text-[10px] hover:bg-red-700 transition-colors cursor-pointer"
+                    >
+                      {copiedHandle === "vodafone" ? "تم النسخ ✓" : "نسخ الرقم"}
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-red-800 leading-relaxed">
+                    {settings?.payment_vodafone_cash_instructions || "قم بتحويل قيمة الطلب أو العربون إلى محفظة فودافون كاش، وأرسل صورة رسالة التحويل عبر الواتساب لتأكيد الشحن فوراً."}
+                  </p>
+                  {settings?.payment_vodafone_cash_qr && (
+                    <div className="pt-1 flex items-center gap-3">
+                      <img src={settings.payment_vodafone_cash_qr} alt="Vodafone Cash QR" className="w-16 h-16 rounded-lg bg-white p-1 border border-red-200 object-contain" />
+                      <span className="text-[10px] text-red-700">امسح الكود عبر تطبيق أنا فودافون للدفع المباشر</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {paymentMethod === "instapay" && (
+                <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 text-xs text-purple-950 space-y-2">
+                  <div className="font-extrabold flex items-center justify-between text-purple-900">
+                    <span className="flex items-center gap-1.5">
+                      <span>⚡</span>
+                      <span>معرف InstaPay IPA: <b dir="ltr">{settings?.payment_instapay_handle || "mobilestore@instapay"}</b></span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(settings?.payment_instapay_handle || "mobilestore@instapay", "instapay")}
+                      className="px-2.5 py-1 rounded-lg bg-purple-600 text-white font-bold text-[10px] hover:bg-purple-700 transition-colors cursor-pointer"
+                    >
+                      {copiedHandle === "instapay" ? "تم النسخ ✓" : "نسخ المعرف"}
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-purple-800 leading-relaxed">
+                    {settings?.payment_instapay_instructions || "قم بالتحويل عبر تطبيق إنستاباي إلى المعرف (IPA) الموضح أعلاه، واحتفظ بإيصال العملية للمعاينة."}
+                  </p>
+                  {settings?.payment_instapay_qr && (
+                    <div className="pt-1 flex items-center gap-3">
+                      <img src={settings.payment_instapay_qr} alt="InstaPay QR" className="w-16 h-16 rounded-lg bg-white p-1 border border-purple-200 object-contain" />
+                      <span className="text-[10px] text-purple-700">امسح الكود عبر تطبيق إنستاباي للتحويل الفوري</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Price Summary */}
             <div className="p-3.5 rounded-2xl bg-neutral-100/70 space-y-1.5 text-xs text-neutral-700">
               <div className="flex justify-between">
                 <span>إجمالي الأجهزة ({totalCartCount}):</span>
-                <span className="font-bold">{cartSubtotal.toLocaleString("ar-EG")} ج.م</span>
+                <span className="font-bold">{formatPrice(cartSubtotal)}</span>
               </div>
               <div className="flex justify-between">
                 <span>تكلفة الشحن إلى {selectedGov.name}:</span>
-                <span className="font-bold text-emerald-700">{isFreeShipping ? "شحن مجاني 🎉" : `${shippingFee} ج.م`}</span>
+                <span className="font-bold text-emerald-700">{isFreeShipping ? "شحن مجاني 🎉" : formatPrice(shippingFee)}</span>
               </div>
               <div className="flex justify-between text-sm font-black text-neutral-900 pt-1.5 border-t border-neutral-200">
                 <span>المبلغ الإجمالي للدفع:</span>
-                <span className="text-emerald-800 text-base">{cartTotal.toLocaleString("ar-EG")} ج.م</span>
+                <span className="text-emerald-800 text-base">{formatPrice(cartTotal)}</span>
               </div>
             </div>
 
@@ -215,7 +360,7 @@ export default function CheckoutModal() {
                 disabled={submittingOrder}
                 className="w-full bg-lime-400 hover:bg-lime-500 text-black font-extrabold h-12 rounded-xl text-sm shadow-md shadow-lime-400/25 transition-transform active:scale-[0.99] cursor-pointer"
               >
-                {submittingOrder ? "جاري تسجيل وتأكيد الطلب..." : `تأكيد حجز الطلب (${cartTotal.toLocaleString("ar-EG")} ج.م) ⚡`}
+                {submittingOrder ? "جاري تسجيل وتأكيد الطلب..." : `تأكيد حجز الطلب (${formatPrice(cartTotal)}) ⚡`}
               </Button>
             </div>
 

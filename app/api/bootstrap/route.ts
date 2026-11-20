@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
-import { getAllProducts, getAllCategories, getAllBrands, getAllColors } from "../../../lib/db";
+import { getAllProducts, getAllCategories, getAllBrands, getAllColors, getStoreSettings } from "../../../lib/db";
 
 export async function GET() {
   try {
-    const [products, categories, brands, colors] = await Promise.all([
+    const [products, categories, brands, colors, settings] = await Promise.all([
       getAllProducts(),
       getAllCategories(),
       getAllBrands(),
       getAllColors(),
+      getStoreSettings(),
     ]);
 
     return NextResponse.json(
@@ -17,6 +18,7 @@ export async function GET() {
         categories,
         brands,
         colors,
+        settings,
       },
       {
         headers: {

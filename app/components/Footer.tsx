@@ -4,8 +4,14 @@ import Link from "next/link";
 import { useCart } from "../context/CartContext";
 
 export default function Footer() {
-  const { setIsWishlistOpen } = useCart();
-  const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
+  const { setIsWishlistOpen, settings } = useCart();
+  const waNumber = settings?.whatsapp_number || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
+  const storeName = settings?.store_name || "MOBILE STORE";
+  const tagline = settings?.tagline || "موبايلات · تابلت · إلكترونيات";
+  const description = settings?.description || "متجر Mobile Store المتخصص في بيع الهواتف الذكية والأجهزة اللوحية والإكسسوارات الأصلية. نحرص على تقديم أعلى معايير الجودة، المعاينة والفحص الكامل قبل الدفع، وضمان محلي معتمد مع استبدال فوري.";
+  const addressText = settings?.address_text || "التجمع الخامس، شارع التسعين، القاهرة، جمهورية مصر العربية";
+  const phoneNumber = settings?.phone_number || "0106 571 2366";
+  const salesHours = settings?.sales_hours || "يومياً من 10:00 صباحاً حتى 11:00 مساءً";
 
   return (
     <footer
@@ -18,35 +24,94 @@ export default function Footer() {
           {/* Brand Col */}
           <div className="space-y-4">
             <Link className="flex items-center gap-2.5 group" href="/">
-              <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-lime-400 text-black shadow-md shadow-lime-400/20 group-hover:scale-105 transition-transform">
-                <svg
-                  className="w-5 h-5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="5" y="2" width="14" height="20" rx="3" ry="3"></rect>
-                  <line x1="12" y1="18" x2="12.01" y2="18"></line>
-                </svg>
-              </span>
-              <span className="flex flex-col">
-                <span className="font-extrabold text-2xl text-white tracking-wider leading-none">
-                  MOBILE<span className="text-lime-400">STORE</span>
-                </span>
-                <span className="text-[10px] font-bold text-neutral-400 tracking-widest uppercase">
-                  موبايلات · تابلت · إلكترونيات
-                </span>
-              </span>
+              {settings?.logo_url ? (
+                <img
+                  src={settings.logo_url}
+                  alt={storeName}
+                  className="h-10 max-w-[170px] object-contain"
+                />
+              ) : (
+                <>
+                  <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-lime-400 text-black shadow-md shadow-lime-400/20 group-hover:scale-105 transition-transform">
+                    <svg
+                      className="w-5 h-5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="5" y="2" width="14" height="20" rx="3" ry="3"></rect>
+                      <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                    </svg>
+                  </span>
+                  <span className="flex flex-col">
+                    <span className="font-extrabold text-2xl text-white tracking-wider leading-none">
+                      {storeName}
+                    </span>
+                    <span className="text-[10px] font-bold text-neutral-400 tracking-widest uppercase">
+                      {tagline}
+                    </span>
+                  </span>
+                </>
+              )}
             </Link>
 
             <p className="text-xs leading-relaxed text-neutral-400">
-              متجر Mobile Store المتخصص في بيع الهواتف الذكية والأجهزة اللوحية
-              والإكسسوارات الأصلية. نحرص على تقديم أعلى معايير الجودة، المعاينة
-              والفحص الكامل قبل الدفع، وضمان محلي معتمد مع استبدال فوري.
+              {description}
             </p>
+
+            {/* Social Media Links */}
+            <div className="pt-2">
+              <span className="text-[11px] font-bold text-neutral-300 block mb-2">تابعنا وتواصل معنا:</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                {settings?.social_facebook_enabled && settings?.social_facebook && (
+                  <a
+                    href={settings.social_facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-8 h-8 rounded-lg bg-white/5 hover:bg-[#1877F2]/20 border border-white/10 hover:border-[#1877F2]/40 text-[#1877F2] flex items-center justify-center text-sm font-bold transition-all"
+                    title="فيسبوك"
+                  >
+                    f
+                  </a>
+                )}
+                {settings?.social_instagram_enabled && settings?.social_instagram && (
+                  <a
+                    href={settings.social_instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-8 h-8 rounded-lg bg-white/5 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500/40 text-rose-400 flex items-center justify-center text-xs transition-all"
+                    title="إنستجرام"
+                  >
+                    📸
+                  </a>
+                )}
+                {settings?.social_tiktok_enabled && settings?.social_tiktok && (
+                  <a
+                    href={settings.social_tiktok}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/20 border border-white/10 hover:border-white/30 text-white flex items-center justify-center text-xs transition-all"
+                    title="تيك توك"
+                  >
+                    🎵
+                  </a>
+                )}
+                {settings?.whatsapp_enabled && (
+                  <a
+                    href={`https://wa.me/${waNumber}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-8 h-8 rounded-lg bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 text-[#25D366] flex items-center justify-center text-xs transition-all"
+                    title="واتساب"
+                  >
+                    💬
+                  </a>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Quick Links */}
@@ -201,21 +266,19 @@ export default function Footer() {
             <ul className="space-y-2.5 text-xs text-neutral-400">
               <li className="flex items-start gap-2">
                 <span>📍</span>
-                <span>
-                  التجمع الخامس، شارع التسعين، القاهرة، جمهورية مصر العربية
-                </span>
+                <span>{addressText}</span>
               </li>
               <li className="flex items-center gap-2">
                 <span>📞</span>
-                <span>هاتف المبيعات: 0106 571 2366</span>
+                <span>هاتف المبيعات: {phoneNumber}</span>
               </li>
               <li className="flex items-center gap-2">
                 <span>💬</span>
-                <span>واتساب المبيعات: 0106 571 2366</span>
+                <span>واتساب المبيعات: {waNumber}</span>
               </li>
               <li className="flex items-center gap-2">
                 <span>⏰</span>
-                <span>يومياً من 10:00 صباحاً حتى 11:00 مساءً</span>
+                <span>{salesHours}</span>
               </li>
             </ul>
           </div>
@@ -224,15 +287,26 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500">
           <div>
-            © 2026 Mobile Store — جميع الحقوق محفوظة. جميع الأجهزة أصلية 100%
+            © {new Date().getFullYear()} {storeName} — جميع الحقوق محفوظة. جميع الأجهزة أصلية 100%
             والمعاينة والفحص قبل الاستلام.
           </div>
 
-          <div className="flex items-center gap-3 text-neutral-400 font-bold flex-wrap">
-            <span>الدفع عند الاستلام بعد المعاينة</span> ·{" "}
-            <span>إنستاباي / InstaPay</span> ·{" "}
-            <span>محافظ إلكترونية (Vodafone Cash)</span> ·{" "}
-            <span>فيزا وماستركارد</span>
+          <div className="flex items-center gap-2.5 text-neutral-400 font-bold flex-wrap">
+            {settings?.payment_cod_enabled && (
+              <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[11px] text-lime-400">
+                الدفع عند الاستلام بعد المعاينة 💵
+              </span>
+            )}
+            {settings?.payment_instapay_enabled && (
+              <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[11px] text-purple-400">
+                إنستاباي / InstaPay ⚡
+              </span>
+            )}
+            {settings?.payment_vodafone_cash_enabled && (
+              <span className="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[11px] text-red-400">
+                فودافون كاش (Vodafone Cash) 📱
+              </span>
+            )}
           </div>
         </div>
       </div>

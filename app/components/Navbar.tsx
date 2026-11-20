@@ -14,10 +14,13 @@ export default function Navbar() {
     setIsSearchOpen,
     setIsMobileMenuOpen,
     isAdmin,
+    settings,
   } = useCart();
 
   const pathname = usePathname();
-  const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
+  const waNumber = settings?.whatsapp_number || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
+  const storeName = settings?.store_name || "MOBILE STORE";
+  const tagline = settings?.tagline || "موبايلات · تابلت · إلكترونيات";
 
   return (
     <header
@@ -57,28 +60,45 @@ export default function Navbar() {
               className="flex items-center gap-2 sm:gap-2.5 group shrink-0"
               href="/"
             >
-              <span className="flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-lime-400 text-black shadow-md shadow-lime-400/20 group-hover:scale-105 transition-transform shrink-0">
-                <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="5" y="2" width="14" height="20" rx="3" ry="3"></rect>
-                  <line x1="12" y1="18" x2="12.01" y2="18"></line>
-                </svg>
-              </span>
-              <span className="flex flex-col">
-                <span className="font-extrabold text-base sm:text-xl lg:text-2xl tracking-wider leading-none">
-                  MOBILE<span className="text-lime-400">STORE</span>
-                </span>
-                <span className="text-[8px] sm:text-[9px] lg:text-[10px] font-bold text-neutral-400 tracking-widest uppercase">
-                  موبايلات · تابلت · إلكترونيات
-                </span>
-              </span>
+              {settings?.logo_url ? (
+                <div className="flex items-center gap-2">
+                  <img
+                    src={settings.logo_url}
+                    alt={storeName}
+                    className="h-8 sm:h-10 max-w-[130px] sm:max-w-[170px] object-contain"
+                  />
+                  {tagline && (
+                    <span className="hidden xl:inline text-[9px] font-bold text-neutral-400 border-r border-white/10 pr-2 mr-2">
+                      {tagline}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <span className="flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-lime-400 text-black shadow-md shadow-lime-400/20 group-hover:scale-105 transition-transform shrink-0">
+                    <svg
+                      className="w-5 h-5 sm:w-6 sm:h-6"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="5" y="2" width="14" height="20" rx="3" ry="3"></rect>
+                      <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                    </svg>
+                  </span>
+                  <span className="flex flex-col">
+                    <span className="font-extrabold text-base sm:text-xl lg:text-2xl tracking-wider leading-none">
+                      {storeName}
+                    </span>
+                    <span className="text-[8px] sm:text-[9px] lg:text-[10px] font-bold text-neutral-400 tracking-widest uppercase">
+                      {tagline}
+                    </span>
+                  </span>
+                </>
+              )}
             </Link>
           </div>
 

@@ -5,9 +5,11 @@ import { usePathname } from "next/navigation";
 import { useCart } from "../context/CartContext";
 
 export default function MobileMenuDrawer() {
-  const { isMobileMenuOpen, setIsMobileMenuOpen, isAdmin } = useCart();
+  const { isMobileMenuOpen, setIsMobileMenuOpen, isAdmin, settings } = useCart();
   const pathname = usePathname();
-  const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
+  const waNumber = settings?.whatsapp_number || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
+  const storeName = settings?.store_name || "MOBILE STORE";
+  const tagline = settings?.tagline || "موبايلات · تابلت · إلكترونيات";
 
   if (!isMobileMenuOpen) return null;
 
@@ -81,12 +83,22 @@ export default function MobileMenuDrawer() {
             onClick={() => setIsMobileMenuOpen(false)}
             className="flex items-center gap-2 group"
           >
-            <span className="w-8 h-8 rounded-lg bg-lime-400 text-black flex items-center justify-center font-black text-sm">
-              M
-            </span>
-            <span className="font-extrabold text-base tracking-wider">
-              MOBILE<span className="text-lime-400">STORE</span>
-            </span>
+            {settings?.logo_url ? (
+              <img
+                src={settings.logo_url}
+                alt={storeName}
+                className="h-8 max-w-[130px] object-contain"
+              />
+            ) : (
+              <>
+                <span className="w-8 h-8 rounded-lg bg-lime-400 text-black flex items-center justify-center font-black text-sm">
+                  📱
+                </span>
+                <span className="font-extrabold text-base tracking-wider">
+                  {storeName}
+                </span>
+              </>
+            )}
           </Link>
 
           <button
@@ -163,8 +175,46 @@ export default function MobileMenuDrawer() {
           </div>
         </div>
 
-        {/* WhatsApp Direct Action at Bottom */}
-        <div className="p-4 border-t border-white/10 bg-[#121815]">
+        {/* Social Media Links & WhatsApp Direct Action at Bottom */}
+        <div className="p-4 border-t border-white/10 bg-[#121815] space-y-3">
+          {(settings?.social_facebook_enabled || settings?.social_instagram_enabled || settings?.social_tiktok_enabled) && (
+            <div className="flex items-center justify-center gap-3">
+              {settings?.social_facebook_enabled && settings?.social_facebook && (
+                <a
+                  href={settings.social_facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 rounded-lg bg-white/5 hover:bg-[#1877F2]/20 border border-white/10 text-[#1877F2] flex items-center justify-center text-xs font-bold"
+                  title="فيسبوك"
+                >
+                  f
+                </a>
+              )}
+              {settings?.social_instagram_enabled && settings?.social_instagram && (
+                <a
+                  href={settings.social_instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 rounded-lg bg-white/5 hover:bg-rose-500/20 border border-white/10 text-rose-400 flex items-center justify-center text-xs"
+                  title="إنستجرام"
+                >
+                  📸
+                </a>
+              )}
+              {settings?.social_tiktok_enabled && settings?.social_tiktok && (
+                <a
+                  href={settings.social_tiktok}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/20 border border-white/10 text-white flex items-center justify-center text-xs"
+                  title="تيك توك"
+                >
+                  🎵
+                </a>
+              )}
+            </div>
+          )}
+
           <a
             href={`https://wa.me/${waNumber}?text=${encodeURIComponent("مرحباً، أود الاستفسار عن عروض الأجهزة")}`}
             target="_blank"
