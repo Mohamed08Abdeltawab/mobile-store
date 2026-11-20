@@ -519,8 +519,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   </Button>
 
                   <Button
-                    variant="outline"
-                    className="w-full text-neutral-900 font-extrabold h-11 rounded-xl border-neutral-300 hover:bg-neutral-100 cursor-pointer"
+                    className="w-full bg-neutral-900 hover:bg-black text-white font-extrabold h-11 rounded-xl border border-neutral-800 shadow-sm transition-colors cursor-pointer"
                     onClick={() =>
                       openCheckoutWithProduct(product, {
                         qty: 1,

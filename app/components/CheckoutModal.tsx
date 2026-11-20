@@ -67,7 +67,7 @@ export default function CheckoutModal() {
       />
 
       {/* Modal Dialog */}
-      <div className="relative z-10 w-full max-w-xl max-h-[70vh] flex flex-col bg-white rounded-3xl shadow-2xl border border-neutral-100 overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="relative z-10 w-full max-w-xl max-h-[80vh] flex flex-col bg-white rounded-3xl shadow-2xl border border-neutral-100 overflow-hidden animate-in zoom-in-95 duration-200">
         
         {/* Header */}
         <div className="flex items-start justify-between p-5 sm:p-6 border-b border-neutral-100 bg-neutral-50/70 shrink-0">
