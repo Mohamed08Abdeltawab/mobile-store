@@ -533,28 +533,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 </div>
               </div>
 
-              {/* Shipping Calculator */}
-              <div className="p-4 rounded-2xl bg-neutral-50 border border-neutral-200 space-y-2">
-                <div className="flex items-center justify-between gap-3 flex-wrap text-xs font-bold text-neutral-800">
-                  <span>🚚 مصاريف ومواعيد الشحن لمحافظتك:</span>
-                  <select
-                    className="h-10 px-3 rounded-lg border border-neutral-200 bg-white text-xs font-bold text-neutral-800 outline-none cursor-pointer"
-                    value={selectedGov.id}
-                    onChange={(e) => {
-                      const g = GOVERNORATES.find(gov => gov.id === e.target.value);
-                      if (g) setSelectedGov(g);
-                    }}
-                  >
-                    {GOVERNORATES.map(gov => (
-                      <option key={gov.id} value={gov.id}>{gov.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <p className="text-xs text-neutral-500 leading-relaxed">
-                  الشحن إلى <strong className="text-neutral-800">{selectedGov.name}</strong> يستغرق <strong className="text-neutral-800">{selectedGov.days}</strong> وقيمته <strong className="text-emerald-700">{selectedGov.shipping === 0 ? "مجاناً" : `${selectedGov.shipping} ج.م`}</strong> (أو مجاني للطلبات فوق 5,000 ج.م).
-                </p>
-              </div>
-
             </div>
 
           </div>
