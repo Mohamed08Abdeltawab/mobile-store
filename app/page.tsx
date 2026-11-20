@@ -98,10 +98,10 @@ export default function HomePage() {
             
             {/* Copy Column */}
             <div className="lg:col-span-7 space-y-5 text-right">
-              {/* Stacked Slides for Smooth Crossfade */}
-              <div className="relative min-h-[290px] sm:min-h-[270px]">
+              {/* Stacked Slides for Smooth Crossfade - Fixed Height Container with Grid to prevent layout jumps */}
+              <div className="relative grid grid-cols-1 items-start min-h-[360px] sm:min-h-[330px] lg:min-h-[320px]">
                 {!isSettingsLoaded ? (
-                  <div className="space-y-4 sm:space-y-5 animate-pulse">
+                  <div className="col-start-1 row-start-1 space-y-4 sm:space-y-5 animate-pulse">
                     <div className="h-6 w-52 bg-white/10 rounded-full" />
                     <div className="space-y-2">
                       <div className="h-10 sm:h-12 w-4/5 bg-white/10 rounded-xl" />
@@ -122,10 +122,10 @@ export default function HomePage() {
                   return (
                     <div
                       key={sIdx}
-                      className={`space-y-4 sm:space-y-5 transition-all duration-700 ease-in-out ${
+                      className={`col-start-1 row-start-1 w-full space-y-4 sm:space-y-5 transition-all duration-700 ease-in-out ${
                         isActive
-                          ? "opacity-100 translate-y-0 relative z-10 pointer-events-auto"
-                          : "opacity-0 translate-y-3 absolute inset-0 pointer-events-none z-0"
+                          ? "opacity-100 translate-y-0 z-10 pointer-events-auto"
+                          : "opacity-0 translate-y-3 pointer-events-none z-0"
                       }`}
                     >
                       <Badge className="bg-lime-400/15 text-lime-400 border border-lime-400/30 text-xs font-bold px-3 py-1 gap-2">
