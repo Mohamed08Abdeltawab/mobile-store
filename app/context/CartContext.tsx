@@ -130,6 +130,7 @@ interface CartContextType {
   setIsAdmin: (val: boolean) => void;
   checkAdminAuth: () => Promise<boolean>;
   refreshProducts: () => Promise<void>;
+  isSettingsLoaded: boolean;
 }
 
 const CartContext = createContext<CartContextType | null>(null);
@@ -140,6 +141,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [colors, setColors] = useState<PredefinedColor[]>([]);
   const [settings, setSettings] = useState<StoreSettings>(DEFAULT_STORE_SETTINGS);
+  const [isSettingsLoaded, setIsSettingsLoaded] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -275,8 +277,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   async function loadInitialData() {
-    // 1. Try instant load from sessionStorage cache (for instant rendering on refresh)
+    // 1. Instant load from localStorage settings cache to avoid any flash of defaults
     if (typeof window !== "undefined") {
+      try {
+        const localSettings = localStorage.getItem("mobile_store_settings");
+        if (localSettings) {
+          const parsedLocal = JSON.parse(localSettings);
+          if (parsedLocal && typeof parsedLocal === "object") {
+            setSettings({ ...DEFAULT_STORE_SETTINGS, ...parsedLocal });
+            setIsSettingsLoaded(true);
+          }
+        }
+      } catch (e) {}
+
+      // 2. Try load from sessionStorage cache (for products, categories, etc.)
       try {
         const cached = sessionStorage.getItem("mobile_store_bootstrap");
         if (cached) {
@@ -293,13 +307,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
             setColors(parsed.colors || []);
             if (parsed.settings) {
               setSettings({ ...DEFAULT_STORE_SETTINGS, ...parsed.settings });
+              setIsSettingsLoaded(true);
             }
           }
         }
       } catch (e) {}
     }
 
-    // 2. Single consolidated request for all store data
+    // 3. Single consolidated request for all store data from server/database
     try {
       const res = await fetch(`/api/bootstrap?t=${Date.now()}`, { cache: "no-store" });
       const data: any = await res.json();
@@ -309,7 +324,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         if (Array.isArray(data.brands)) setBrands(data.brands);
         if (Array.isArray(data.colors)) setColors(data.colors);
         if (data.settings) {
-          setSettings({ ...DEFAULT_STORE_SETTINGS, ...data.settings });
+          const merged = { ...DEFAULT_STORE_SETTINGS, ...data.settings };
+          setSettings(merged);
+          setIsSettingsLoaded(true);
+          try {
+            localStorage.setItem("mobile_store_settings", JSON.stringify(data.settings));
+          } catch (e) {}
         }
 
         if (typeof window !== "undefined") {
@@ -718,6 +738,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setIsAdmin,
         checkAdminAuth,
         refreshProducts,
+        isSettingsLoaded,
       }}
     >
       {children}
