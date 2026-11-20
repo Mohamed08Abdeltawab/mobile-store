@@ -456,8 +456,8 @@ export default function HomePage() {
                 <LazyImage
                   src={dealProduct?.image || "/img/iphone-16-pro-max.png"}
                   alt={dealProduct?.name || "عرض اليوم"}
-                  wrapperClassName="relative z-10 w-full h-full flex items-center justify-center bg-transparent"
-                  className="relative z-10 w-full h-full object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+                  wrapperClassName="relative z-10 w-full h-full flex items-center justify-center rounded-full overflow-hidden border border-white/10 bg-white/5 shadow-2xl"
+                  className="relative z-10 w-full h-full object-contain rounded-full drop-shadow-2xl hover:scale-105 transition-transform duration-500"
                 />
               </div>
             </div>
