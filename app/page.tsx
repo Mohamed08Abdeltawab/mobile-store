@@ -212,6 +212,7 @@ export default function HomePage() {
                           <LazyImage
                             src={slide.image || "https://store.storeimages.cdn-apple.com/1/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-9inch-deserttitanium?wid=1000&hei=1000&fmt=jpeg&qlt=90"}
                             alt={slide.title || "بانر العرض الرئيسي"}
+                            priority={sIdx === 0}
                             wrapperClassName="w-full h-full rounded-full flex items-center justify-center bg-transparent"
                             className="w-full h-full object-cover sm:object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)] hover:scale-110 transition-transform duration-500"
                           />

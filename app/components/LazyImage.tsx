@@ -6,14 +6,16 @@ interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   fallbackSrc?: string;
   wrapperClassName?: string;
   blurColor?: string;
+  priority?: boolean;
 }
 
 /**
  * High-performance Lazy Image with:
- * 1. IntersectionObserver viewport-detection (won't trigger request until within 150px of viewport)
- * 2. Blur / Shimmer placeholder while loading
- * 3. Graceful fallback on broken image URLs
- * 4. GPU-accelerated smooth fade-in
+ * 1. Instant rendering if priority=true or already cached in browser
+ * 2. IntersectionObserver viewport-detection for below-the-fold images
+ * 3. Blur / Shimmer placeholder while loading
+ * 4. Graceful fallback on broken image URLs
+ * 5. GPU-accelerated smooth fade-in
  */
 export default function LazyImage({
   src,
@@ -22,14 +24,21 @@ export default function LazyImage({
   wrapperClassName = "",
   fallbackSrc = "/img/mobile-concept-01.png",
   blurColor = "bg-neutral-100",
+  priority = false,
   ...props
 }: LazyImageProps) {
-  const [isInView, setIsInView] = useState(false);
+  const [isInView, setIsInView] = useState(priority);
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
+    if (priority) {
+      setIsInView(true);
+      return;
+    }
+
     const el = wrapperRef.current;
     if (!el) return;
 
@@ -49,7 +58,7 @@ export default function LazyImage({
         });
       },
       {
-        rootMargin: "180px 0px 180px 0px", // Preload when 180px near viewport
+        rootMargin: "250px 0px 250px 0px", // Preload when 250px near viewport
         threshold: 0.01
       }
     );
@@ -59,7 +68,14 @@ export default function LazyImage({
     return () => {
       observer.disconnect();
     };
-  }, []);
+  }, [priority]);
+
+  // Check if image is already cached in browser memory upon mounting
+  useEffect(() => {
+    if (imgRef.current && imgRef.current.complete && imgRef.current.naturalWidth > 0) {
+      setIsLoaded(true);
+    }
+  }, [src, isInView]);
 
   const imageSrc = hasError || !src ? fallbackSrc : src;
 
@@ -69,23 +85,27 @@ export default function LazyImage({
       className={`relative overflow-hidden ${blurColor} ${wrapperClassName}`}
     >
       {/* Shimmer / Skeleton Placeholder while loading */}
-      {!isLoaded && (
+      {!isLoaded && !priority && (
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse pointer-events-none z-0" />
       )}
 
       {isInView && (
         <img
+          ref={imgRef}
           src={imageSrc}
           alt={alt}
-          loading="lazy"
-          decoding="async"
+          loading={priority ? "eager" : "lazy"}
+          decoding={priority ? "sync" : "async"}
+          fetchPriority={priority ? "high" : "auto"}
           onLoad={() => setIsLoaded(true)}
           onError={() => {
             setHasError(true);
             setIsLoaded(true);
           }}
-          className={`${className} transition-opacity duration-500 ease-out ${
-            isLoaded ? "opacity-100" : "opacity-0"
+          className={`${className} ${
+            priority
+              ? "" // No delay/fade-in for hero priority image
+              : `transition-opacity duration-300 ease-out ${isLoaded ? "opacity-100" : "opacity-0"}`
           }`}
           {...props}
         />
