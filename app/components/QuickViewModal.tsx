@@ -170,8 +170,7 @@ export default function QuickViewModal() {
 
               <div className="grid grid-cols-2 gap-2">
                 <Button
-                  variant="outline"
-                  className="w-full text-xs font-bold h-10 rounded-xl"
+                  className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-bold h-10 rounded-xl shadow-sm transition-colors cursor-pointer"
                   onClick={() => {
                     sendDirectWhatsApp(quickProduct);
                     setQuickProduct(null);
@@ -180,7 +179,7 @@ export default function QuickViewModal() {
                   طلب عبر واتساب 💬
                 </Button>
 
-                <Button asChild variant="ghost" className="w-full text-xs font-bold h-10 rounded-xl text-neutral-700">
+                <Button asChild className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold h-10 rounded-xl shadow-sm transition-colors cursor-pointer">
                   <Link
                     href={`/product/${quickProduct.id}`}
                     onClick={() => setQuickProduct(null)}
