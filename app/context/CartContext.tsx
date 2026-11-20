@@ -187,16 +187,56 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [activeGovernorates]);
 
-  // Apply Brand Colors dynamically to CSS variables
+  // Apply Brand Colors dynamically to CSS variables with contrast and shades
   useEffect(() => {
     if (typeof document !== "undefined") {
-      if (settings.primary_color) {
-        document.documentElement.style.setProperty("--color-accent-green", settings.primary_color);
-        document.documentElement.style.setProperty("--brand-primary", settings.primary_color);
-      }
-      if (settings.secondary_color) {
-        document.documentElement.style.setProperty("--brand-secondary", settings.secondary_color);
-      }
+      const primary = settings.primary_color || "#A3E635";
+      const secondary = settings.secondary_color || "#10B981";
+
+      const hexToRgb = (hex: string) => {
+        const clean = hex.replace("#", "").trim();
+        const full = clean.length === 3 ? clean.split("").map((c) => c + c).join("") : clean;
+        const num = parseInt(full, 16);
+        if (isNaN(num)) return { r: 163, g: 230, b: 53 };
+        return {
+          r: (num >> 16) & 255,
+          g: (num >> 8) & 255,
+          b: num & 255,
+        };
+      };
+
+      const getContrast = (hex: string) => {
+        const { r, g, b } = hexToRgb(hex);
+        // Calculate YIQ brightness ratio (>= 140 is bright, needs dark text)
+        const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+        return yiq >= 140 ? "#000000" : "#ffffff";
+      };
+
+      const adjustBrightness = (hex: string, factor: number) => {
+        const { r, g, b } = hexToRgb(hex);
+        const adjR = Math.min(255, Math.max(0, Math.round(r * factor)));
+        const adjG = Math.min(255, Math.max(0, Math.round(g * factor)));
+        const adjB = Math.min(255, Math.max(0, Math.round(b * factor)));
+        return `#${((1 << 24) + (adjR << 16) + (adjG << 8) + adjB).toString(16).slice(1)}`;
+      };
+
+      const pRgb = hexToRgb(primary);
+      const sRgb = hexToRgb(secondary);
+
+      const root = document.documentElement.style;
+      root.setProperty("--brand-primary", primary);
+      root.setProperty("--brand-primary-hover", adjustBrightness(primary, 0.88));
+      root.setProperty("--brand-primary-text", getContrast(primary));
+      root.setProperty("--brand-primary-glow", `rgba(${pRgb.r}, ${pRgb.g}, ${pRgb.b}, 0.35)`);
+      root.setProperty("--brand-primary-light", `rgba(${pRgb.r}, ${pRgb.g}, ${pRgb.b}, 0.15)`);
+
+      root.setProperty("--brand-secondary", secondary);
+      root.setProperty("--brand-secondary-hover", adjustBrightness(secondary, 0.88));
+      root.setProperty("--brand-secondary-text", getContrast(secondary));
+      root.setProperty("--brand-secondary-glow", `rgba(${sRgb.r}, ${sRgb.g}, ${sRgb.b}, 0.35)`);
+      root.setProperty("--brand-secondary-light", `rgba(${sRgb.r}, ${sRgb.g}, ${sRgb.b}, 0.15)`);
+
+      root.setProperty("--color-accent-green", primary);
     }
   }, [settings.primary_color, settings.secondary_color]);
 

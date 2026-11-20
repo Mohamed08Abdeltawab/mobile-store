@@ -18,11 +18,11 @@ export default function ClientStoreWrapper({ children }: { children: ReactNode }
   const isAdmin = pathname?.startsWith("/admin");
 
   if (isAdmin) {
-    return <>{children}</>;
+    return <div className="admin-root min-w-0 w-full">{children}</div>;
   }
 
   return (
-    <>
+    <div className="storefront-root min-w-0 w-full">
       <Navbar />
       <main id="main" className="min-w-0 w-full overflow-x-clip">{children}</main>
       <Footer />
@@ -34,6 +34,6 @@ export default function ClientStoreWrapper({ children }: { children: ReactNode }
       <QuickViewModal />
       <SearchModal />
       <ToastContainer />
-    </>
+    </div>
   );
 }

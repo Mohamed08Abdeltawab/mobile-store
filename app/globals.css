@@ -119,3 +119,109 @@ body {
     animation-duration: 90s;
   }
 }
+
+/* ==========================================================================
+   Storefront Dynamic Brand Theme Overrides
+   Dynamically binds storefront buttons, badges, highlights, and icons
+   to the Admin-configured Primary and Secondary brand colors.
+   ========================================================================== */
+
+:root {
+  --brand-primary: #A3E635;
+  --brand-primary-hover: #8ecf29;
+  --brand-primary-text: #000000;
+  --brand-primary-glow: rgba(163, 230, 53, 0.35);
+  --brand-primary-light: rgba(163, 230, 53, 0.15);
+
+  --brand-secondary: #10B981;
+  --brand-secondary-hover: #059669;
+  --brand-secondary-text: #ffffff;
+  --brand-secondary-glow: rgba(16, 185, 129, 0.35);
+  --brand-secondary-light: rgba(16, 185, 129, 0.15);
+}
+
+/* Primary Brand Backgrounds (Buttons, Badges, Chips) */
+.storefront-root .bg-lime-400,
+.storefront-root .bg-lime-300,
+.storefront-root .bg-accent-green,
+.storefront-root .bg-brand-primary {
+  background-color: var(--brand-primary, #A3E635) !important;
+  color: var(--brand-primary-text, #000000) !important;
+}
+
+/* Hover State for Primary Brand Buttons */
+.storefront-root .hover\:bg-lime-500:hover,
+.storefront-root .hover\:bg-lime-400:hover,
+.storefront-root .hover\:bg-lime-300:hover,
+.storefront-root .hover\:bg-brand-primary:hover {
+  background-color: var(--brand-primary-hover, #8ecf29) !important;
+  color: var(--brand-primary-text, #000000) !important;
+}
+
+/* Primary Brand Text */
+.storefront-root .text-lime-400,
+.storefront-root .text-lime-300,
+.storefront-root .text-accent-green,
+.storefront-root .text-brand-primary {
+  color: var(--brand-primary, #A3E635) !important;
+}
+
+.storefront-root .hover\:text-lime-400:hover,
+.storefront-root .hover\:text-lime-300:hover,
+.storefront-root .hover\:text-brand-primary:hover {
+  color: var(--brand-primary, #A3E635) !important;
+}
+
+/* Primary Brand Borders & Rings */
+.storefront-root .border-lime-400,
+.storefront-root .border-lime-500,
+.storefront-root .border-brand-primary {
+  border-color: var(--brand-primary, #A3E635) !important;
+}
+
+.storefront-root .ring-lime-400,
+.storefront-root .focus\:ring-lime-400\/40:focus,
+.storefront-root .focus\:ring-lime-400:focus {
+  --tw-ring-color: var(--brand-primary, #A3E635) !important;
+}
+
+/* Primary Brand Shadows & Glows */
+.storefront-root .shadow-lime-400\/20,
+.storefront-root .shadow-lime-400\/25,
+.storefront-root .shadow-lime-400\/30,
+.storefront-root .shadow-lime-400\/40,
+.storefront-root .shadow-lime-400\/50 {
+  --tw-shadow-color: var(--brand-primary-glow, rgba(163, 230, 53, 0.35)) !important;
+}
+
+/* Primary Brand Light Backgrounds / Badges */
+.storefront-root .bg-lime-400\/10,
+.storefront-root .bg-lime-400\/15,
+.storefront-root .bg-lime-400\/20,
+.storefront-root .bg-lime-400\/25 {
+  background-color: var(--brand-primary-light, rgba(163, 230, 53, 0.15)) !important;
+}
+
+/* Selection Highlight */
+.storefront-root ::selection {
+  background-color: var(--brand-primary, #A3E635) !important;
+  color: var(--brand-primary-text, #000000) !important;
+}
+
+/* Secondary Brand Accents & Interactions */
+.storefront-root .text-brand-secondary {
+  color: var(--brand-secondary, #10B981) !important;
+}
+
+.storefront-root .bg-brand-secondary {
+  background-color: var(--brand-secondary, #10B981) !important;
+  color: var(--brand-secondary-text, #ffffff) !important;
+}
+
+.storefront-root .border-brand-secondary {
+  border-color: var(--brand-secondary, #10B981) !important;
+}
+
+.storefront-root .group:hover .group-hover\:text-emerald-700 {
+  color: var(--brand-secondary, #10B981) !important;
+}
