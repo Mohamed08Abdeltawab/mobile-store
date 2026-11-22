@@ -160,10 +160,10 @@ export default function AdminDashboardPage() {
       }
 
       setIsAdmin(true);
-      const pData = await pRes.json();
-      const oData = await oRes.json();
-      const cData = await cRes.json();
-      const bData = await bRes.json();
+      const pData: any = await pRes.json();
+      const oData: any = await oRes.json();
+      const cData: any = await cRes.json();
+      const bData: any = await bRes.json();
 
       if (pData.success) setProducts(pData.products || []);
       if (oData.success) setOrders(oData.orders || []);
@@ -219,7 +219,7 @@ export default function AdminDashboardPage() {
         method: "POST",
         body: formData
       });
-      const data = await res.json();
+      const data: any = await res.json();
       if (data.success && Array.isArray(data.urls)) {
         setForm(prev => {
           const combined = [...prev.images, ...data.urls].slice(0, 10);
@@ -325,7 +325,7 @@ export default function AdminDashboardPage() {
 
     try {
       const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
-      const data = await res.json();
+      const data: any = await res.json();
       if (data.success) {
         notify(`تم حذف المنتج "${name}" بنجاح ✓`);
         loadData();
@@ -573,7 +573,7 @@ export default function AdminDashboardPage() {
         body: JSON.stringify(payload)
       });
 
-      const data = await res.json();
+      const data: any = await res.json();
       if (data.success) {
         notify(editingProduct ? "تم تحديث بيانات المنتج بنجاح ✓" : "تمت إضافة المنتج الجديد للكتالوج بنجاح ✓");
         setShowProductModal(false);
@@ -596,7 +596,7 @@ export default function AdminDashboardPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus })
       });
-      const data = await res.json();
+      const data: any = await res.json();
       if (data.success) {
         notify(`تم تحديث حالة الطلب #${orderRef} إلى: ${newStatus}`);
         loadData();

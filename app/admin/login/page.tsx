@@ -29,7 +29,7 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ username, password })
       });
 
-      const data = await res.json();
+      const data: any = await res.json();
       if (data.success) {
         if (typeof window !== "undefined") {
           localStorage.setItem("mobile_admin_hint", "true");
