@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCart } from "../context/CartContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { WhatsAppIcon } from "../components/icons/SocialIcons";
 
 export default function CustomerServicePage() {
   const { settings } = useCart();
@@ -89,8 +90,10 @@ export default function CustomerServicePage() {
               href={`https://wa.me/${waNumber}?text=${encodeURIComponent(`مرحباً خدمة عملاء ${storeName}، أود الاستفسار بخصوص طلبي`)}`}
               target="_blank"
               rel="noreferrer"
+              className="flex items-center gap-2"
             >
-              تواصل معنا على واتساب الآن 💬
+              <WhatsAppIcon className="w-5 h-5 fill-current shrink-0" />
+              <span>تواصل معنا على واتساب الآن</span>
             </a>
           </Button>
         </div>

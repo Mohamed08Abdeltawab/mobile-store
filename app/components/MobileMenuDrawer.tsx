@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "../context/CartContext";
+import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon } from "./icons/SocialIcons";
 
 export default function MobileMenuDrawer() {
   const { isMobileMenuOpen, setIsMobileMenuOpen, isAdmin, settings } = useCart();
@@ -123,11 +124,10 @@ export default function MobileMenuDrawer() {
               href={cat.href}
               prefetch={false}
               onClick={() => setIsMobileMenuOpen(false)}
-              className={`min-h-[44px] flex items-center justify-between px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-colors ${
-                pathname === cat.href
+              className={`min-h-[44px] flex items-center justify-between px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-colors ${pathname === cat.href
                   ? "bg-white/15 text-lime-400"
                   : "text-neutral-300 hover:text-white hover:bg-white/5"
-              }`}
+                }`}
             >
               <span>{cat.label}</span>
               {cat.badge && (
@@ -184,10 +184,10 @@ export default function MobileMenuDrawer() {
                   href={settings.social_facebook}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-8 h-8 rounded-lg bg-white/5 hover:bg-[#1877F2]/20 border border-white/10 text-[#1877F2] flex items-center justify-center text-xs font-bold"
+                  className="w-9 h-9 rounded-xl bg-white/5 hover:bg-[#1877F2]/20 border border-white/10 text-neutral-300 hover:text-[#1877F2] flex items-center justify-center transition-colors shadow-sm"
                   title="فيسبوك"
                 >
-                  f
+                  <FacebookIcon className="w-4 h-4 fill-current" />
                 </a>
               )}
               {settings?.social_instagram_enabled && settings?.social_instagram && (
@@ -195,10 +195,10 @@ export default function MobileMenuDrawer() {
                   href={settings.social_instagram}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-8 h-8 rounded-lg bg-white/5 hover:bg-rose-500/20 border border-white/10 text-rose-400 flex items-center justify-center text-xs"
+                  className="w-9 h-9 rounded-xl bg-white/5 hover:bg-rose-500/20 border border-white/10 text-neutral-300 hover:text-rose-400 flex items-center justify-center transition-colors shadow-sm"
                   title="إنستجرام"
                 >
-                  📸
+                  <InstagramIcon className="w-4 h-4" />
                 </a>
               )}
               {settings?.social_tiktok_enabled && settings?.social_tiktok && (
@@ -206,10 +206,10 @@ export default function MobileMenuDrawer() {
                   href={settings.social_tiktok}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/20 border border-white/10 text-white flex items-center justify-center text-xs"
+                  className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/20 border border-white/10 text-neutral-300 hover:text-white flex items-center justify-center transition-colors shadow-sm"
                   title="تيك توك"
                 >
-                  🎵
+                  <TikTokIcon className="w-4 h-4 fill-current" />
                 </a>
               )}
             </div>
@@ -221,7 +221,7 @@ export default function MobileMenuDrawer() {
             rel="noopener noreferrer"
             className="w-full h-11 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition-transform active:scale-95"
           >
-            <span>💬</span>
+            <WhatsAppIcon className="w-4 h-4 fill-current" />
             <span>تواصل مباشر عبر واتساب</span>
           </a>
         </div>

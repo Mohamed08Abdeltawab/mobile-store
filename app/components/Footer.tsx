@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCart } from "../context/CartContext";
+import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon } from "./icons/SocialIcons";
 
 export default function Footer() {
   const { setIsWishlistOpen, settings, isSettingsLoaded } = useCart();
@@ -86,10 +87,10 @@ export default function Footer() {
                     href={settings.social_facebook}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-8 h-8 rounded-lg bg-white/5 hover:bg-[#1877F2]/20 border border-white/10 hover:border-[#1877F2]/40 text-[#1877F2] flex items-center justify-center text-sm font-bold transition-all"
+                    className="w-9 h-9 rounded-xl bg-white/5 hover:bg-[#1877F2]/20 border border-white/10 hover:border-[#1877F2]/40 text-neutral-300 hover:text-[#1877F2] flex items-center justify-center transition-all hover:scale-105 shadow-sm"
                     title="فيسبوك"
                   >
-                    f
+                    <FacebookIcon className="w-4 h-4 fill-current" />
                   </a>
                 )}
                 {settings?.social_instagram_enabled && settings?.social_instagram && (
@@ -97,10 +98,10 @@ export default function Footer() {
                     href={settings.social_instagram}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-8 h-8 rounded-lg bg-white/5 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500/40 text-rose-400 flex items-center justify-center text-xs transition-all"
+                    className="w-9 h-9 rounded-xl bg-white/5 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500/40 text-neutral-300 hover:text-rose-400 flex items-center justify-center transition-all hover:scale-105 shadow-sm"
                     title="إنستجرام"
                   >
-                    📸
+                    <InstagramIcon className="w-4 h-4" />
                   </a>
                 )}
                 {settings?.social_tiktok_enabled && settings?.social_tiktok && (
@@ -108,10 +109,10 @@ export default function Footer() {
                     href={settings.social_tiktok}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/20 border border-white/10 hover:border-white/30 text-white flex items-center justify-center text-xs transition-all"
+                    className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/20 border border-white/10 hover:border-white/30 text-neutral-300 hover:text-white flex items-center justify-center transition-all hover:scale-105 shadow-sm"
                     title="تيك توك"
                   >
-                    🎵
+                    <TikTokIcon className="w-4 h-4 fill-current" />
                   </a>
                 )}
                 {settings?.whatsapp_enabled && (
@@ -119,10 +120,10 @@ export default function Footer() {
                     href={`https://wa.me/${waNumber}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-8 h-8 rounded-lg bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 text-[#25D366] flex items-center justify-center text-xs transition-all"
+                    className="w-9 h-9 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/30 text-[#25D366] flex items-center justify-center transition-all hover:scale-105 shadow-sm"
                     title="واتساب"
                   >
-                    💬
+                    <WhatsAppIcon className="w-4 h-4 fill-current" />
                   </a>
                 )}
               </div>
