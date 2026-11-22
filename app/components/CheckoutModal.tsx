@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useCart } from "../context/CartContext";
 import { Button } from "@/components/ui/button";
+import { WhatsAppIcon } from "./icons/SocialIcons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -129,8 +130,10 @@ export default function CheckoutModal() {
                   href={orderCompleted.whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2"
                 >
-                  متابعة الطلب على واتساب برقم #{orderCompleted.orderRef}
+                  <WhatsAppIcon className="w-4 h-4 fill-current shrink-0" />
+                  <span>متابعة الطلب على واتساب برقم #{orderCompleted.orderRef}</span>
                 </a>
               </Button>
 

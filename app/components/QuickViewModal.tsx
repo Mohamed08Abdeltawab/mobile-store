@@ -6,6 +6,7 @@ import { useCart } from "../context/CartContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import LazyImage from "./LazyImage";
+import { WhatsAppIcon } from "./icons/SocialIcons";
 
 export default function QuickViewModal() {
   const {
@@ -170,13 +171,14 @@ export default function QuickViewModal() {
 
               <div className="grid grid-cols-2 gap-2">
                 <Button
-                  className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-bold h-10 rounded-xl shadow-sm transition-colors cursor-pointer"
+                  className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white text-xs font-bold h-10 rounded-xl shadow-sm transition-colors cursor-pointer flex items-center justify-center gap-1.5"
                   onClick={() => {
                     sendDirectWhatsApp(quickProduct);
                     setQuickProduct(null);
                   }}
                 >
-                  طلب عبر واتساب 💬
+                  <WhatsAppIcon className="w-4 h-4 fill-current shrink-0" />
+                  <span>طلب عبر واتساب</span>
                 </Button>
 
                 <Button asChild className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold h-10 rounded-xl shadow-sm transition-colors cursor-pointer">

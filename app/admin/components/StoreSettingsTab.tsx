@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useCart } from "@/app/context/CartContext";
 import Image from "next/image";
+import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon } from "@/app/components/icons/SocialIcons";
 import {
   StoreSettings,
   DEFAULT_STORE_SETTINGS,
@@ -975,8 +976,8 @@ export default function StoreSettingsTab({
               <div className="bg-black/40 border border-white/10 rounded-xl p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-[#1877F2]/20 text-[#1877F2] flex items-center justify-center font-bold text-base">
-                      f
+                    <div className="w-8 h-8 rounded-lg bg-[#1877F2]/20 text-[#1877F2] flex items-center justify-center">
+                      <FacebookIcon className="w-4 h-4 fill-current" />
                     </div>
                     <div>
                       <div className="font-bold text-xs text-white">صفحة فيسبوك (Facebook)</div>
@@ -1013,8 +1014,8 @@ export default function StoreSettingsTab({
               <div className="bg-black/40 border border-white/10 rounded-xl p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm">
-                      📸
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 text-white flex items-center justify-center">
+                      <InstagramIcon className="w-4 h-4" />
                     </div>
                     <div>
                       <div className="font-bold text-xs text-white">إنستجرام (Instagram)</div>
@@ -1051,8 +1052,8 @@ export default function StoreSettingsTab({
               <div className="bg-black/40 border border-white/10 rounded-xl p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-neutral-900 border border-white/20 text-white flex items-center justify-center font-bold text-sm">
-                      🎵
+                    <div className="w-8 h-8 rounded-lg bg-neutral-900 border border-white/20 text-white flex items-center justify-center">
+                      <TikTokIcon className="w-4 h-4 fill-current" />
                     </div>
                     <div>
                       <div className="font-bold text-xs text-white">تيك توك (TikTok)</div>
@@ -1174,23 +1175,23 @@ export default function StoreSettingsTab({
                 <div className="text-xs text-neutral-300 font-bold">تابعنا وتواصل معنا:</div>
                 <div className="flex items-center gap-3">
                   {settings.social_facebook_enabled && (
-                    <div className="w-8 h-8 rounded-full bg-[#1877F2]/20 border border-[#1877F2]/40 text-[#1877F2] flex items-center justify-center text-xs font-bold">
-                      f
+                    <div className="w-8 h-8 rounded-full bg-[#1877F2]/20 border border-[#1877F2]/40 text-[#1877F2] flex items-center justify-center">
+                      <FacebookIcon className="w-4 h-4 fill-current" />
                     </div>
                   )}
                   {settings.social_instagram_enabled && (
-                    <div className="w-8 h-8 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 flex items-center justify-center text-xs">
-                      📸
+                    <div className="w-8 h-8 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 flex items-center justify-center">
+                      <InstagramIcon className="w-4 h-4" />
                     </div>
                   )}
                   {settings.social_tiktok_enabled && (
-                    <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 text-white flex items-center justify-center text-xs">
-                      🎵
+                    <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 text-white flex items-center justify-center">
+                      <TikTokIcon className="w-4 h-4 fill-current" />
                     </div>
                   )}
                   {settings.whatsapp_enabled && (
-                    <div className="w-8 h-8 rounded-full bg-[#25D366]/20 border border-[#25D366]/40 text-[#25D366] flex items-center justify-center text-xs">
-                      💬
+                    <div className="w-8 h-8 rounded-full bg-[#25D366]/20 border border-[#25D366]/40 text-[#25D366] flex items-center justify-center">
+                      <WhatsAppIcon className="w-4 h-4 fill-current" />
                     </div>
                   )}
                 </div>

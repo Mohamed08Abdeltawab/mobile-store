@@ -289,7 +289,7 @@ export default function Footer() {
                 <span>هاتف المبيعات: {phoneNumber}</span>
               </li>
               <li className="flex items-center gap-2">
-                <span>💬</span>
+                <WhatsAppIcon className="w-3.5 h-3.5 text-[#25D366] shrink-0 fill-current" />
                 <span>واتساب المبيعات: {waNumber}</span>
               </li>
               <li className="flex items-center gap-2">

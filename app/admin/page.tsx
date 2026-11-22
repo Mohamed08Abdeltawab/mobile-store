@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useCart } from "../context/CartContext";
 import { PREDEFINED_COLORS, Product, ProductCondition } from "@/lib/types";
 import StoreSettingsTab from "./components/StoreSettingsTab";
+import { WhatsAppIcon } from "../components/icons/SocialIcons";
 
 const CATEGORIES = [
   "الموبايلات",
@@ -991,7 +992,8 @@ export default function AdminDashboardPage() {
                             rel="noopener noreferrer"
                             className="px-4 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-400 text-xs font-bold flex items-center gap-2 transition-colors no-underline"
                           >
-                            <span>محادثة واتساب 💬</span>
+                            <WhatsAppIcon className="w-4 h-4 fill-current shrink-0" />
+                            <span>محادثة واتساب</span>
                           </a>
 
                           <select
