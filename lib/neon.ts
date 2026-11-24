@@ -1,5 +1,27 @@
 import { neon } from "@neondatabase/serverless";
 
+function readStaticProcessEnv(key: string): string {
+  if (typeof process === "undefined" || !process.env) return "";
+  switch (key) {
+    case "DATABASE_URL":
+      return process.env.DATABASE_URL || "";
+    case "ADMIN_USERNAME":
+      return process.env.ADMIN_USERNAME || "";
+    case "ADMIN_PASSWORD":
+      return process.env.ADMIN_PASSWORD || "";
+    case "NEXT_PUBLIC_WHATSAPP_NUMBER":
+      return process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "";
+    case "NEXT_PUBLIC_STORE_NAME":
+      return process.env.NEXT_PUBLIC_STORE_NAME || "";
+    case "R2_BUCKET_NAME":
+      return process.env.R2_BUCKET_NAME || "";
+    case "NEXT_PUBLIC_R2_PUBLIC_URL":
+      return process.env.NEXT_PUBLIC_R2_PUBLIC_URL || "";
+    default:
+      return process.env[key] || "";
+  }
+}
+
 export async function getEnvVar(key: string): Promise<string> {
   try {
     // @ts-ignore
@@ -10,27 +32,11 @@ export async function getEnvVar(key: string): Promise<string> {
   } catch {
     // Not running in Cloudflare Workers / workerd runtime
   }
-  if (typeof process !== "undefined" && process.env && process.env[key]) {
-    return String(process.env[key]).trim();
-  }
-  return "";
+  return readStaticProcessEnv(key).trim();
 }
 
 export async function getDatabaseUrl(): Promise<string> {
-  let raw = "";
-  try {
-    // @ts-ignore
-    const cf = await import("cloudflare:workers");
-    if (cf?.env?.DATABASE_URL) {
-      raw = String(cf.env.DATABASE_URL);
-    }
-  } catch {
-    // Not running in Cloudflare Workers / workerd runtime
-  }
-  // Static property access so Vite `define` replaces process.env.DATABASE_URL in local preview
-  if (!raw && typeof process !== "undefined" && process.env && process.env.DATABASE_URL) {
-    raw = process.env.DATABASE_URL;
-  }
+  const raw = await getEnvVar("DATABASE_URL");
   return raw.replace(/^["']|["']$/g, "").trim();
 }
 

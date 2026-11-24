@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 
 export async function POST(req: Request) {
   try {
-    const { username, password } = await req.json();
+    const { username, password }: any = await req.json();
 
     if (!username || !password) {
       return NextResponse.json({ success: false, error: "يرجى إدخال اسم المستخدم وكلمة المرور" }, { status: 400 });
@@ -15,10 +15,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "اسم المستخدم أو كلمة المرور غير صحيحة" }, { status: 401 });
     }
 
+    const isHttps =
+      req.url.startsWith("https://") ||
+      req.headers.get("x-forwarded-proto") === "https";
+
     const cookieStore = await cookies();
     cookieStore.set("mobile_admin_token", "mobile_authorized_session", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isHttps,
+      sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: "/"
     });

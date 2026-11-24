@@ -4,9 +4,24 @@ import { cloudflare } from "@cloudflare/vite-plugin";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const serverDefine = env.DATABASE_URL
-    ? { "process.env.DATABASE_URL": JSON.stringify(env.DATABASE_URL) }
-    : undefined;
+  const serverDefine: Record<string, string> = {};
+  const serverKeys = [
+    "DATABASE_URL",
+    "ADMIN_USERNAME",
+    "ADMIN_PASSWORD",
+    "NEXT_PUBLIC_WHATSAPP_NUMBER",
+    "NEXT_PUBLIC_STORE_NAME",
+    "R2_BUCKET_NAME",
+    "NEXT_PUBLIC_R2_PUBLIC_URL",
+  ];
+
+  for (const key of serverKeys) {
+    if (env[key]) {
+      serverDefine[`process.env.${key}`] = JSON.stringify(env[key]);
+    }
+  }
+
+  const hasDefines = Object.keys(serverDefine).length > 0;
 
   return {
     plugins: [
@@ -18,7 +33,7 @@ export default defineConfig(({ mode }) => {
         },
       }),
     ],
-    environments: serverDefine
+    environments: hasDefines
       ? {
           rsc: { define: serverDefine },
           ssr: { define: serverDefine },
