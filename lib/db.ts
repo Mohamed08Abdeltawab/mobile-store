@@ -3,6 +3,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import bcrypt from "bcryptjs";
 import { getSupabaseAdmin, isSupabaseConfigured, getEnvVar } from "./supabase";
+import { getNeonSql, isNeonConfigured } from "./neon";
 import { Product, Order, Category, Brand, PredefinedColor, PREDEFINED_COLORS, StoreSettings, DEFAULT_STORE_SETTINGS } from "./types";
 
 let sqliteInstance: any = null;
@@ -898,6 +899,12 @@ function formatOrder(r: any): Order | null {
 // ==============================================================================
 
 export async function getAllProducts(): Promise<Product[]> {
+  if (await isNeonConfigured()) {
+    const sql = await getNeonSql();
+    const rows = await sql`SELECT * FROM products ORDER BY created_at DESC`;
+    return (rows || []).map(formatProduct) as Product[];
+  }
+
   if (isSupabaseConfigured()) {
     try {
       const supabase = getSupabaseAdmin()!;
@@ -928,6 +935,12 @@ export async function getAllProducts(): Promise<Product[]> {
 }
 
 export async function getProductById(id: string): Promise<Product | null> {
+  if (await isNeonConfigured()) {
+    const sql = await getNeonSql();
+    const rows = await sql`SELECT * FROM products WHERE id = ${id} LIMIT 1`;
+    return rows && rows.length > 0 ? formatProduct(rows[0]) : null;
+  }
+
   if (isSupabaseConfigured()) {
     try {
       const supabase = getSupabaseAdmin()!;
@@ -1094,6 +1107,45 @@ export async function createProduct(prod: any): Promise<Product | null> {
       }
     }
   };
+
+  if (await isNeonConfigured()) {
+    const sql = await getNeonSql();
+    const rows = await sql`
+      INSERT INTO products (
+        id, name, sub, cat, category_id, subcategory, brand_id, brand,
+        price, old_price, rating, reviews, tag, badge_text, image, images,
+        overview, description, condition, specifications, colors, variants,
+        in_stock, is_featured
+      ) VALUES (
+        ${id}, ${name}, ${newProduct.sub}, ${catName}, ${catId}, ${newProduct.subcategory}, ${brandId}, ${brandName},
+        ${price}, ${oldPrice}, ${newProduct.rating}, ${newProduct.reviews}, ${newProduct.tag}, ${newProduct.badge_text}, ${mainImage}, ${JSON.stringify(imagesList)}::jsonb,
+        ${newProduct.overview}, ${desc}, ${condition}, ${JSON.stringify(specsObj)}::jsonb, ${JSON.stringify(colorsList)}::jsonb, ${JSON.stringify(variantsList)}::jsonb,
+        ${newProduct.in_stock}, ${Boolean(newProduct.is_featured)}
+      )
+      RETURNING *
+    `;
+
+    if (colorsList.length > 0) {
+      for (const c of colorsList) {
+        const cId = c.color_id || c.id || "black";
+        const cName = c.color_name || c.name_ar || c.name || "أسود";
+        const cHex = c.hex_code || c.hex || "#111827";
+        const cQty = Number(c.quantity || 0);
+        try {
+          await sql`
+            INSERT INTO product_colors (product_id, color_id, color_name, hex_code, quantity)
+            VALUES (${id}, ${cId}, ${cName}, ${cHex}, ${cQty})
+            ON CONFLICT (product_id, color_id) DO UPDATE
+            SET color_name = EXCLUDED.color_name, hex_code = EXCLUDED.hex_code, quantity = EXCLUDED.quantity
+          `;
+        } catch (cErr) {
+          console.warn("[Neon] Could not sync product_colors:", cErr);
+        }
+      }
+    }
+
+    return formatProduct(rows[0]);
+  }
 
   if (isSupabaseConfigured()) {
     try {
@@ -1274,6 +1326,58 @@ export async function updateProduct(id: string, prod: any): Promise<Product | nu
     }
   };
 
+  if (await isNeonConfigured()) {
+    const sql = await getNeonSql();
+    const rows = await sql`
+      UPDATE products SET
+        name = ${name},
+        sub = ${updateData.sub},
+        cat = ${catName},
+        category_id = ${catId},
+        subcategory = ${updateData.subcategory},
+        brand_id = ${brandId},
+        brand = ${brandName},
+        price = ${price},
+        old_price = ${oldPrice},
+        tag = ${updateData.tag},
+        badge_text = ${updateData.badge_text},
+        image = ${mainImage},
+        images = ${JSON.stringify(imagesList)}::jsonb,
+        overview = ${updateData.overview},
+        description = ${desc},
+        condition = ${condition},
+        specifications = ${JSON.stringify(specsObj)}::jsonb,
+        colors = ${JSON.stringify(colorsList)}::jsonb,
+        variants = ${JSON.stringify(variantsList)}::jsonb,
+        in_stock = ${updateData.in_stock},
+        is_featured = ${Boolean(updateData.is_featured)}
+      WHERE id = ${id}
+      RETURNING *
+    `;
+
+    if (colorsList.length > 0) {
+      try {
+        await sql`DELETE FROM product_colors WHERE product_id = ${id}`;
+        for (const c of colorsList) {
+          const cId = c.color_id || c.id || "black";
+          const cName = c.color_name || c.name_ar || c.name || "أسود";
+          const cHex = c.hex_code || c.hex || "#111827";
+          const cQty = Number(c.quantity || 0);
+          await sql`
+            INSERT INTO product_colors (product_id, color_id, color_name, hex_code, quantity)
+            VALUES (${id}, ${cId}, ${cName}, ${cHex}, ${cQty})
+            ON CONFLICT (product_id, color_id) DO UPDATE
+            SET color_name = EXCLUDED.color_name, hex_code = EXCLUDED.hex_code, quantity = EXCLUDED.quantity
+          `;
+        }
+      } catch (cErr) {
+        console.warn("[Neon] Could not sync product_colors:", cErr);
+      }
+    }
+
+    return rows && rows.length > 0 ? formatProduct(rows[0]) : null;
+  }
+
   if (isSupabaseConfigured()) {
     try {
       const supabase = getSupabaseAdmin()!;
@@ -1342,6 +1446,17 @@ export async function deleteProduct(id: string): Promise<boolean> {
     console.error("Error cleaning up product images on delete:", err);
   }
 
+  if (await isNeonConfigured()) {
+    const sql = await getNeonSql();
+    try {
+      await sql`DELETE FROM product_colors WHERE product_id = ${id}`;
+      await sql`DELETE FROM product_variants WHERE product_id = ${id}`;
+      await sql`UPDATE order_items SET product_id = NULL WHERE product_id = ${id}`;
+    } catch (e) {}
+    const rows = await sql`DELETE FROM products WHERE id = ${id} RETURNING id`;
+    return rows.length > 0;
+  }
+
   let deletedFromSupabase = false;
   if (isSupabaseConfigured()) {
     try {
@@ -1390,6 +1505,12 @@ export async function deleteProduct(id: string): Promise<boolean> {
 // ==============================================================================
 
 export async function getAllCategories(): Promise<Category[]> {
+  if (await isNeonConfigured()) {
+    const sql = await getNeonSql();
+    const rows = await sql`SELECT * FROM categories ORDER BY sort_order ASC`;
+    return rows as Category[];
+  }
+
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseAdmin()!;
     const { data, error } = await supabase
@@ -1406,6 +1527,16 @@ export async function getAllCategories(): Promise<Category[]> {
 
 export async function createCategory(cat: { id: string; name: string; parent_id?: string | null; sort_order?: number }): Promise<Category> {
   const sort = cat.sort_order || 0;
+  if (await isNeonConfigured()) {
+    const sql = await getNeonSql();
+    const rows = await sql`
+      INSERT INTO categories (id, name, parent_id, sort_order, is_active)
+      VALUES (${cat.id}, ${cat.name}, ${cat.parent_id || null}, ${sort}, true)
+      RETURNING *
+    `;
+    return rows[0] as Category;
+  }
+
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseAdmin()!;
     const { data, error } = await supabase.from("categories").insert([{
@@ -1427,6 +1558,12 @@ export async function createCategory(cat: { id: string; name: string; parent_id?
 }
 
 export async function deleteCategory(id: string): Promise<boolean> {
+  if (await isNeonConfigured()) {
+    const sql = await getNeonSql();
+    const rows = await sql`DELETE FROM categories WHERE id = ${id} RETURNING id`;
+    return rows.length > 0;
+  }
+
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseAdmin()!;
     const { error } = await supabase.from("categories").delete().eq("id", id);
@@ -1438,6 +1575,12 @@ export async function deleteCategory(id: string): Promise<boolean> {
 }
 
 export async function getAllBrands(): Promise<Brand[]> {
+  if (await isNeonConfigured()) {
+    const sql = await getNeonSql();
+    const rows = await sql`SELECT * FROM brands ORDER BY name ASC`;
+    return rows as Brand[];
+  }
+
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseAdmin()!;
     const { data, error } = await supabase.from("brands").select("*").order("name");
@@ -1449,6 +1592,16 @@ export async function getAllBrands(): Promise<Brand[]> {
 }
 
 export async function createBrand(brand: { id: string; name: string; category_id?: string | null }): Promise<Brand> {
+  if (await isNeonConfigured()) {
+    const sql = await getNeonSql();
+    const rows = await sql`
+      INSERT INTO brands (id, name, category_id)
+      VALUES (${brand.id}, ${brand.name}, ${brand.category_id || null})
+      RETURNING *
+    `;
+    return rows[0] as Brand;
+  }
+
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseAdmin()!;
     const { data, error } = await supabase.from("brands").insert([brand]).select().single();
@@ -1464,6 +1617,12 @@ export async function createBrand(brand: { id: string; name: string; category_id
 }
 
 export async function deleteBrand(id: string): Promise<boolean> {
+  if (await isNeonConfigured()) {
+    const sql = await getNeonSql();
+    const rows = await sql`DELETE FROM brands WHERE id = ${id} RETURNING id`;
+    return rows.length > 0;
+  }
+
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseAdmin()!;
     const { error } = await supabase.from("brands").delete().eq("id", id);
@@ -1479,6 +1638,12 @@ export async function deleteBrand(id: string): Promise<boolean> {
 // ==============================================================================
 
 export async function getAllColors(): Promise<PredefinedColor[]> {
+  if (await isNeonConfigured()) {
+    const sql = await getNeonSql();
+    const rows = await sql`SELECT * FROM colors ORDER BY name ASC`;
+    return rows.length > 0 ? (rows as PredefinedColor[]) : PREDEFINED_COLORS;
+  }
+
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseAdmin()!;
     const { data, error } = await supabase.from("colors").select("*").order("name");
@@ -1519,6 +1684,21 @@ export async function createOrder(data: any): Promise<Order | null> {
     itemsList = data.items;
   } else if (typeof data.items === "string") {
     try { itemsList = JSON.parse(data.items); } catch (e) { itemsList = []; }
+  }
+
+  if (await isNeonConfigured()) {
+    const sql = await getNeonSql();
+    const rows = await sql`
+      INSERT INTO orders (
+        order_ref, customer_name, customer_phone, governorate, address,
+        payment_method, items, subtotal, shipping, total, status
+      ) VALUES (
+        ${orderRef}, ${data.customer_name}, ${data.customer_phone}, ${data.governorate}, ${data.address},
+        ${data.payment_method || "cod"}, ${JSON.stringify(itemsList)}::jsonb, ${Number(data.subtotal)}, ${Number(data.shipping)}, ${Number(data.total)}, ${"قيد المراجعة"}
+      )
+      RETURNING *
+    `;
+    return rows && rows.length > 0 ? formatOrder(rows[0]) : null;
   }
 
   if (isSupabaseConfigured()) {
@@ -1579,6 +1759,12 @@ export async function createOrder(data: any): Promise<Order | null> {
 }
 
 export async function getAllOrders(): Promise<Order[]> {
+  if (await isNeonConfigured()) {
+    const sql = await getNeonSql();
+    const rows = await sql`SELECT * FROM orders ORDER BY created_at DESC`;
+    return (rows || []).map(formatOrder) as Order[];
+  }
+
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseAdmin()!;
     const { data, error } = await supabase
@@ -1600,6 +1786,12 @@ export async function getAllOrders(): Promise<Order[]> {
 }
 
 export async function getOrderByRef(orderRef: string): Promise<Order | null> {
+  if (await isNeonConfigured()) {
+    const sql = await getNeonSql();
+    const rows = await sql`SELECT * FROM orders WHERE order_ref = ${orderRef} LIMIT 1`;
+    return rows && rows.length > 0 ? formatOrder(rows[0]) : null;
+  }
+
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseAdmin()!;
     const { data, error } = await supabase
@@ -1622,6 +1814,12 @@ export async function getOrderByRef(orderRef: string): Promise<Order | null> {
 }
 
 export async function updateOrderStatus(orderRef: string, status: string): Promise<boolean> {
+  if (await isNeonConfigured()) {
+    const sql = await getNeonSql();
+    const rows = await sql`UPDATE orders SET status = ${status} WHERE order_ref = ${orderRef} RETURNING order_ref`;
+    return rows.length > 0;
+  }
+
   if (isSupabaseConfigured()) {
     const supabase = getSupabaseAdmin()!;
     const { error } = await supabase
@@ -1657,6 +1855,19 @@ export async function verifyAdmin(username: string, password: string): Promise<b
     username === adminUsername
   ) {
     return true;
+  }
+
+  if (await isNeonConfigured()) {
+    const sql = await getNeonSql();
+    const rows = await sql`SELECT * FROM admins WHERE username = ${username} LIMIT 1`;
+    if (!rows || rows.length === 0) return false;
+    const row = rows[0] as any;
+    if (row.password_hash === password) return true;
+    try {
+      return bcrypt.compareSync(password, row.password_hash);
+    } catch (e) {
+      return false;
+    }
   }
 
   if (isSupabaseConfigured()) {
@@ -1695,6 +1906,36 @@ export async function verifyAdmin(username: string, password: string): Promise<b
 let memorySettings: StoreSettings = { ...DEFAULT_STORE_SETTINGS };
 
 export async function getStoreSettings(): Promise<StoreSettings> {
+  if (await isNeonConfigured()) {
+    try {
+      const sql = await getNeonSql();
+      const rows = await sql`SELECT settings FROM store_settings WHERE id = 'default' LIMIT 1`;
+      if (rows && rows.length > 0 && rows[0].settings) {
+        const parsed = typeof rows[0].settings === "string" ? JSON.parse(rows[0].settings) : rows[0].settings;
+        memorySettings = {
+          ...DEFAULT_STORE_SETTINGS,
+          ...parsed,
+          shipping_cities: (Array.isArray(parsed.shipping_cities) && parsed.shipping_cities.length > 0)
+            ? parsed.shipping_cities
+            : (parsed.shipping_cities ?? DEFAULT_STORE_SETTINGS.shipping_cities),
+          hero_slides: (Array.isArray(parsed.hero_slides) && parsed.hero_slides.length > 0)
+            ? parsed.hero_slides
+            : (parsed.hero_slides ?? DEFAULT_STORE_SETTINGS.hero_slides)
+        };
+        return memorySettings;
+      } else {
+        await sql`
+          INSERT INTO store_settings (id, settings, updated_at)
+          VALUES ('default', ${JSON.stringify(DEFAULT_STORE_SETTINGS)}::jsonb, NOW())
+          ON CONFLICT (id) DO NOTHING
+        `;
+        return { ...DEFAULT_STORE_SETTINGS };
+      }
+    } catch (e) {
+      console.error("[Neon getStoreSettings Error]:", e);
+    }
+  }
+
   // 1. Try Supabase
   if (isSupabaseConfigured()) {
     try {
@@ -1766,6 +2007,20 @@ export async function updateStoreSettings(newSettings: Partial<StoreSettings>): 
     updated_at: new Date().toISOString()
   };
   memorySettings = merged;
+
+  if (await isNeonConfigured()) {
+    try {
+      const sql = await getNeonSql();
+      await sql`
+        INSERT INTO store_settings (id, settings, updated_at)
+        VALUES ('default', ${JSON.stringify(merged)}::jsonb, NOW())
+        ON CONFLICT (id) DO UPDATE SET settings = EXCLUDED.settings, updated_at = NOW()
+      `;
+      return merged;
+    } catch (e) {
+      console.error("[Neon updateStoreSettings Error]:", e);
+    }
+  }
 
   // 1. Try Supabase
   if (isSupabaseConfigured()) {
