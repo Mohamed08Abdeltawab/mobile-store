@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import path from "node:path";
 import { uploadImageToStorage, deleteImageFromStorage } from "../../../lib/r2";
-import { getSupabaseAdmin, isSupabaseConfigured } from "../../../lib/supabase";
 
 export async function POST(req: Request) {
   try {
@@ -66,26 +65,8 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ success: false, error: "رابط الصورة مطلوب لحذفها" }, { status: 400 });
     }
 
-    // 1. Delete from Cloudflare R2 / Local storage
+    // Delete from Cloudflare R2 / Local storage
     await deleteImageFromStorage(url);
-
-    // 2. Legacy fallback: Check if it was stored in Supabase Storage previously
-    const bucketName = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || "mobiles";
-    const useSupabase = isSupabaseConfigured();
-
-    if (useSupabase && (url.includes(bucketName) || url.includes("supabase.co"))) {
-      try {
-        const supabase = getSupabaseAdmin()!;
-        const cleanUrl = url.split("?")[0];
-        const filename = path.basename(cleanUrl);
-        const { error } = await supabase.storage.from(bucketName).remove([filename]);
-        if (error) {
-          console.error("[Supabase Storage Delete Error]:", error);
-        }
-      } catch (err) {
-        console.error("Supabase Storage deletion error:", err);
-      }
-    }
 
     return NextResponse.json({
       success: true,

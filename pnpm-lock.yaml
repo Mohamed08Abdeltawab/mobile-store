@@ -20,9 +20,6 @@ importers:
       '@neondatabase/serverless':
         specifier: ^1.2.1
         version: 1.2.1
-      '@supabase/supabase-js':
-        specifier: ^2.118.0
-        version: 2.119.1
       '@vinext/cloudflare':
         specifier: ^1.4.0
         version: 1.4.0(76df377615a6310d872b37fd14c9a34e)
@@ -1030,38 +1027,6 @@ packages:
   '@speed-highlight/core@1.2.24':
     resolution: {integrity: sha512-qeW2e1l78afw8VhRPfPQ1Gjj+KU5XFQ/OFV5ti6eTa9bruO7mJyZtA4vw0ofqmA3tKCkROE9xLk3VZoeRc98nw==}
 
-  '@supabase/auth-js@2.119.1':
-    resolution: {integrity: sha512-EE7nQBWvNbfRPTDaPuDlpKqa+be+HFm29iuOFeoWSH+kWGdkTb1dif8Beu70TOaZyPauLuP8++ksbrlxbK4vyA==}
-    engines: {node: '>=22.0.0'}
-
-  '@supabase/functions-js@2.119.1':
-    resolution: {integrity: sha512-IgV04Sjpt+Sy/cZbDmDVqOVmriAZWn9gibUnanbmlS1iJIbquX7Hvp+k39QR/TgrgDZ9d1b2MDg7RAEuepgvxw==}
-    engines: {node: '>=22.0.0'}
-
-  '@supabase/phoenix@0.4.5':
-    resolution: {integrity: sha512-aAn9H9ovVyeApKy11OWOrrOGq8DV68yWeH4ud2lN9fzn4aO8Zb5GLL9m1pUg9nLqIcT+ZDfAcsZe0E/nqdv2lw==}
-
-  '@supabase/postgrest-js@2.119.1':
-    resolution: {integrity: sha512-/Ww9h0QhY6QQ4qsqnPVH3EQtLLPKThYg28wzsY1qOfbBfb55Zz6ZmUoxZFk13Fmxtzp0OBf1dld3wAUeoSnYQA==}
-    engines: {node: '>=22.0.0'}
-
-  '@supabase/realtime-js@2.119.1':
-    resolution: {integrity: sha512-xw8eV7dLlL9qO7EKFt5JyAyyjpZF+azqF6LvaKqbvZD5lnoywZmURah9THDSxiztyn+bmbaPJXWToGdYK6x1pg==}
-    engines: {node: '>=22.0.0'}
-
-  '@supabase/storage-js@2.119.1':
-    resolution: {integrity: sha512-LD/dTcm2txvplWBTD4wZbPcZqUSze+MDAk6JKy2onMTTU0puTANQY0NdwFACII0//PzcaC4BCjbb8+MOm1ZqMg==}
-    engines: {node: '>=22.0.0'}
-
-  '@supabase/supabase-js@2.119.1':
-    resolution: {integrity: sha512-uypIljL8NVQ6de+Z2F2qPW5HW2Isavh/NmpuqUo8AKpoj1NvbNZTy5sMeA0NWy/kXxcpwq94abKOvQnbjSkR0w==}
-    engines: {node: '>=22.0.0'}
-    peerDependencies:
-      '@opentelemetry/api': '>=1.0.0'
-    peerDependenciesMeta:
-      '@opentelemetry/api':
-        optional: true
-
   '@swc/helpers@0.5.23':
     resolution: {integrity: sha512-5lSsMOTXURePglDfvuAQUqkGek9Hg2kksOYay2m0+XR++b2NWYL/4sWyuvVBIs8oKnJaxkdi9whaL/sqN13afw==}
 
@@ -1720,10 +1685,6 @@ packages:
   human-signals@8.0.1:
     resolution: {integrity: sha512-eKCa6bwnJhvxj14kZk5NCPc6Hb6BdsU9DZcOnmQKSnO1VKrfV0zCvtttPZUsBvjmNDn8rpcJfpwSYnHBjc95MQ==}
     engines: {node: '>=18.18.0'}
-
-  iceberg-js@0.8.1:
-    resolution: {integrity: sha512-1dhVQZXhcHje7798IVM+xoo/1ZdVfzOMIc8/rgVSijRK38EDqOJoGula9N/8ZI5RD8QTxNQtK/Gozpr+qUqRRA==}
-    engines: {node: '>=20.0.0'}
 
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
@@ -2452,9 +2413,6 @@ packages:
   tsconfig-paths@4.2.0:
     resolution: {integrity: sha512-NoZ4roiN7LnbKn9QqE1amc9DJfzvZXxF4xDavcOWt1BPkdx+m+0gJuPM+S0vCe7zTJMYUP0R8pO2XMr+Y8oLIg==}
     engines: {node: '>=6'}
-
-  tslib@2.8.1:
-    resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
   tslib@2.9.1:
     resolution: {integrity: sha512-a4Ux9VKuIMHsOS7ENbEq6hK2ZGYIT27Rtl0E4eD9KqwxhKiQeMZE/9xb3IdYwWaSOyIBQLExhQgXDTYoiCxnWA==}
@@ -3493,38 +3451,6 @@ snapshots:
 
   '@speed-highlight/core@1.2.24': {}
 
-  '@supabase/auth-js@2.119.1':
-    dependencies:
-      tslib: 2.8.1
-
-  '@supabase/functions-js@2.119.1':
-    dependencies:
-      tslib: 2.8.1
-
-  '@supabase/phoenix@0.4.5': {}
-
-  '@supabase/postgrest-js@2.119.1':
-    dependencies:
-      tslib: 2.8.1
-
-  '@supabase/realtime-js@2.119.1':
-    dependencies:
-      '@supabase/phoenix': 0.4.5
-      tslib: 2.8.1
-
-  '@supabase/storage-js@2.119.1':
-    dependencies:
-      iceberg-js: 0.8.1
-      tslib: 2.8.1
-
-  '@supabase/supabase-js@2.119.1':
-    dependencies:
-      '@supabase/auth-js': 2.119.1
-      '@supabase/functions-js': 2.119.1
-      '@supabase/postgrest-js': 2.119.1
-      '@supabase/realtime-js': 2.119.1
-      '@supabase/storage-js': 2.119.1
-
   '@swc/helpers@0.5.23':
     dependencies:
       tslib: 2.9.1
@@ -4132,8 +4058,6 @@ snapshots:
   human-signals@2.1.0: {}
 
   human-signals@8.0.1: {}
-
-  iceberg-js@0.8.1: {}
 
   ignore@5.3.2: {}
 
@@ -4785,8 +4709,6 @@ snapshots:
       json5: 2.2.3
       minimist: 1.2.8
       strip-bom: 3.0.0
-
-  tslib@2.8.1: {}
 
   tslib@2.9.1: {}
 

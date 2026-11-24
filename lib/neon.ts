@@ -1,5 +1,21 @@
 import { neon } from "@neondatabase/serverless";
 
+export async function getEnvVar(key: string): Promise<string> {
+  try {
+    // @ts-ignore
+    const cf = await import("cloudflare:workers");
+    if (cf?.env && cf.env[key]) {
+      return String(cf.env[key]).trim();
+    }
+  } catch {
+    // Not running in Cloudflare Workers / workerd runtime
+  }
+  if (typeof process !== "undefined" && process.env && process.env[key]) {
+    return String(process.env[key]).trim();
+  }
+  return "";
+}
+
 export async function getDatabaseUrl(): Promise<string> {
   let raw = "";
   try {
@@ -11,10 +27,11 @@ export async function getDatabaseUrl(): Promise<string> {
   } catch {
     // Not running in Cloudflare Workers / workerd runtime
   }
+  // Static property access so Vite `define` replaces process.env.DATABASE_URL in local preview
   if (!raw && typeof process !== "undefined" && process.env && process.env.DATABASE_URL) {
     raw = process.env.DATABASE_URL;
   }
-  return raw.trim().replace(/^["']|["']$/g, "");
+  return raw.replace(/^["']|["']$/g, "").trim();
 }
 
 export async function isNeonConfigured(): Promise<boolean> {

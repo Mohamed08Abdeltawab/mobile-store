@@ -25,7 +25,8 @@
     "ecommerce",
     "egypt",
     "nextjs",
-    "supabase"
+    "neon",
+    "postgres"
   ],
   "author": "Mobile Store",
   "license": "MIT",
@@ -34,7 +35,6 @@
     "@neon/config": "^1.14.6",
     "@neon/env": "^2.1.9",
     "@neondatabase/serverless": "^1.2.1",
-    "@supabase/supabase-js": "^2.118.0",
     "@vinext/cloudflare": "^1.4.0",
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",

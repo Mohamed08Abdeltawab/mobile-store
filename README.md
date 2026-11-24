@@ -13,7 +13,7 @@
 - **معاينة سريعة للمنتجات (Quick View Modal)**: إمكانية استعراض تفاصيل المنتج واختيار الألوان وإضافته للسلة فوراً دون مغادرة الصفحة.
 
 ### 2. بنية قواعد بيانات مزدوجة ومرنة (Dual-Database Architecture)
-- **Supabase Cloud (PostgreSQL)**: جاهز للإنتاج مع ملف الميجريشن الكامل `supabase_schema.sql`، وسياسات أمان Row Level Security (RLS)، والتخزين السحابي للصور في باكت `mobiles`.
+- **Neon Postgres (Lakebase Postgres)**: جاهز للإنتاج عبر `@neondatabase/serverless` مع ملف الـ schema الكامل `neon_schema.sql`، والتخزين السحابي للصور عبر Cloudflare R2.
 - **Node.js Native SQLite Fallback**: تشغيل محلي فوري بمجرد تشغيل المشروع دون الحاجة لضبط أي قاعدة بيانات سحابية بفضل وحدة `node:sqlite` المدمجة، مع تهيئة الجداول تلقائياً وإدراج منتجات تجريبية واقعية بكامل المواصفات.
 
 ### 3. نظام متقدم لحالات الأجهزة (جديد / كسر زيرو / مستعمل)
@@ -31,7 +31,7 @@
 
 ### 5. نظام رفع وإدارة صور احترافي (Multi-Image Upload)
 - إمكانية رفع حتى 10 صور عالية الدقة لكل منتج عبر السحب والإفلات أو التحديد المتعدد.
-- تخزين الصور على Supabase Storage مع fallback تلقائي إلى مجلد `public/uploads`.
+- تخزين الصور على Cloudflare R2 مع fallback تلقائي إلى مجلد `public/uploads`.
 - إمكانية ترتيب الصور، تحديد أي صورة كغلاف رئيسي (Cover)، وحذف الصور نهائياً من الخادم.
 
 ### 6. سلة الشراء وتكامل الدفع والواتساب (Checkout & WhatsApp VIP Ordering)
@@ -66,7 +66,7 @@
 | **Tailwind CSS** | `^4.3.3` | تصميم وتنسيق عصري مدعوم بمتغيرات CSS الحديثة |
 | **@base-ui/react** | `^1.9.0` | مكونات Accessible بدون تنسيق افتراضي |
 | **Lucide React** | `^1.64.0` | حزمة الأيقونات العصرية |
-| **@supabase/supabase-js** | `^2.118.0` | إدارة قاعدة البيانات السحابية والتخزين والمصادقة |
+| **@neondatabase/serverless** | `^1.0.2` | الاتصال بقاعدة بيانات Neon Postgres عبر HTTP/WebSockets |
 | **node:sqlite** | Native Node.js | قاعدة بيانات محلية مدمجة تعمل محلياً دون أي خوادم خارجية |
 | **bcryptjs** | `^3.0.3` | تشفير وتأمين كلمات مرور المشرفين |
 
@@ -101,7 +101,7 @@ npm install
 ```bash
 cp .env.example .env.local
 ```
-> **ملاحظة هامة:** إذا لم تقم بإدخال مفاتيح Supabase، سيعمل المتجر تلقائياً وبكفاءة 100% بنظام الـ SQLite المحلي المدمج في ملف `mobile_store.db`.
+> **ملاحظة هامة:** إذا لم تقم بإدخال `DATABASE_URL` الخاصة بـ Neon، سيعمل المتجر تلقائياً بنظام الـ SQLite المحلي المدمج في ملف `mobile_store.db`.
 
 ### 3. تشغيل خادم التطوير
 يمكنك تشغيل بيئة التطوير السريعة (Vinext / Vite):
@@ -142,13 +142,11 @@ npm run deploy
 
 ---
 
-## 🗄️ إعداد Supabase (للبيئة السحابية)
+## 🗄️ إعداد Neon Postgres (للبيئة السحابية)
 
-1. أنشئ مشروعاً جديداً في [Supabase](https://supabase.com).
-2. من لوحة تحكم Supabase، ادخل على **SQL Editor**.
-3. افتح الملف `supabase_schema.sql` وانسخ محتواه والصقه داخل SQL Editor ثم اضغط **Run**.
-4. ادخل على **Storage** وأنشئ باكت باسم `mobiles` واجعله **Public**.
-5. انسخ رابط المشروع ومفتاح `anon key` و `service_role key` وضعهم في ملف `.env.local`.
+1. سجّل الدخول إلى Neon باستخدام `neon login` ثم نفّذ `neon deploy` لسحب `DATABASE_URL` و `DATABASE_URL_UNPOOLED` إلى `.env.local`.
+2. في حال إنشاء قاعدة بيانات جديدة فارغة، نفّذ محتوى الملف `neon_schema.sql` عبر Neon SQL Editor أو `psql` لإنشاء الجداول والبيانات الأولية.
+3. للنشر على Cloudflare Workers، أضف `DATABASE_URL` كـ Secret في إعدادات الـ Worker.
 
 ---
 

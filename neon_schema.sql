@@ -1,10 +1,8 @@
 -- ==============================================================================
--- Mobile Store - Supabase Complete Schema & Initial Data
--- متجر فون زون (PhoneZone) للأجهزة الذكية والإلكترونيات
--- قم بنسخ هذا الكود بالكامل ولصقه في SQL Editor داخل Supabase ثم اضغط Run
+-- Mobile Store - Neon (Lakebase Postgres) Complete Schema & Initial Data
 -- ==============================================================================
 
--- 1. جدول الفئات الرئيسية والفرعية (Categories Table)
+-- 1. Categories Table
 CREATE TABLE IF NOT EXISTS categories (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -15,7 +13,7 @@ CREATE TABLE IF NOT EXISTS categories (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. جدول الماركات (Brands Table)
+-- 2. Brands Table
 CREATE TABLE IF NOT EXISTS brands (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -23,14 +21,14 @@ CREATE TABLE IF NOT EXISTS brands (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. جدول الألوان الموحدة (Colors Table)
+-- 3. Colors Table
 CREATE TABLE IF NOT EXISTS colors (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   hex_code TEXT NOT NULL
 );
 
--- 4. جدول المنتجات الأساسي (Products Table)
+-- 4. Products Table
 CREATE TABLE IF NOT EXISTS products (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -59,7 +57,7 @@ CREATE TABLE IF NOT EXISTS products (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 5. جدول مخزون الألوان لكل منتج (Product Colors Table)
+-- 5. Product Colors Inventory Table
 CREATE TABLE IF NOT EXISTS product_colors (
   id BIGSERIAL PRIMARY KEY,
   product_id TEXT REFERENCES products(id) ON DELETE CASCADE,
@@ -70,7 +68,7 @@ CREATE TABLE IF NOT EXISTS product_colors (
   UNIQUE(product_id, color_id)
 );
 
--- 6. جدول متغيرات المنتجات (Product Variants Table)
+-- 6. Product Variants Table
 CREATE TABLE IF NOT EXISTS product_variants (
   id BIGSERIAL PRIMARY KEY,
   product_id TEXT REFERENCES products(id) ON DELETE CASCADE,
@@ -82,7 +80,7 @@ CREATE TABLE IF NOT EXISTS product_variants (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 7. جدول الطلبات (Orders Table)
+-- 7. Orders Table
 CREATE TABLE IF NOT EXISTS orders (
   id BIGSERIAL PRIMARY KEY,
   order_ref TEXT UNIQUE NOT NULL,
@@ -99,7 +97,7 @@ CREATE TABLE IF NOT EXISTS orders (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 8. جدول تفاصيل بنود الطلبات (Order Items Table)
+-- 8. Order Items Table
 CREATE TABLE IF NOT EXISTS order_items (
   id BIGSERIAL PRIMARY KEY,
   order_id BIGINT REFERENCES orders(id) ON DELETE CASCADE,
@@ -115,7 +113,7 @@ CREATE TABLE IF NOT EXISTS order_items (
   total_price NUMERIC NOT NULL
 );
 
--- 9. جدول المشرفين (Admin Users Table)
+-- 9. Admin Users Table
 CREATE TABLE IF NOT EXISTS admins (
   id BIGSERIAL PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
@@ -123,26 +121,20 @@ CREATE TABLE IF NOT EXISTS admins (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- إضافة حساب المشرف الافتراضي (admin / admin)
+-- Default admin user (admin / admin)
 INSERT INTO admins (username, password_hash)
 VALUES ('admin', '$2b$10$rzmW8Z9S9SZzkc6vpTKcJeLdoghftshEu.TvIa7yaWxR8nOslVHzK')
-ON CONFLICT (username) DO UPDATE 
+ON CONFLICT (username) DO UPDATE
 SET password_hash = '$2b$10$rzmW8Z9S9SZzkc6vpTKcJeLdoghftshEu.TvIa7yaWxR8nOslVHzK';
 
--- 9b. جدول إعدادات المتجر العامة (Store Settings Table)
+-- 10. Store Settings Table
 CREATE TABLE IF NOT EXISTS store_settings (
   id TEXT PRIMARY KEY DEFAULT 'default',
   settings JSONB NOT NULL DEFAULT '{}'::jsonb,
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE store_settings ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Public read store_settings" ON store_settings;
-CREATE POLICY "Public read store_settings" ON store_settings FOR SELECT USING (true);
-DROP POLICY IF EXISTS "Service role full access store_settings" ON store_settings;
-CREATE POLICY "Service role full access store_settings" ON store_settings FOR ALL USING (true) WITH CHECK (true);
-
--- 10. إدخال الألوان الـ 15 المعتمدة
+-- 11. Colors Seed
 INSERT INTO colors (id, name, hex_code) VALUES
 ('black', 'أسود', '#111827'),
 ('white', 'أبيض', '#FFFFFF'),
@@ -162,7 +154,7 @@ INSERT INTO colors (id, name, hex_code) VALUES
 ON CONFLICT (id) DO UPDATE
 SET name = EXCLUDED.name, hex_code = EXCLUDED.hex_code;
 
--- 11. إدخال الفئات الرئيسية والفرعية
+-- 12. Categories Seed
 INSERT INTO categories (id, name, parent_id, sort_order) VALUES
 ('phones', 'الموبايلات', NULL, 1),
 ('tablets', 'التابلت', NULL, 2),
@@ -174,7 +166,7 @@ INSERT INTO categories (id, name, parent_id, sort_order) VALUES
 ON CONFLICT (id) DO UPDATE
 SET name = EXCLUDED.name, sort_order = EXCLUDED.sort_order;
 
--- 12. الماركات الرئيسية (مع الصيغة الموحدة: العربية والإنجليزية بين قوسين)
+-- 13. Brands Seed
 INSERT INTO brands (id, name, category_id) VALUES
 ('samsung', 'سامسونج (Samsung)', 'phones'),
 ('apple', 'آبل (Apple)', 'phones'),
@@ -193,7 +185,7 @@ INSERT INTO brands (id, name, category_id) VALUES
 ON CONFLICT (id) DO UPDATE
 SET name = EXCLUDED.name, category_id = EXCLUDED.category_id;
 
--- 13. إدخال المنتجات الأولية المميزة (Initial Products Seed)
+-- 14. Initial Products Seed
 INSERT INTO products (
   id, name, sub, cat, category_id, subcategory, brand_id, brand,
   price, old_price, rating, reviews, tag, badge_text, image, images,
@@ -296,53 +288,3 @@ SET
   condition = EXCLUDED.condition,
   specifications = EXCLUDED.specifications,
   colors = EXCLUDED.colors;
-
--- 14. تفعيل Row Level Security (RLS) وسياسات الوصول
-ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE brands ENABLE ROW LEVEL SECURITY;
-ALTER TABLE colors ENABLE ROW LEVEL SECURITY;
-ALTER TABLE products ENABLE ROW LEVEL SECURITY;
-ALTER TABLE product_colors ENABLE ROW LEVEL SECURITY;
-ALTER TABLE product_variants ENABLE ROW LEVEL SECURITY;
-ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
-ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
-ALTER TABLE admins ENABLE ROW LEVEL SECURITY;
-
--- حذف السياسات القديمة إن وجدت لمنع تكرار الأسماء
-DROP POLICY IF EXISTS "Public read categories" ON categories;
-DROP POLICY IF EXISTS "Public read brands" ON brands;
-DROP POLICY IF EXISTS "Public read colors" ON colors;
-DROP POLICY IF EXISTS "Public read products" ON products;
-DROP POLICY IF EXISTS "Public read product_colors" ON product_colors;
-DROP POLICY IF EXISTS "Public read product_variants" ON product_variants;
-DROP POLICY IF EXISTS "Public insert orders" ON orders;
-DROP POLICY IF EXISTS "Public insert order_items" ON order_items;
-DROP POLICY IF EXISTS "Service role full access products" ON products;
-DROP POLICY IF EXISTS "Service role full access categories" ON categories;
-DROP POLICY IF EXISTS "Service role full access brands" ON brands;
-DROP POLICY IF EXISTS "Service role full access colors" ON colors;
-DROP POLICY IF EXISTS "Service role full access orders" ON orders;
-DROP POLICY IF EXISTS "Service role full access order_items" ON order_items;
-
--- سياسات القراءة العامة للمتجر
-CREATE POLICY "Public read categories" ON categories FOR SELECT USING (true);
-CREATE POLICY "Public read brands" ON brands FOR SELECT USING (true);
-CREATE POLICY "Public read colors" ON colors FOR SELECT USING (true);
-CREATE POLICY "Public read products" ON products FOR SELECT USING (true);
-CREATE POLICY "Public read product_colors" ON product_colors FOR SELECT USING (true);
-CREATE POLICY "Public read product_variants" ON product_variants FOR SELECT USING (true);
-
--- سياسة إنشاء الطلبات للعملاء
-CREATE POLICY "Public insert orders" ON orders FOR INSERT WITH CHECK (true);
-CREATE POLICY "Public insert order_items" ON order_items FOR INSERT WITH CHECK (true);
-
--- سياسات الوصول الكامل لـ service_role (لوحة الأدمن والسيرفر)
-CREATE POLICY "Service role full access products" ON products FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Service role full access categories" ON categories FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Service role full access brands" ON brands FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Service role full access colors" ON colors FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Service role full access orders" ON orders FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Service role full access order_items" ON order_items FOR ALL USING (true) WITH CHECK (true);
-
--- 15. تحديث كاش PostgREST Schema فوراً
-NOTIFY pgrst, 'reload schema';

@@ -2,8 +2,7 @@
 import path from "node:path";
 import fs from "node:fs/promises";
 import bcrypt from "bcryptjs";
-import { getSupabaseAdmin, isSupabaseConfigured, getEnvVar } from "./supabase";
-import { getNeonSql, isNeonConfigured } from "./neon";
+import { getNeonSql, isNeonConfigured, getEnvVar } from "./neon";
 import { Product, Order, Category, Brand, PredefinedColor, PREDEFINED_COLORS, StoreSettings, DEFAULT_STORE_SETTINGS } from "./types";
 
 let sqliteInstance: any = null;
@@ -31,13 +30,13 @@ function getSqliteDb() {
   const dbPath = path.join(process.cwd(), "mobile_store.db");
   const DatabaseSync = getDatabaseSync();
   if (!DatabaseSync) {
-    throw new Error("SQLite is not supported in this runtime. Please configure Supabase in environment variables.");
+    throw new Error("SQLite is not supported in this runtime. Please configure DATABASE_URL for Neon in environment variables.");
   }
   let db: any;
   try {
     db = new DatabaseSync(dbPath);
   } catch (err: any) {
-    throw new Error("SQLite is not supported in this runtime. Please configure Supabase in environment variables: " + (err?.message || ""));
+    throw new Error("SQLite is not supported in this runtime. Please configure DATABASE_URL for Neon in environment variables: " + (err?.message || ""));
   }
   db.exec("PRAGMA journal_mode = WAL;");
 
@@ -166,11 +165,11 @@ function getSqliteDb() {
   // Seed default admin
   const adminCheck = db.prepare("SELECT COUNT(*) as count FROM admins").get() as any;
   if (!adminCheck || adminCheck.count === 0) {
-    const defaultPassword = getEnvVar("ADMIN_PASSWORD") || process.env.ADMIN_PASSWORD;
+    const defaultPassword = process.env.ADMIN_PASSWORD;
     if (defaultPassword) {
       const salt = bcrypt.genSaltSync(10);
       const hash = bcrypt.hashSync(defaultPassword, salt);
-      const adminUser = getEnvVar("ADMIN_USERNAME") || process.env.ADMIN_USERNAME || "admin";
+      const adminUser = process.env.ADMIN_USERNAME || "admin";
       db.prepare("INSERT INTO admins (username, password_hash) VALUES (?, ?)").run(adminUser, hash);
     }
   }
@@ -905,29 +904,6 @@ export async function getAllProducts(): Promise<Product[]> {
     return (rows || []).map(formatProduct) as Product[];
   }
 
-  if (isSupabaseConfigured()) {
-    try {
-      const supabase = getSupabaseAdmin()!;
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (!error && data) {
-        return (data || []).map(formatProduct) as Product[];
-      }
-      if (error && error.code !== "PGRST205" && !error.message?.includes("schema cache")) {
-        console.error("[Supabase Error - getAllProducts]:", error);
-        throw error;
-      }
-    } catch (err: any) {
-      if (err.code !== "PGRST205" && !err.message?.includes("schema cache")) {
-        console.error("Supabase getAllProducts error:", err);
-        throw err;
-      }
-    }
-  }
-
   // SQLite Fallback
   const db = getSqliteDb();
   const rows = db.prepare("SELECT * FROM products ORDER BY created_at DESC").all();
@@ -939,30 +915,6 @@ export async function getProductById(id: string): Promise<Product | null> {
     const sql = await getNeonSql();
     const rows = await sql`SELECT * FROM products WHERE id = ${id} LIMIT 1`;
     return rows && rows.length > 0 ? formatProduct(rows[0]) : null;
-  }
-
-  if (isSupabaseConfigured()) {
-    try {
-      const supabase = getSupabaseAdmin()!;
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
-
-      if (!error && data) {
-        return formatProduct(data);
-      }
-      if (error && error.code !== "PGRST205" && !error.message?.includes("schema cache")) {
-        console.error("[Supabase Error - getProductById]:", error);
-        throw error;
-      }
-    } catch (err: any) {
-      if (err.code !== "PGRST205" && !err.message?.includes("schema cache")) {
-        console.error("Supabase getProductById error:", err);
-        throw err;
-      }
-    }
   }
 
   // SQLite Fallback
@@ -1145,51 +1097,6 @@ export async function createProduct(prod: any): Promise<Product | null> {
     }
 
     return formatProduct(rows[0]);
-  }
-
-  if (isSupabaseConfigured()) {
-    try {
-      const supabase = getSupabaseAdmin()!;
-      const { data, error } = await supabase
-        .from("products")
-        .insert([newProduct])
-        .select()
-        .single();
-
-      if (error) {
-        if (error.code === "PGRST205" || error.message?.includes("schema cache")) {
-          console.warn("[Supabase] Table 'products' not found in schema cache. Saving to local SQLite.");
-          saveToSqlite();
-          return getProductById(id);
-        }
-        console.error("[Supabase Error - createProduct]:", error);
-        throw error;
-      }
-
-      if (colorsList.length > 0) {
-        try {
-          const rows = colorsList.map((c: any) => ({
-            product_id: id,
-            color_id: c.color_id || c.id || "black",
-            color_name: c.color_name || c.name_ar || c.name || "أسود",
-            hex_code: c.hex_code || c.hex || "#111827",
-            quantity: Number(c.quantity || 0)
-          }));
-          await supabase.from("product_colors").insert(rows);
-        } catch (cErr) {
-          console.warn("[Supabase] Could not sync product_colors:", cErr);
-        }
-      }
-
-      try { saveToSqlite(); } catch (e) {}
-      return formatProduct(data);
-    } catch (err: any) {
-      if (err.code === "PGRST205" || err.message?.includes("schema cache")) {
-        saveToSqlite();
-        return getProductById(id);
-      }
-      throw err;
-    }
   }
 
   saveToSqlite();
@@ -1378,53 +1285,6 @@ export async function updateProduct(id: string, prod: any): Promise<Product | nu
     return rows && rows.length > 0 ? formatProduct(rows[0]) : null;
   }
 
-  if (isSupabaseConfigured()) {
-    try {
-      const supabase = getSupabaseAdmin()!;
-      const { data, error } = await supabase
-        .from("products")
-        .update(updateData)
-        .eq("id", id)
-        .select()
-        .single();
-
-      if (error) {
-        if (error.code === "PGRST205" || error.message?.includes("schema cache")) {
-          console.warn("[Supabase] Table 'products' not found in schema cache. Updating locally in SQLite.");
-          updateSqlite();
-          return getProductById(id);
-        }
-        console.error("[Supabase Error - updateProduct]:", error);
-        throw error;
-      }
-
-      if (colorsList.length > 0) {
-        try {
-          await supabase.from("product_colors").delete().eq("product_id", id);
-          const rows = colorsList.map((c: any) => ({
-            product_id: id,
-            color_id: c.color_id || c.id || "black",
-            color_name: c.color_name || c.name_ar || c.name || "أسود",
-            hex_code: c.hex_code || c.hex || "#111827",
-            quantity: Number(c.quantity || 0)
-          }));
-          await supabase.from("product_colors").insert(rows);
-        } catch (cErr) {
-          console.warn("[Supabase] Could not sync product_colors:", cErr);
-        }
-      }
-
-      try { updateSqlite(); } catch (e) {}
-      return formatProduct(data);
-    } catch (err: any) {
-      if (err.code === "PGRST205" || err.message?.includes("schema cache")) {
-        updateSqlite();
-        return getProductById(id);
-      }
-      throw err;
-    }
-  }
-
   updateSqlite();
   return getProductById(id);
 }
@@ -1457,36 +1317,6 @@ export async function deleteProduct(id: string): Promise<boolean> {
     return rows.length > 0;
   }
 
-  let deletedFromSupabase = false;
-  if (isSupabaseConfigured()) {
-    try {
-      const supabase = getSupabaseAdmin()!;
-      try {
-        await supabase.from("product_colors").delete().eq("product_id", id);
-        await supabase.from("product_variants").delete().eq("product_id", id);
-        await supabase.from("order_items").update({ product_id: null }).eq("product_id", id);
-      } catch (e) {}
-
-      const { error, count } = await supabase
-        .from("products")
-        .delete({ count: "exact" })
-        .eq("id", id);
-
-      if (error) {
-        if (error.code !== "PGRST205" && !error.message?.includes("schema cache")) {
-          console.error("[Supabase Error - deleteProduct]:", error);
-          throw error;
-        }
-      } else {
-        deletedFromSupabase = (count ?? 0) > 0;
-      }
-    } catch (err: any) {
-      if (err.code !== "PGRST205" && !err.message?.includes("schema cache")) {
-        throw err;
-      }
-    }
-  }
-
   const db = getSqliteDb();
   try {
     db.prepare("DELETE FROM product_colors WHERE product_id = ?").run(id);
@@ -1495,9 +1325,7 @@ export async function deleteProduct(id: string): Promise<boolean> {
 
   const stmt = db.prepare("DELETE FROM products WHERE id = ?");
   const result = stmt.run(id);
-  const deletedFromSqlite = result.changes > 0;
-
-  return deletedFromSupabase || deletedFromSqlite;
+  return result.changes > 0;
 }
 
 // ==============================================================================
@@ -1509,16 +1337,6 @@ export async function getAllCategories(): Promise<Category[]> {
     const sql = await getNeonSql();
     const rows = await sql`SELECT * FROM categories ORDER BY sort_order ASC`;
     return rows as Category[];
-  }
-
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseAdmin()!;
-    const { data, error } = await supabase
-      .from("categories")
-      .select("*")
-      .order("sort_order", { ascending: true });
-
-    if (!error && data) return data as Category[];
   }
 
   const db = getSqliteDb();
@@ -1537,19 +1355,6 @@ export async function createCategory(cat: { id: string; name: string; parent_id?
     return rows[0] as Category;
   }
 
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseAdmin()!;
-    const { data, error } = await supabase.from("categories").insert([{
-      id: cat.id,
-      name: cat.name,
-      parent_id: cat.parent_id || null,
-      sort_order: sort,
-      is_active: true
-    }]).select().single();
-    if (error) throw error;
-    return data as Category;
-  }
-
   const db = getSqliteDb();
   db.prepare("INSERT INTO categories (id, name, parent_id, sort_order, is_active) VALUES (?, ?, ?, ?, 1)").run(
     cat.id, cat.name, cat.parent_id || null, sort
@@ -1564,11 +1369,6 @@ export async function deleteCategory(id: string): Promise<boolean> {
     return rows.length > 0;
   }
 
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseAdmin()!;
-    const { error } = await supabase.from("categories").delete().eq("id", id);
-    return !error;
-  }
   const db = getSqliteDb();
   const res = db.prepare("DELETE FROM categories WHERE id = ?").run(id);
   return res.changes > 0;
@@ -1579,12 +1379,6 @@ export async function getAllBrands(): Promise<Brand[]> {
     const sql = await getNeonSql();
     const rows = await sql`SELECT * FROM brands ORDER BY name ASC`;
     return rows as Brand[];
-  }
-
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseAdmin()!;
-    const { data, error } = await supabase.from("brands").select("*").order("name");
-    if (!error && data) return data as Brand[];
   }
 
   const db = getSqliteDb();
@@ -1602,13 +1396,6 @@ export async function createBrand(brand: { id: string; name: string; category_id
     return rows[0] as Brand;
   }
 
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseAdmin()!;
-    const { data, error } = await supabase.from("brands").insert([brand]).select().single();
-    if (error) throw error;
-    return data as Brand;
-  }
-
   const db = getSqliteDb();
   db.prepare("INSERT INTO brands (id, name, category_id) VALUES (?, ?, ?)").run(
     brand.id, brand.name, brand.category_id || null
@@ -1623,11 +1410,6 @@ export async function deleteBrand(id: string): Promise<boolean> {
     return rows.length > 0;
   }
 
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseAdmin()!;
-    const { error } = await supabase.from("brands").delete().eq("id", id);
-    return !error;
-  }
   const db = getSqliteDb();
   const res = db.prepare("DELETE FROM brands WHERE id = ?").run(id);
   return res.changes > 0;
@@ -1642,12 +1424,6 @@ export async function getAllColors(): Promise<PredefinedColor[]> {
     const sql = await getNeonSql();
     const rows = await sql`SELECT * FROM colors ORDER BY name ASC`;
     return rows.length > 0 ? (rows as PredefinedColor[]) : PREDEFINED_COLORS;
-  }
-
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseAdmin()!;
-    const { data, error } = await supabase.from("colors").select("*").order("name");
-    if (!error && data && data.length > 0) return data as PredefinedColor[];
   }
 
   const db = getSqliteDb();
@@ -1701,35 +1477,6 @@ export async function createOrder(data: any): Promise<Order | null> {
     return rows && rows.length > 0 ? formatOrder(rows[0]) : null;
   }
 
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseAdmin()!;
-    const orderRecord = {
-      order_ref: orderRef,
-      customer_name: data.customer_name,
-      customer_phone: data.customer_phone,
-      governorate: data.governorate,
-      address: data.address,
-      payment_method: data.payment_method || "cod",
-      items: itemsList,
-      subtotal: Number(data.subtotal),
-      shipping: Number(data.shipping),
-      total: Number(data.total),
-      status: "قيد المراجعة"
-    };
-
-    const { data: created, error } = await supabase
-      .from("orders")
-      .insert([orderRecord])
-      .select()
-      .single();
-
-    if (error) {
-      console.error("[Supabase Error - createOrder]:", error);
-      throw error;
-    }
-    return formatOrder(created);
-  }
-
   // SQLite Fallback
   const db = getSqliteDb();
   const stmt = db.prepare(`
@@ -1765,20 +1512,6 @@ export async function getAllOrders(): Promise<Order[]> {
     return (rows || []).map(formatOrder) as Order[];
   }
 
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseAdmin()!;
-    const { data, error } = await supabase
-      .from("orders")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("[Supabase Error - getAllOrders]:", error);
-      throw error;
-    }
-    return (data || []).map(formatOrder) as Order[];
-  }
-
   // SQLite Fallback
   const db = getSqliteDb();
   const rows = db.prepare("SELECT * FROM orders ORDER BY created_at DESC").all();
@@ -1790,21 +1523,6 @@ export async function getOrderByRef(orderRef: string): Promise<Order | null> {
     const sql = await getNeonSql();
     const rows = await sql`SELECT * FROM orders WHERE order_ref = ${orderRef} LIMIT 1`;
     return rows && rows.length > 0 ? formatOrder(rows[0]) : null;
-  }
-
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseAdmin()!;
-    const { data, error } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("order_ref", orderRef)
-      .maybeSingle();
-
-    if (error) {
-      console.error("[Supabase Error - getOrderByRef]:", error);
-      throw error;
-    }
-    return formatOrder(data);
   }
 
   // SQLite Fallback
@@ -1820,20 +1538,6 @@ export async function updateOrderStatus(orderRef: string, status: string): Promi
     return rows.length > 0;
   }
 
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseAdmin()!;
-    const { error } = await supabase
-      .from("orders")
-      .update({ status })
-      .eq("order_ref", orderRef);
-
-    if (error) {
-      console.error("[Supabase Error - updateOrderStatus]:", error);
-      throw error;
-    }
-    return true;
-  }
-
   // SQLite Fallback
   const db = getSqliteDb();
   const stmt = db.prepare("UPDATE orders SET status = ? WHERE order_ref = ?");
@@ -1846,8 +1550,8 @@ export async function updateOrderStatus(orderRef: string, status: string): Promi
 // ==============================================================================
 
 export async function verifyAdmin(username: string, password: string): Promise<boolean> {
-  const adminPassword = getEnvVar("ADMIN_PASSWORD") || process.env.ADMIN_PASSWORD;
-  const adminUsername = getEnvVar("ADMIN_USERNAME") || process.env.ADMIN_USERNAME || "admin";
+  const adminPassword = await getEnvVar("ADMIN_PASSWORD");
+  const adminUsername = (await getEnvVar("ADMIN_USERNAME")) || "admin";
 
   if (
     adminPassword &&
@@ -1865,23 +1569,6 @@ export async function verifyAdmin(username: string, password: string): Promise<b
     if (row.password_hash === password) return true;
     try {
       return bcrypt.compareSync(password, row.password_hash);
-    } catch (e) {
-      return false;
-    }
-  }
-
-  if (isSupabaseConfigured()) {
-    const supabase = getSupabaseAdmin()!;
-    const { data, error } = await supabase
-      .from("admins")
-      .select("*")
-      .eq("username", username)
-      .maybeSingle();
-
-    if (error || !data) return false;
-    if (data.password_hash === password) return true;
-    try {
-      return bcrypt.compareSync(password, data.password_hash);
     } catch (e) {
       return false;
     }
@@ -1936,48 +1623,6 @@ export async function getStoreSettings(): Promise<StoreSettings> {
     }
   }
 
-  // 1. Try Supabase
-  if (isSupabaseConfigured()) {
-    try {
-      const supabase = getSupabaseAdmin()!;
-      const { data, error } = await supabase
-        .from("store_settings")
-        .select("settings")
-        .eq("id", "default")
-        .maybeSingle();
-
-      if (!error && data && data.settings) {
-        const parsed = typeof data.settings === "string" ? JSON.parse(data.settings) : data.settings;
-        memorySettings = {
-          ...DEFAULT_STORE_SETTINGS,
-          ...parsed,
-          shipping_cities: (Array.isArray(parsed.shipping_cities) && parsed.shipping_cities.length > 0)
-            ? parsed.shipping_cities
-            : (parsed.shipping_cities ?? DEFAULT_STORE_SETTINGS.shipping_cities),
-          hero_slides: (Array.isArray(parsed.hero_slides) && parsed.hero_slides.length > 0)
-            ? parsed.hero_slides
-            : (parsed.hero_slides ?? DEFAULT_STORE_SETTINGS.hero_slides)
-        };
-        return memorySettings;
-      } else if (!error && !data) {
-        // Table exists but row is missing; initialize default row
-        await supabase
-          .from("store_settings")
-          .upsert(
-            {
-              id: "default",
-              settings: DEFAULT_STORE_SETTINGS,
-              updated_at: new Date().toISOString()
-            },
-            { onConflict: "id" }
-          );
-        return { ...DEFAULT_STORE_SETTINGS };
-      }
-    } catch (e) {
-      console.error("[Supabase getStoreSettings Error]:", e);
-    }
-  }
-
   // 2. Try SQLite
   try {
     const db = getSqliteDb();
@@ -2019,30 +1664,6 @@ export async function updateStoreSettings(newSettings: Partial<StoreSettings>): 
       return merged;
     } catch (e) {
       console.error("[Neon updateStoreSettings Error]:", e);
-    }
-  }
-
-  // 1. Try Supabase
-  if (isSupabaseConfigured()) {
-    try {
-      const supabase = getSupabaseAdmin()!;
-      const { error } = await supabase
-        .from("store_settings")
-        .upsert(
-          {
-            id: "default",
-            settings: merged,
-            updated_at: new Date().toISOString()
-          },
-          { onConflict: "id" }
-        );
-
-      if (!error) {
-        return merged;
-      }
-      console.error("[Supabase updateStoreSettings Error]:", error);
-    } catch (e) {
-      console.error("[Supabase updateStoreSettings Exception]:", e);
     }
   }
 
