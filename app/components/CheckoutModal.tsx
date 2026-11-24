@@ -23,6 +23,9 @@ export default function CheckoutModal() {
     setCustomerName,
     customerPhone,
     setCustomerPhone,
+    activePhoneCountries,
+    selectedPhoneCountry,
+    setSelectedPhoneCountry,
     selectedGov,
     setSelectedGov,
     customerAddress,
@@ -197,17 +200,43 @@ export default function CheckoutModal() {
 
             {/* Customer Phone */}
             <div className="space-y-1">
-              <Label className="text-xs font-bold text-neutral-700">رقم الهاتف (موبايل مصري) *</Label>
-              <Input
-                type="tel"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                placeholder="01012345678"
-                dir="ltr"
-                className={`h-11 rounded-xl bg-neutral-50 text-sm text-right ${formErrors.phone ? "border-rose-500 ring-1 ring-rose-500" : ""}`}
-              />
+              <Label className="text-xs font-bold text-neutral-700">رقم الهاتف *</Label>
+              <div className="flex gap-2" dir="ltr">
+                {activePhoneCountries.length > 1 ? (
+                  <select
+                    value={selectedPhoneCountry.id}
+                    onChange={(e) => {
+                      const found = activePhoneCountries.find((c) => c.id === e.target.value);
+                      if (found) setSelectedPhoneCountry(found);
+                    }}
+                    aria-label="رمز الدولة"
+                    className="h-11 px-2.5 rounded-xl border border-neutral-200 bg-neutral-50 text-xs font-bold text-neutral-800 outline-none cursor-pointer shrink-0"
+                  >
+                    {activePhoneCountries.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.flag} {c.dial_code} ({c.name})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="h-11 px-3 rounded-xl border border-neutral-200 bg-neutral-100 text-xs font-bold text-neutral-700 flex items-center gap-1.5 shrink-0 select-none">
+                    <span>{selectedPhoneCountry.flag}</span>
+                    <span className="font-mono">{selectedPhoneCountry.dial_code}</span>
+                  </div>
+                )}
+                <Input
+                  type="tel"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder={selectedPhoneCountry.placeholder}
+                  dir="ltr"
+                  className={`h-11 flex-1 rounded-xl bg-neutral-50 text-sm text-left ${formErrors.phone ? "border-rose-500 ring-1 ring-rose-500" : ""}`}
+                />
+              </div>
               {formErrors.phone && (
-                <span className="text-[11px] text-rose-500 font-bold">يرجى إدخال رقم موبايل مصري صحيح (11 رقم يبدأ بـ 01)</span>
+                <span className="text-[11px] text-rose-500 font-bold">
+                  يرجى إدخال رقم هاتف صحيح لدولة {selectedPhoneCountry.name} (مثال: {selectedPhoneCountry.placeholder})
+                </span>
               )}
             </div>
 

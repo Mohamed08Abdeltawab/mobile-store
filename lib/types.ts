@@ -179,6 +179,137 @@ export interface ShippingCity {
   is_active: boolean;
 }
 
+export interface PhoneCountryOption {
+  id: string;
+  name: string;
+  dial_code: string;
+  flag: string;
+  placeholder: string;
+  min_digits: number;
+  max_digits: number;
+  pattern?: string;
+  is_active: boolean;
+}
+
+export const PRESET_PHONE_COUNTRIES: PhoneCountryOption[] = [
+  {
+    id: "eg",
+    name: "مصر",
+    dial_code: "+20",
+    flag: "🇪🇬",
+    placeholder: "01012345678",
+    min_digits: 10,
+    max_digits: 11,
+    pattern: "^0?1[0125][0-9]{8}$",
+    is_active: true,
+  },
+  {
+    id: "sa",
+    name: "السعودية",
+    dial_code: "+966",
+    flag: "🇸🇦",
+    placeholder: "0501234567",
+    min_digits: 9,
+    max_digits: 10,
+    pattern: "^0?5[0-9]{8}$",
+    is_active: true,
+  },
+  {
+    id: "ae",
+    name: "الإمارات",
+    dial_code: "+971",
+    flag: "🇦🇪",
+    placeholder: "0501234567",
+    min_digits: 9,
+    max_digits: 10,
+    pattern: "^0?5[0-9]{8}$",
+    is_active: true,
+  },
+  {
+    id: "kw",
+    name: "الكويت",
+    dial_code: "+965",
+    flag: "🇰🇼",
+    placeholder: "50123456",
+    min_digits: 8,
+    max_digits: 8,
+    is_active: true,
+  },
+  {
+    id: "qa",
+    name: "قطر",
+    dial_code: "+974",
+    flag: "🇶🇦",
+    placeholder: "30123456",
+    min_digits: 8,
+    max_digits: 8,
+    is_active: true,
+  },
+  {
+    id: "bh",
+    name: "البحرين",
+    dial_code: "+973",
+    flag: "🇧🇭",
+    placeholder: "30123456",
+    min_digits: 8,
+    max_digits: 8,
+    is_active: true,
+  },
+  {
+    id: "om",
+    name: "عُمان",
+    dial_code: "+968",
+    flag: "🇴🇲",
+    placeholder: "90123456",
+    min_digits: 8,
+    max_digits: 8,
+    is_active: true,
+  },
+  {
+    id: "jo",
+    name: "الأردن",
+    dial_code: "+962",
+    flag: "🇯🇴",
+    placeholder: "0791234567",
+    min_digits: 9,
+    max_digits: 10,
+    is_active: true,
+  },
+];
+
+/**
+ * Validate a local phone input against a configured country rule.
+ */
+export function validatePhoneForCountry(rawPhone: string, country: PhoneCountryOption): boolean {
+  let cleaned = rawPhone.replace(/[\s\-()]/g, "");
+  if (country.dial_code && cleaned.startsWith(country.dial_code)) {
+    cleaned = cleaned.slice(country.dial_code.length);
+  }
+  if (!/^\d+$/.test(cleaned)) return false;
+  if (country.pattern) {
+    try {
+      return new RegExp(country.pattern).test(cleaned);
+    } catch {
+      // Fallback to digit length check if custom regex is invalid
+    }
+  }
+  return cleaned.length >= country.min_digits && cleaned.length <= country.max_digits;
+}
+
+/**
+ * Format a validated phone number with its country dial code (e.g. +201012345678).
+ */
+export function formatPhoneWithDialCode(rawPhone: string, country: PhoneCountryOption): string {
+  let cleaned = rawPhone.replace(/[\s\-()]/g, "");
+  if (country.dial_code && cleaned.startsWith(country.dial_code)) {
+    return cleaned;
+  }
+  if (cleaned.startsWith("0")) {
+    cleaned = cleaned.slice(1);
+  }
+  return `${country.dial_code}${cleaned}`;
+}
+
 export interface HeroSlide {
   id: string;
   image: string;
@@ -203,6 +334,7 @@ export interface StoreSettings {
   currency: CurrencyCode;
   currency_format: CurrencyFormat;
   custom_currency_symbol?: string;
+  phone_countries?: PhoneCountryOption[];
 
   // 3. Social Media Links (Marketing)
   social_facebook: string;
@@ -256,6 +388,7 @@ export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   currency: "EGP",
   currency_format: "symbol_after_arabic",
   custom_currency_symbol: "",
+  phone_countries: [PRESET_PHONE_COUNTRIES[0]],
 
   social_facebook: "https://facebook.com",
   social_facebook_enabled: true,

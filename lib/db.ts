@@ -1607,7 +1607,10 @@ export async function getStoreSettings(): Promise<StoreSettings> {
             : (parsed.shipping_cities ?? DEFAULT_STORE_SETTINGS.shipping_cities),
           hero_slides: (Array.isArray(parsed.hero_slides) && parsed.hero_slides.length > 0)
             ? parsed.hero_slides
-            : (parsed.hero_slides ?? DEFAULT_STORE_SETTINGS.hero_slides)
+            : (parsed.hero_slides ?? DEFAULT_STORE_SETTINGS.hero_slides),
+          phone_countries: (Array.isArray(parsed.phone_countries) && parsed.phone_countries.length > 0)
+            ? parsed.phone_countries
+            : (parsed.phone_countries ?? DEFAULT_STORE_SETTINGS.phone_countries)
         };
         return memorySettings;
       } else {
@@ -1633,7 +1636,10 @@ export async function getStoreSettings(): Promise<StoreSettings> {
         ...DEFAULT_STORE_SETTINGS,
         ...parsed,
         shipping_cities: parsed.shipping_cities || DEFAULT_STORE_SETTINGS.shipping_cities,
-        hero_slides: parsed.hero_slides || DEFAULT_STORE_SETTINGS.hero_slides
+        hero_slides: parsed.hero_slides || DEFAULT_STORE_SETTINGS.hero_slides,
+        phone_countries: (Array.isArray(parsed.phone_countries) && parsed.phone_countries.length > 0)
+          ? parsed.phone_countries
+          : DEFAULT_STORE_SETTINGS.phone_countries
       };
       return memorySettings;
     }

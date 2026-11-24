@@ -16,6 +16,10 @@ import {
   PredefinedColor,
   StoreSettings,
   DEFAULT_STORE_SETTINGS,
+  PhoneCountryOption,
+  PRESET_PHONE_COUNTRIES,
+  validatePhoneForCountry,
+  formatPhoneWithDialCode,
   formatCurrency,
 } from "../../lib/types";
 
@@ -132,6 +136,9 @@ interface CartContextType {
   setCustomerName: (val: string) => void;
   customerPhone: string;
   setCustomerPhone: (val: string) => void;
+  activePhoneCountries: PhoneCountryOption[];
+  selectedPhoneCountry: PhoneCountryOption;
+  setSelectedPhoneCountry: (country: PhoneCountryOption) => void;
   selectedGov: Governorate;
   setSelectedGov: (gov: Governorate) => void;
   customerAddress: string;
@@ -190,6 +197,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [directBuyItem, setDirectBuyItem] = useState<CartItem | null>(null);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+
+  // Dynamic active phone countries from store settings
+  const configuredPhoneCountries =
+    settings.phone_countries && settings.phone_countries.length > 0
+      ? settings.phone_countries.filter((c) => c.is_active)
+      : [];
+  const activePhoneCountries: PhoneCountryOption[] =
+    configuredPhoneCountries.length > 0
+      ? configuredPhoneCountries
+      : [PRESET_PHONE_COUNTRIES[0]];
+  const [selectedPhoneCountry, setSelectedPhoneCountry] = useState<PhoneCountryOption>(
+    activePhoneCountries[0]
+  );
+
+  // Keep selectedPhoneCountry in sync with activePhoneCountries
+  useEffect(() => {
+    if (activePhoneCountries.length > 0) {
+      const match = activePhoneCountries.find((c) => c.id === selectedPhoneCountry?.id);
+      if (!match) {
+        setSelectedPhoneCountry(activePhoneCountries[0]);
+      } else if (
+        match.dial_code !== selectedPhoneCountry.dial_code ||
+        match.pattern !== selectedPhoneCountry.pattern ||
+        match.min_digits !== selectedPhoneCountry.min_digits ||
+        match.max_digits !== selectedPhoneCountry.max_digits
+      ) {
+        setSelectedPhoneCountry(match);
+      }
+    }
+  }, [settings.phone_countries]);
   const [selectedGov, setSelectedGov] = useState<Governorate>(GOVERNORATES[0]);
   const [customerAddress, setCustomerAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cod");
@@ -716,7 +753,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (!customerName.trim()) errs.name = true;
     if (
       !customerPhone.trim() ||
-      !/^01[0125][0-9]{8}$/.test(customerPhone.trim())
+      !validatePhoneForCountry(customerPhone, selectedPhoneCountry)
     )
       errs.phone = true;
     if (!customerAddress.trim()) errs.addr = true;
@@ -728,12 +765,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     setSubmittingOrder(true);
     try {
+      const formattedPhone = formatPhoneWithDialCode(customerPhone, selectedPhoneCountry);
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customer_name: customerName.trim(),
-          customer_phone: customerPhone.trim(),
+          customer_phone: formattedPhone,
           governorate: selectedGov.name,
           address: customerAddress.trim(),
           payment_method: paymentMethod,
@@ -821,6 +859,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setCustomerName,
         customerPhone,
         setCustomerPhone,
+        activePhoneCountries,
+        selectedPhoneCountry,
+        setSelectedPhoneCountry,
         selectedGov,
         setSelectedGov,
         customerAddress,

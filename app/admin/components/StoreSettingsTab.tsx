@@ -9,6 +9,8 @@ import {
   DEFAULT_STORE_SETTINGS,
   ShippingCity,
   HeroSlide,
+  PhoneCountryOption,
+  PRESET_PHONE_COUNTRIES,
   formatCurrency,
   CurrencyCode,
   CurrencyFormat
@@ -62,6 +64,24 @@ export default function StoreSettingsTab({
   });
 
   const [isLoadingSettings, setIsLoadingSettings] = useState(true);
+
+  // Custom phone country state
+  const [showAddPhoneCountry, setShowAddPhoneCountry] = useState(false);
+  const [newPhoneCountry, setNewPhoneCountry] = useState<{
+    name: string;
+    dial_code: string;
+    flag: string;
+    placeholder: string;
+    min_digits: number;
+    max_digits: number;
+  }>({
+    name: "",
+    dial_code: "+",
+    flag: "🌍",
+    placeholder: "501234567",
+    min_digits: 8,
+    max_digits: 12,
+  });
 
   // Track unsaved changes
   const hasUnsavedChanges = JSON.stringify(settings) !== JSON.stringify(savedSettings);
@@ -920,6 +940,276 @@ export default function StoreSettingsTab({
                 <span className="text-[10px] text-neutral-500 mt-1 block">
                   إذا أردت تخصيص رمز خاص لعملتك يتجاوز الرموز القياسية.
                 </span>
+              </div>
+            </div>
+
+            {/* Phone Country Codes Configuration */}
+            <div className="bg-[#141c18] border border-white/10 rounded-2xl p-5 space-y-5">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
+                <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
+                  <span className="text-lime-400 text-base">📱</span>
+                  <span>رموز دول الهاتف المسموحة عند الطلب</span>
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowAddPhoneCountry(!showAddPhoneCountry)}
+                  className="px-3 py-1.5 rounded-lg bg-lime-400/15 border border-lime-400/40 text-lime-400 hover:bg-lime-400/25 text-xs font-bold transition cursor-pointer"
+                >
+                  {showAddPhoneCountry ? "إغلاق" : "+ إضافة دولة مخصصة"}
+                </button>
+              </div>
+
+              <p className="text-[11px] text-neutral-400 leading-relaxed">
+                حدّد الدول المسموح للعملاء بإدخال أرقام هواتفهم منها في نافذة إتمام الطلب. عند تفعيل أكثر من دولة، ستظهر قائمة منسدلة (`select`) لاختيار رمز الدولة تلقائياً.
+              </p>
+
+              {/* Quick-add Presets */}
+              <div>
+                <span className="block text-[11px] font-bold text-neutral-300 mb-2">
+                  إضافة سريعة لدول شائعة:
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {PRESET_PHONE_COUNTRIES.map((preset) => {
+                    const currentList = settings.phone_countries || DEFAULT_STORE_SETTINGS.phone_countries || [];
+                    const alreadyAdded = currentList.some(
+                      (c) => c.id === preset.id || c.dial_code === preset.dial_code
+                    );
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        disabled={alreadyAdded}
+                        onClick={() => {
+                          setSettings({
+                            ...settings,
+                            phone_countries: [...currentList, { ...preset, is_active: true }],
+                          });
+                        }}
+                        className={`px-2.5 py-1.5 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition ${
+                          alreadyAdded
+                            ? "bg-white/5 border-white/10 text-neutral-500 cursor-not-allowed"
+                            : "bg-black/40 border-white/15 text-neutral-200 hover:border-lime-400 hover:text-lime-400 cursor-pointer"
+                        }`}
+                      >
+                        <span>{preset.flag}</span>
+                        <span>{preset.name}</span>
+                        <span dir="ltr" className="font-mono text-[11px] text-lime-400/90">
+                          {preset.dial_code}
+                        </span>
+                        {alreadyAdded && <span className="text-[10px] text-emerald-400">✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Custom Country Form */}
+              {showAddPhoneCountry && (
+                <div className="bg-black/40 border border-lime-400/30 rounded-xl p-4 space-y-3">
+                  <div className="text-xs font-bold text-lime-400">إضافة رمز دولة مخصص</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[11px] text-neutral-300 mb-1">اسم الدولة *</label>
+                      <input
+                        type="text"
+                        value={newPhoneCountry.name}
+                        onChange={(e) => setNewPhoneCountry({ ...newPhoneCountry, name: e.target.value })}
+                        placeholder="مثال: العراق"
+                        className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-lime-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-neutral-300 mb-1">رمز الدولة *</label>
+                      <input
+                        type="text"
+                        dir="ltr"
+                        value={newPhoneCountry.dial_code}
+                        onChange={(e) => setNewPhoneCountry({ ...newPhoneCountry, dial_code: e.target.value })}
+                        placeholder="+964"
+                        className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-lime-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-neutral-300 mb-1">العلم (Emoji)</label>
+                      <input
+                        type="text"
+                        value={newPhoneCountry.flag}
+                        onChange={(e) => setNewPhoneCountry({ ...newPhoneCountry, flag: e.target.value })}
+                        placeholder="🇮🇶"
+                        className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-lime-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-neutral-300 mb-1">مثال للرقم (Placeholder)</label>
+                      <input
+                        type="text"
+                        dir="ltr"
+                        value={newPhoneCountry.placeholder}
+                        onChange={(e) => setNewPhoneCountry({ ...newPhoneCountry, placeholder: e.target.value })}
+                        placeholder="07701234567"
+                        className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-lime-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-neutral-300 mb-1">أقل عدد أرقام</label>
+                      <input
+                        type="number"
+                        min={5}
+                        max={15}
+                        value={newPhoneCountry.min_digits}
+                        onChange={(e) =>
+                          setNewPhoneCountry({ ...newPhoneCountry, min_digits: Number(e.target.value) || 8 })
+                        }
+                        className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-lime-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-neutral-300 mb-1">أقصى عدد أرقام</label>
+                      <input
+                        type="number"
+                        min={5}
+                        max={15}
+                        value={newPhoneCountry.max_digits}
+                        onChange={(e) =>
+                          setNewPhoneCountry({ ...newPhoneCountry, max_digits: Number(e.target.value) || 12 })
+                        }
+                        className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-lime-400"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const name = newPhoneCountry.name.trim();
+                        let dial = newPhoneCountry.dial_code.trim();
+                        if (!name || !dial || dial === "+") {
+                          notify("error", "يرجى إدخال اسم الدولة ورمزها (مثال: +964)");
+                          return;
+                        }
+                        if (!dial.startsWith("+")) dial = `+${dial}`;
+                        const currentList = settings.phone_countries || [];
+                        const item: PhoneCountryOption = {
+                          id: `custom-${Date.now()}`,
+                          name,
+                          dial_code: dial,
+                          flag: newPhoneCountry.flag.trim() || "🌍",
+                          placeholder: newPhoneCountry.placeholder.trim() || "123456789",
+                          min_digits: Math.max(5, Math.min(15, newPhoneCountry.min_digits)),
+                          max_digits: Math.max(
+                            newPhoneCountry.min_digits,
+                            Math.min(15, newPhoneCountry.max_digits)
+                          ),
+                          is_active: true,
+                        };
+                        setSettings({ ...settings, phone_countries: [...currentList, item] });
+                        setNewPhoneCountry({
+                          name: "",
+                          dial_code: "+",
+                          flag: "🌍",
+                          placeholder: "501234567",
+                          min_digits: 8,
+                          max_digits: 12,
+                        });
+                        setShowAddPhoneCountry(false);
+                      }}
+                      className="px-4 py-2 rounded-lg bg-lime-400 text-black font-bold text-xs hover:bg-lime-300 transition cursor-pointer"
+                    >
+                      إضافة للقائمة
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Active / Configured Countries List */}
+              <div className="space-y-2">
+                {(settings.phone_countries || DEFAULT_STORE_SETTINGS.phone_countries || []).map((country, idx, arr) => (
+                  <div
+                    key={country.id}
+                    className={`flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl border transition ${
+                      country.is_active
+                        ? "bg-black/40 border-white/15"
+                        : "bg-black/20 border-white/5 opacity-60"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">{country.flag}</span>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-white">{country.name}</span>
+                          <span dir="ltr" className="text-xs font-mono font-bold text-lime-400">
+                            {country.dial_code}
+                          </span>
+                          {idx === 0 && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-lime-400/15 text-lime-400 font-bold">
+                              الافتراضية
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[10px] text-neutral-400 mt-0.5">
+                          مثال: <span dir="ltr" className="font-mono">{country.placeholder}</span> · الطول:{" "}
+                          {country.min_digits === country.max_digits
+                            ? `${country.min_digits} أرقام`
+                            : `${country.min_digits}-${country.max_digits} أرقام`}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {idx > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = [...arr];
+                            const [moved] = updated.splice(idx, 1);
+                            updated.unshift(moved);
+                            setSettings({ ...settings, phone_countries: updated });
+                          }}
+                          className="px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] text-neutral-300 font-bold cursor-pointer"
+                          title="جعلها الخيار الافتراضي الأول"
+                        >
+                          تعيين كافتراضي
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const activeCount = arr.filter((c) => c.is_active).length;
+                          if (country.is_active && activeCount <= 1) {
+                            notify("error", "يجب أن تبقى دولة واحدة مفعلة على الأقل");
+                            return;
+                          }
+                          const updated = arr.map((c) =>
+                            c.id === country.id ? { ...c, is_active: !c.is_active } : c
+                          );
+                          setSettings({ ...settings, phone_countries: updated });
+                        }}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer ${
+                          country.is_active
+                            ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                            : "bg-neutral-800 text-neutral-400 border border-white/10"
+                        }`}
+                      >
+                        {country.is_active ? "مفعلة" : "معطلة"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (arr.length <= 1) {
+                            notify("error", "يجب أن تحتوي القائمة على دولة واحدة على الأقل");
+                            return;
+                          }
+                          const updated = arr.filter((c) => c.id !== country.id);
+                          setSettings({ ...settings, phone_countries: updated });
+                        }}
+                        className="px-2 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 text-[11px] font-bold cursor-pointer"
+                        title="حذف"
+                      >
+                        حذف
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
