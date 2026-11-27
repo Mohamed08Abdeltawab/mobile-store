@@ -673,7 +673,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Quick WhatsApp Purchase
   function sendDirectWhatsApp(product: Product) {
     if (!product) return;
-    const num = settings.whatsapp_number || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
+    const num = settings.whatsapp_number || DEFAULT_STORE_SETTINGS.whatsapp_number;
     const conditionText = product.condition
       ? ` (حالة: ${product.condition})`
       : "";

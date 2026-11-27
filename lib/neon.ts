@@ -9,10 +9,6 @@ function readStaticProcessEnv(key: string): string {
       return process.env.ADMIN_USERNAME || "";
     case "ADMIN_PASSWORD":
       return process.env.ADMIN_PASSWORD || "";
-    case "NEXT_PUBLIC_WHATSAPP_NUMBER":
-      return process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "";
-    case "NEXT_PUBLIC_STORE_NAME":
-      return process.env.NEXT_PUBLIC_STORE_NAME || "";
     case "R2_BUCKET_NAME":
       return process.env.R2_BUCKET_NAME || "";
     case "NEXT_PUBLIC_R2_PUBLIC_URL":

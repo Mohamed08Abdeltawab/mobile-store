@@ -1,10 +1,15 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useCart } from "../context/CartContext";
+import { DEFAULT_STORE_SETTINGS } from "@/lib/types";
 import ScrollReveal from "./ScrollReveal";
 
 export default function WhatsAppSection() {
-  const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
+  const { settings } = useCart();
+  const waNumber = settings?.whatsapp_number || DEFAULT_STORE_SETTINGS.whatsapp_number;
+  const phoneNumber = settings?.phone_number || DEFAULT_STORE_SETTINGS.phone_number;
+  const salesHours = settings?.sales_hours || DEFAULT_STORE_SETTINGS.sales_hours;
 
   return (
     <section
@@ -57,11 +62,11 @@ export default function WhatsAppSection() {
                 <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
                   <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2z"></path>
                 </svg>
-                <span>بدء المحادثة على واتساب (0106 571 2366)</span>
+                <span>بدء المحادثة على واتساب ({phoneNumber})</span>
               </a>
             </Button>
             <span className="text-[11px] text-neutral-500">
-              متاح يومياً من 10:00 صباحاً حتى 11:00 مساءً
+              {salesHours}
             </span>
           </div>
         </div>

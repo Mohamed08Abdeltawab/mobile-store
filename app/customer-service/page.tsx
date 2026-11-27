@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useCart } from "../context/CartContext";
+import { DEFAULT_STORE_SETTINGS } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { WhatsAppIcon } from "../components/icons/SocialIcons";
 
 export default function CustomerServicePage() {
   const { settings } = useCart();
-  const waNumber = settings?.whatsapp_number || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
+  const waNumber = settings?.whatsapp_number || DEFAULT_STORE_SETTINGS.whatsapp_number;
   const storeName = settings?.store_name || "موبايل ستور";
   const salesHours = settings?.sales_hours || "يومياً من 10 صباحاً حتى 11 مساءً";
 

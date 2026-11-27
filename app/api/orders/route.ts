@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { createOrder, getAllOrders } from "../../../lib/db";
+import { createOrder, getAllOrders, getStoreSettings } from "../../../lib/db";
+import { DEFAULT_STORE_SETTINGS } from "../../../lib/types";
 import { cookies } from "next/headers";
-
-const WA_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
 
 export async function GET() {
   try {
@@ -62,7 +61,11 @@ export async function POST(req: Request) {
         .join("\n");
     }
 
-    const waMessage = `*طلب جديد من متجر الموبايل والإلكترونيات* 📱
+    const settings = await getStoreSettings();
+    const waNumber = settings.whatsapp_number || DEFAULT_STORE_SETTINGS.whatsapp_number;
+    const storeName = settings.store_name || "متجر الموبايل والإلكترونيات";
+
+    const waMessage = `*طلب جديد من ${storeName}* 📱
 *رقم مرجع الطلب:* #${order.order_ref}
 
 👤 *بيانات العميل:*
@@ -81,7 +84,7 @@ ${itemsList}
 
 طريقة الدفع: الدفع عند الاستلام بعد الفحص والمعاينة الكاملة`;
 
-    const whatsappUrl = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(waMessage)}`;
+    const whatsappUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(waMessage)}`;
 
     return NextResponse.json(
       {

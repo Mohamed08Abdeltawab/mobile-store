@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useCart } from "../context/CartContext";
+import { DEFAULT_STORE_SETTINGS } from "@/lib/types";
 import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon } from "./icons/SocialIcons";
 
 export default function Footer() {
   const { setIsWishlistOpen, settings, isSettingsLoaded } = useCart();
-  const waNumber = settings?.whatsapp_number || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
+  const waNumber = settings?.whatsapp_number || DEFAULT_STORE_SETTINGS.whatsapp_number;
   const storeName = settings?.store_name || "MOBILE STORE";
   const tagline = settings?.tagline || "موبايلات · تابلت · إلكترونيات";
   const description = settings?.description || "متجر Mobile Store المتخصص في بيع الهواتف الذكية والأجهزة اللوحية والإكسسوارات الأصلية. نحرص على تقديم أعلى معايير الجودة، المعاينة والفحص الكامل قبل الدفع، وضمان محلي معتمد مع استبدال فوري.";

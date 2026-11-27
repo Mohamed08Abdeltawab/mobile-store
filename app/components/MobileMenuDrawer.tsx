@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "../context/CartContext";
+import { DEFAULT_STORE_SETTINGS } from "@/lib/types";
 import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon } from "./icons/SocialIcons";
 
 export default function MobileMenuDrawer() {
   const { isMobileMenuOpen, setIsMobileMenuOpen, isAdmin, settings } = useCart();
   const pathname = usePathname();
-  const waNumber = settings?.whatsapp_number || process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "201131350988";
+  const waNumber = settings?.whatsapp_number || DEFAULT_STORE_SETTINGS.whatsapp_number;
   const storeName = settings?.store_name || "MOBILE STORE";
   const tagline = settings?.tagline || "موبايلات · تابلت · إلكترونيات";
 
