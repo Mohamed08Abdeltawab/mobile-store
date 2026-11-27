@@ -9,7 +9,6 @@ export default defineConfig(({ mode }) => {
     "DATABASE_URL",
     "ADMIN_USERNAME",
     "ADMIN_PASSWORD",
-    "R2_BUCKET_NAME",
     "NEXT_PUBLIC_R2_PUBLIC_URL",
   ];
 

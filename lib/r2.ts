@@ -24,10 +24,6 @@ export async function getR2Bucket(): Promise<any | null> {
  * e.g., https://pub-xxxxxxxx.r2.dev or https://images.yourdomain.com
  */
 export async function getR2PublicUrl(): Promise<string> {
-  if (typeof process !== "undefined" && process.env) {
-    if (process.env.NEXT_PUBLIC_R2_PUBLIC_URL) return process.env.NEXT_PUBLIC_R2_PUBLIC_URL.trim();
-    if (process.env.R2_PUBLIC_URL) return process.env.R2_PUBLIC_URL.trim();
-  }
   try {
     // @ts-ignore
     const cf = await import("cloudflare:workers");
@@ -35,6 +31,10 @@ export async function getR2PublicUrl(): Promise<string> {
     if (env.NEXT_PUBLIC_R2_PUBLIC_URL) return String(env.NEXT_PUBLIC_R2_PUBLIC_URL).trim();
     if (env.R2_PUBLIC_URL) return String(env.R2_PUBLIC_URL).trim();
   } catch {}
+  if (typeof process !== "undefined" && process.env) {
+    if (process.env.NEXT_PUBLIC_R2_PUBLIC_URL) return process.env.NEXT_PUBLIC_R2_PUBLIC_URL.trim();
+    if (process.env.R2_PUBLIC_URL) return process.env.R2_PUBLIC_URL.trim();
+  }
   return "";
 }
 
